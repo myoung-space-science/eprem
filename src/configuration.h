@@ -94,42 +94,14 @@ typedef struct {
 
   Scalar_t idw_p;
   
-  Index_t masTriLinear;
-  Index_t masCouple;
-  Index_t masCorRotateFake;
-  Index_t masHelCouple;
-  Index_t masNumFiles;
-  Index_t masHelNumFiles;
-  Index_t useMasSteadyStateDt;
-  Index_t masSteadyState;
-  char* masDirectory;
-  char* masHelDirectory;
-  Index_t masDigits;
-  Index_t masHelDigits;
-
-  Index_t masCoupledTime;
-  Scalar_t masStartTime;
   Scalar_t epEquilibriumCalcDuration;
-
   Scalar_t preEruptionDuration;
-  Index_t masInitMonteCarlo;
-  Index_t masInitFromOuterBoundary;
-  Scalar_t masInitRadius;
-  Scalar_t masInitTimeStep;
-
-  Scalar_t masRadialMin;
-  Scalar_t masRadialMax;
-  Scalar_t masHelRadialMin;
-  Scalar_t masHelRadialMax;
-  Scalar_t masVmin;
 
   Scalar_t parallelFlow;
   Index_t  fieldAligned;
 
   Scalar_t epCalcStartTime;
 
-  Index_t masRotateSolution;
-  
   Index_t useBoundaryFunction;
   Index_t boundaryFunctionInitDomain;
   

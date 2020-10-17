@@ -106,21 +106,9 @@ typedef int               MPI_Flag_t;
 #define THRESH 0.025
 /* threshold for perp diff & drift shell */
 
-#define MAS_TIME_NORM 1445.87003080685
-#define MAS_LENGTH_NORM 6.96e10
-#define MAS_RHO_NORM 1.6726e-16
-#define MAS_TIME_CONVERT MAS_TIME_NORM / (24.0 * 60.0 * 60.0)
-#define MAS_V_CONVERT ( MAS_LENGTH_NORM / MAS_TIME_NORM ) / C
-#define MAS_RHO_CONVERT (MAS_RHO_NORM / MP) / MHD_DENSITY_NORM
-#define MAS_B_CONVERT sqrt(4.0*PI*MAS_RHO_NORM)*MAS_LENGTH_NORM / MAS_TIME_NORM / MHD_B_NORM
-
 #define MAX_STRING_SIZE 240
 
 #define MHD_DEFAULT 0
-#define MHD_ENLIL   1
-#define MHD_LFMH    2
-#define MHD_BATSRUS 3
-#define MHD_MAS     4
 
 /*.............................Vec_t...*/
 typedef struct {
