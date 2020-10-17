@@ -70,8 +70,7 @@ getParams( char* configFilename)
   config.simStopTime = readDouble("simStopTime", config.simStartTime + config.tDel, config.simStartTime, BADVALUE);
   config.numEpSteps = readInt("numEpSteps", 30, 1, BADINT);
   config.aziSunStart = readDouble("aziSunStart", 0.0, 0.0, BADVALUE);
-  // This omega makes EPREM and MAS omega values equal to double precision.
-  config.omegaSun = readDouble("omegaSun", (0.004144/MAS_TIME_NORM)*TAU, 0.0, BADVALUE);
+  config.omegaSun = readDouble("omegaSun", 0.001429813, 0.0, BADVALUE);
   config.lamo = readDouble("lamo", 1.0, VERYSMALL, BADVALUE);
   config.dsh_min = readDouble("dsh_min", 5.0e-5, VERYSMALL, BADVALUE);
   config.dsh_hel_min = readDouble("dsh_hel_min", 2.5e-4, VERYSMALL, BADVALUE);
@@ -134,40 +133,13 @@ getParams( char* configFilename)
 
   config.idw_p = readDouble("idw_p", 3.0, VERYSMALL, BADVALUE);
 
-  config.masTriLinear = readInt("masTriLinear", 1, 0, 1);
-  config.masCouple = readInt("masCouple", 0, 0, 1);
-  config.masCorRotateFake = readInt("masCorRotateFake", 0, 0, 1);
-  config.masHelCouple = readInt("masHelCouple", 0, 0, 1);
-  config.masNumFiles = readInt("masNumFiles", 0, 0, 32767);
-  config.masHelNumFiles = readInt("masHelNumFiles", 0, 0, 32767);
-  config.useMasSteadyStateDt = readInt("useMasSteadyStateDt", 1, 0, 1);
-  config.masSteadyState = readInt("masSteadyState", 1, 0, 1);
-  config.masDirectory = (char*)readString("masDirectory"," ");
-  config.masHelDirectory = (char*)readString("masHelDirectory"," ");
-  config.masDigits = readInt("masDigits", 3, 0, 32767);
-  config.masHelDigits = readInt("masHelDigits", 3, 0, 32767);
-
-  config.masCoupledTime = readInt("masCoupledTime", 1, 0, 1);
-  config.masStartTime = readDouble("masStartTime", 0.0, 0.0, BADVALUE);
   config.epEquilibriumCalcDuration = readDouble("epEquilibriumCalcDuration", 0.0, 0.0, BADVALUE);
   config.preEruptionDuration = readDouble("preEruptionDuration", 0.0, 0.0, BADVALUE);
-  config.masRadialMin = readDouble("masRadialMin", 0.0, 0.0, BADVALUE);
-  config.masRadialMax = readDouble("masRadialMax", 0.0, 0.0, BADVALUE);
-  config.masHelRadialMin = readDouble("masHelRadialMin", 0.0, 0.0, BADVALUE);
-  config.masHelRadialMax = readDouble("masHelRadialMax", 0.0, 0.0, BADVALUE);
-  config.masVmin = readDouble("masVmin", 50.0e5, 0.0, BADVALUE);
 
-  config.masInitFromOuterBoundary = readInt("masInitFromOuterBoundary", 2, 0, 2);
-  config.masInitMonteCarlo = readInt("masInitMonteCarlo", 0, 0, 1);
-  config.masInitRadius = readDouble("masInitRadius", 0.0, 0.0, BADVALUE);
-  config.masInitTimeStep = readDouble("masInitTimeStep", 0.000011574074074, 0.0, BADVALUE);
-  
   config.parallelFlow = readDouble("parallelFlow", 0.0, 0.0, BADVALUE);
   config.fieldAligned = readInt("fieldAligned", 0, 0, 1);
 
   config.epCalcStartTime = readDouble("epCalcStartTime", config.simStartTime, 0.0, BADVALUE);
-
-  config.masRotateSolution = readInt("masRotateSolution", 1, 0, 1);
 
   config.useBoundaryFunction = readInt("useBoundaryFunction", 1, 0, 1);
   config.boundaryFunctionInitDomain = readInt("boundaryFunctionInitDomain", 1, 0, 1);
@@ -322,7 +294,6 @@ setRuntimeConstants( void )
   config.simStartTimeDay = config.simStartTime / DAY;
   config.simStopTimeDay  = config.simStopTime / DAY;
   config.tDel            /= DAY;
-  config.masInitTimeStep /= DAY;
   
   config.mhdUs           = ( config.flowMag / C );
   config.mhdNsAu         = ( config.mhdDensityAu / MHD_DENSITY_NORM );

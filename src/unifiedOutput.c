@@ -31,7 +31,6 @@
 #include "configuration.h"
 #include "unifiedOutput.h"
 #include "geometry.h"
-#include "masInterp.h"
 #include "safeNetcdf.h"
 #include "cubeShellStruct.h"
 #include "searchTypes.h"
@@ -784,18 +783,6 @@ int * po_distObs_varid;
 
       if (rSph.phi < 0.0) rSph.phi += 2.0 * PI;
       if ( rSph.phi > (2.0 * PI) ) rSph.phi -= 2.0 * PI;;
-
-      masGetNode(rSph, pointObsNode[0]);
-
-      pointObsNode[0].mhdBr = masNode.mhdB.r;
-      pointObsNode[0].mhdBtheta = masNode.mhdB.theta;
-      pointObsNode[0].mhdBphi = masNode.mhdB.phi;
-
-      pointObsNode[0].mhdVr = masNode.mhdV.r;
-      pointObsNode[0].mhdVtheta = masNode.mhdV.theta;
-      pointObsNode[0].mhdVphi = masNode.mhdV.phi;
-
-      pointObsNode[0].mhdDensity = masNode.mhdD;
 
       // zero out distribution
       for (species = 0; species < NUM_SPECIES; species++)

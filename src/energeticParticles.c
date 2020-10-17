@@ -34,8 +34,6 @@
 #include "geometry.h"
 #include "error.h"
 #include "flow.h"
-#include "readMAS.h"
-#include "masInterp.h"
 #include "observerOutput.h"
 #include "timers.h"
 
@@ -179,26 +177,7 @@ int preErupt=0;
 
           timer_tmp = MPI_Wtime();
 
-          // If not running MAS coupling run, always accelerate everywhere in domain.
-          if (config.masCouple == 0) {
-            AdiabaticChange(face, row, col, shell, dt);
-          } 
-          //MAS Coupling Run.
-          else {
-            if (config.masHelCouple == 0){
-              AdiabaticChange(face, row, col, shell, dt);
-            }
-            // If this is a heliospheric run, only accelerate
-            // in corona when it is still evolving.
-            else {
-              if (t_global <= masTime[config.masNumFiles - 1]){
-                AdiabaticChange(face, row, col, shell, dt);
-              }
-              else if ((grid[idx].rmag * config.rScale) > (config.masRadialMax * RSAU)){
-                AdiabaticChange(face, row, col, shell, dt);
-              }
-            }
-          }
+          AdiabaticChange(face, row, col, shell, dt);
           
           timer_adiabaticchange = timer_adiabaticchange + (MPI_Wtime() - timer_tmp);
           
@@ -1578,11 +1557,6 @@ int preErupt=0;
   workIndex = mpi_rank + N_PROCS * iterIndex;
 
   dshmin = config.dsh_min;
-  
-  if ((config.masHelCouple > 0) && 
-      (t_global > masTime[config.masNumFiles-1])) {
-      dshmin = config.dsh_hel_min;
-  }
   
   // check if this process received work
   if (workIndex < NUM_STREAMS)

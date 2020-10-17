@@ -28,9 +28,6 @@
 #include "geometry.h"
 #include "energeticParticles.h"
 #include "flow.h"
-#include "readMAS.h"
-#include "masInterp.h"
-#include "readMAS.h"
 #include "unifiedOutput.h"
 #include "searchTypes.h"
 #include "cubeShellStruct.h"
@@ -86,19 +83,10 @@ Index_t sync_hel=0;
 {
 
   phiOffset = 0.0;
-  phiHelOffset = 0.0;
 
 	weInitializedEPs = 0;
-  unwindPhiOffset = 0;
 
   mhdGridStatus = MHD_DEFAULT;
-
-  masFileIndex0 = 0;
-  masFileIndex1 = 0;
-  masHelFileIndex0 = 0;
-  masHelFileIndex1 = 0;
-  masEqFileFlag = 0;
-  masMallocFlag = 0;
 
   unifiedOutputInit = 0;
   pointObserverOutputInit = 0;
@@ -126,48 +114,9 @@ Index_t sync_hel=0;
 /*-----------------------------------------------------------------------*/
 {
 
-  Scalar_t masDt;
-  Scalar_t masRunDuration;
-
-  if (config.masCouple) {
-
-    masRunDuration = (masTime[config.masNumFiles - 1] - masTime[0])*DAY;
-    if (config.masHelCouple > 0) {
-
-      if ( (masHelTime[config.masHelNumFiles - 1] - masHelTime[0])*DAY > masRunDuration )
-        masRunDuration = (masHelTime[config.masHelNumFiles - 1] - masHelTime[0])*DAY;
-
-    }
-
-    masDt = masTime[1] - masTime[0];
-
-    if (config.useMasSteadyStateDt > 0)
-      config.tDel = masDt;
-
-    if (config.masInitTimeStep == 0.0)
-      config.masInitTimeStep = config.tDel;
-
-    // NOTE! For now, do not allow particle equalibrium.
-    
-    config.simStartTime = config.masStartTime; 
-    // Do not do any particle calculations until CME is about to erupt.
-    config.epCalcStartTime = config.masStartTime + config.preEruptionDuration;
-    
-    config.unifiedOutputTime = config.masStartTime + 0.5 * masDt * DAY;
-    config.pointObserverOutputTime = config.masStartTime + 0.5 * masDt * DAY;
-    config.streamFluxOutputTime = config.masStartTime + 0.5 * masDt * DAY;
-    config.epremDomainOutputTime = config.masStartTime + 0.5 * masDt * DAY;
-    
-    config.simStopTime = config.masStartTime + masRunDuration;
-
-  } else {
-
-    config.pointObserverOutputTime = config.simStartTime + 0.5 * config.tDel * DAY;
-    config.unifiedOutputTime = config.simStartTime + 0.5 * config.tDel * DAY;
-    config.epremDomainOutputTime = config.simStartTime + 0.5 * config.tDel * DAY;
-
-  }
-
+  config.pointObserverOutputTime = config.simStartTime + 0.5 * config.tDel * DAY;
+  config.unifiedOutputTime = config.simStartTime + 0.5 * config.tDel * DAY;
+  config.epremDomainOutputTime = config.simStartTime + 0.5 * config.tDel * DAY;
   config.simStartTimeDay = config.simStartTime / DAY;
   config.simStopTimeDay  = config.simStopTime / DAY;
 
@@ -772,116 +721,4 @@ Index_t sync_hel=0;
 
 }
 /*------------------ END  moveNodes ( ) ---------------------------------*/
-/*-----------------------------------------------------------------------*/
-
-
-/*-----------------------------------------------------------------------*/
-/*-----------------------------------------------------------------------*/
-/*--*/   void setDt ()                                              /*---*/
-/*--*                                                                *---*/
-/*--* Set the time step.                                             *---*/
-/*--*                                                                *---*/
-/*-----------------------------------------------------------------------*/
-/*-----------------------------------------------------------------------*/
-{
-
-  Index_t i, idx;
-
-  if ((config.masCouple > 0) && (config.masCoupledTime > 0)){
-
-    idx = 0;
-//
-// First get the coronal DT.
-//
-    if (t_global < masTime[0]){
-      if (config.useMasSteadyStateDt > 0){
-        config.tDel = masTime[1] - masTime[0];
-      //  if(mpi_rank==0) printf("SetDT0:   DT:  %8.2e\n",config.tDel);
-      }
-    } else if (t_global >= masTime[config.masNumFiles-1]){
-
-      config.tDel = masTime[config.masNumFiles-1] - masTime[config.masNumFiles-2];
-     // if(mpi_rank==0) printf("SetDT1:   DT:  %8.2e\n",config.tDel);
-    } else {
-//
-// Find the closest time index in masTimes to the current t_global time.
-// Then set the time step to be the next step in masTimes.
-//
-      for (i=1; i<config.masNumFiles; i++){
-        if (masTime[i] >= t_global ){
-           idx = i;
-           break;
-        }
-      }
-   /*   if(mpi_rank==0) printf("SetDT:  first idx: %d\n",idx);
-      if(mpi_rank==0) printf("SetDT:  t_global: %8.2e\n",t_global);
-      if(mpi_rank==0) printf("SetDT:  masTime[%03d]: %8.2e\n",idx-1,masTime[idx-1]);
-      if(mpi_rank==0) printf("SetDT:  masTime[%03d]: %8.2e\n",idx,masTime[idx]);
-      if(mpi_rank==0) printf("SetDT:  |t-mas[idx-1]|: %8.2e\n",fabs(t_global - masTime[idx-1]));
-      if(mpi_rank==0) printf("SetDT:  |t-mas[idx]|: %8.2e\n",fabs(t_global - masTime[idx]));*/
-
-      if ((idx == config.masNumFiles-1) ||
-          (fabs(t_global - masTime[idx-1]) < fabs(t_global - masTime[idx]))){
-        idx=idx-1;
-      }
-     //  if(mpi_rank==0) printf("SetDT:  revised idx: %d\n",idx);
-
-     // if(mpi_rank==0) printf("SetDT:   masTime[%03d]: %8.2e  masTime[%03d]: %8.2e \n",idx,masTime[idx],idx+1,masTime[idx+1]);
-      config.tDel = masTime[idx+1] - masTime[idx];
-     // if(mpi_rank==0) printf("SetDT:   DT:  %8.2e\n",config.tDel);
-    }
-//
-// If helio is active, and we are past the coronal times, update the DT.
-//
-    if ((config.masHelCouple > 0) && (t_global > masTime[config.masNumFiles-1])) {
-
-      if (t_global <= masHelTime[0]){
-        //NOTE:  This should NEVER happen since we require masTime[0]==masHelTime[0].
-        if (config.useMasSteadyStateDt > 0){
-          config.tDel = (masHelTime[1] - masHelTime[0]);
-        }
-      } else if (t_global >= masHelTime[config.masHelNumFiles-1]){
-          config.tDel = (masHelTime[config.masHelNumFiles-1]
-      	               - masHelTime[config.masHelNumFiles-2]);
-      } else {
-//
-// Find the time index in masHelTimes to the right or equal to current t_global time.
-//
-        for (i=1; i<config.masHelNumFiles; i++){
-          if (masHelTime[i] >= t_global ){
-             idx = i;
-             break;
-          }
-        }
-
-        // Special case is when corona ends in the middle of a helio step.
-        // Want to find helio indices surrounding the time, compute the dt
-        // needed to get to the next helio step in masTimesHel,
-        // and then after taking that step, continue as normal.
-        // This way the DT and hel times are synced.
-
-        if (sync_hel == 0){
-         sync_hel = 1;
-         if (masHelTime[idx] != t_global){
-           config.tDel = (masHelTime[idx] - t_global);
-           return;
-         }
-        }
-//
-//  Find the closest time index in masHelTimes to the current t_global time.
-//  Then set the time step to be the next step in masHelTimes.
-//
-        if ((idx == config.masHelNumFiles-1) ||
-            (abs(t_global - masHelTime[idx-1]) < abs(t_global - masHelTime[idx]))){
-         idx=idx-1;
-        }
-
-        config.tDel = masHelTime[idx+1] - masHelTime[idx];
-
-      }
-    } // if(helio)
-  } // if(masCoupleTime)
-
-}
-/*------------------ END  setDt ( ) ---------------------------------*/
 /*-----------------------------------------------------------------------*/

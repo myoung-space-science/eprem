@@ -26,9 +26,6 @@
 #include "flow.h"
 #include "simCore.h"
 #include "geometry.h"
-#include "readMAS.h"
-#include "masInterp.h"
-
 
 /*-----------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------*/
@@ -65,18 +62,6 @@
           grid[idx].mhdVsphOld.phi   = grid[idx].mhdVphi;
           grid[idx].dsOld            = grid[idx].ds;
           grid[idx].rOlder           = grid[idx].r;
-
-          // Check for coupling to MAS
-          if (mhdGridStatus == MHD_MAS) {
-
-            // Get spherical position.  
-            radpos = cartToSphPosAu(grid[idx].r);
-
-            // Interpolate MAS MHD values to current position at time=tGlobal+dt.
-            // NOTE: This does NOT set values in grid, only in temp global masNode.
-            masGetNode(radpos, grid[idx]);
-
-          }
 
           // Check to see if node is in ideal shock domain
           idealShockNode = 0;
@@ -176,12 +161,6 @@
     delR.y   = dt * node.mhdVvec.y / config.rScale ;
     delR.z   = dt * node.mhdVvec.z / config.rScale ;
 
-  } else if (mhdGridStatus == MHD_MAS) {
-
-    delR.x   = dt * node.mhdVvec.x / config.rScale ;
-    delR.y   = dt * node.mhdVvec.y / config.rScale ;
-    delR.z   = dt * node.mhdVvec.z / config.rScale ;
-
   } else {
 
     scale = ( config.mhdUs / ( rmag * config.rScale ) );
@@ -221,11 +200,6 @@
       div *= idealShockFactor(rmag * config.rScale);
 
   }
-  else if (mhdGridStatus == MHD_MAS) {
-    V = masNode.mhdV;;
-    mhdUs=sqrt(V.r*V.r+V.theta*V.theta+V.phi*V.phi);
-    div = 2.0 * mhdUs/ ( rmag * config.rScale );
-  }
   else {
     div = 2.0 * config.mhdUs / ( rmag * config.rScale );
   }
@@ -257,11 +231,6 @@
     // ideal shock test
     if ( (config.idealShock > 0) && (idealShockNode > 0) )
       dens *= idealShockFactor(rr);
-
-  }
-  else if (mhdGridStatus == MHD_MAS) {
-
-    dens = masNode.mhdD;
 
   }
   else {
@@ -315,12 +284,6 @@
     }
 
   }
-  else if (mhdGridStatus == MHD_MAS) {
-    B = masNode.mhdB;
-    *Br = B.r;
-    *Btheta = B.theta;
-		*Bphi = B.phi;
-  }
 
   *Bmag = sqrt( (*Br) * (*Br) + (*Btheta) * (*Btheta) + (*Bphi) * (*Bphi) );
 
@@ -369,11 +332,6 @@
 
     *Vphi = 0.0;
 
-  } else if (mhdGridStatus == MHD_MAS) {
-    V = masNode.mhdV;
-    *Vr = V.r;
-    *Vtheta = V.theta;
-    *Vphi = V.phi;
   }
 
   *Vmag = sqrt( (*Vr) * (*Vr) + (*Vtheta) * (*Vtheta) + (*Vphi) * (*Vphi) );
@@ -408,18 +366,7 @@
 /*-----------------------------------------------------------------------*/
 {
 
-	if (mhdGridStatus == MHD_MAS)
-	{
-
-		*curl = masNode.curlBoverB2;
-
-	}
-	else
-	{
-
-    *curl = curlBoverB2(r, Vr, idealShockNode);
-
-	}
+  *curl = curlBoverB2(r, Vr, idealShockNode);
 
 }
 /*---------------- END  mhdV ( ) ----------------------------------------*/

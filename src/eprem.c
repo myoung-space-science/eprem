@@ -252,8 +252,6 @@
 #include "energeticParticlesInit.h"
 #include "energeticParticles.h"
 #include "cubeShellInit.h"
-#include "readMAS.h"
-#include "masInterp.h"
 #include "searchTypes.h"
 #include "unifiedOutput.h"
 #include "observerOutput.h"
@@ -268,7 +266,6 @@ double timer_adiabaticchange=0;
 double timer_diffuseshell=0;
 double timer_driftshell=0;
 double timer_eptotal=0;
-double timer_mas_io=0;
 double timer_eprem_io=0;
 double timer_init=0;
 double timer_other=0;
@@ -312,12 +309,6 @@ int main(int argc, char *argv[]) {
   // Initialize flags
   flagParamInit();
 
-  // Get the MAS coupling info and file lists
-  if (config.masCouple > 0){
-    masFetchCouplingInfo();
-    masFetchFileList();
-  }
-
   // Initialize time variables
   timeInitialization();
 
@@ -331,7 +322,6 @@ int main(int argc, char *argv[]) {
   initEnergeticParticlesGrids();
 
  // Initialize MHD.
-  if (config.masCouple > 0) masGetInterpData(0.0);
   updateMhd( config.tDel );
 
   // Initialize the cube / shell structure
@@ -415,12 +405,6 @@ int main(int argc, char *argv[]) {
       }
     }
 
-    //
-    // Set the time step.
-    //
-
-    setDt();
-
     // -------------------------------------------------------------------------
     // -------------------------------------------------------------------------
     // ------ DISPLAY CURRENT TIME INFO TO SCREEN. -----------------------------
@@ -430,20 +414,6 @@ int main(int argc, char *argv[]) {
     if (mpi_rank == 0){ 
       printf("Step: %06d  TIME: %14.8e  [JD %9.5f]  DTIME: %14.8e  [JD %7.5f]\n", 
              rciter, t_global, t_global*DAY, config.tDel, config.tDel*DAY);
-    }
-
-    // -------------------------------------------------------------------------    
-    // -------------------------------------------------------------------------
-    // ------------------- After seeding nodes, reset phi offsets and 
-    // ------------------- rotate nodes back in phi.
-    // -------------------------------------------------------------------------
-    // -------------------------------------------------------------------------
-    
-    if ((config.masRotateSolution > 0) && (config.masCouple > 0) && (simStarted > 0) && (unwindPhiOffset == 0)) {
-
-      unwindPhiOffset = 1;
-      resetDomainOffset();
-
     }
 
     // -------------------------------------------------------------------------    
@@ -470,26 +440,13 @@ int main(int argc, char *argv[]) {
       
     // Rotate the node seed positions and ripple the shells out
     rotSunAndSpawnShell( config.tDel );
-      
-    if (config.masCouple > 0)
-      masMoveNodes( config.tDel );
-    else
-      moveNodes( config.tDel );
-
-    // Phi-shift nodes in co-rotating coronal frame 
-    // (equivalent to converting corotating frame to inertial with a +Vphi?)
-    // During node seeding, this also phi-shifts nodes in helio-coupled domain.
-    if ( (config.masRotateSolution > 0) && (config.masCouple > 0) )
-      rotateCoupledDomain( config.tDel );
+    moveNodes( config.tDel );
 
     // -------------------------------------------------------------------------    
     // -------------------------------------------------------------------------
     // --------- UPDATE MHD FOR TIME+DT AND SAVE CURRENT MHD TO MHD-OLD --------
     // -------------------------------------------------------------------------    
     // -------------------------------------------------------------------------
-    
-    // Load MAS data from files needed to get MHD quantities at time=time+dt. 
-    if (config.masCouple > 0) masGetInterpData( config.tDel );
 
     // NOTE:  updateMhd only uses tDel for computing div-V and it is never used.
     updateMhd( config.tDel );
