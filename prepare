@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+
+rm aclocal.m4 2>/dev/null
+autoheader
+aclocal
+autoconf
+automake --foreign -a
