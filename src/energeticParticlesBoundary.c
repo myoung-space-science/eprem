@@ -118,11 +118,11 @@
   Scalar_t rScale = config.rScale;
 
   normJ0 = J0 * (MP * C) / (MHD_DENSITY_NORM * MEV);
-  normRadius = r / r1;
+  normRadius = r1 / config.rScale;
   normE1 = E1 * MEV / (MP * C * C);
   normE0 = E0 * MEV / (MP * C * C);
 
-  radialTerm = pow( (one / (rScale * normRadius)), beta );
+  radialTerm = pow( (r / normRadius), -beta );
   powerLawTerm = pow( (energy / normE1), -gamma);
   expTerm = exp( -(energy / normE0) );
 

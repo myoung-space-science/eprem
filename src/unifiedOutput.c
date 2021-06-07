@@ -42,16 +42,13 @@ Index_t** computeLines;
 
 char** outputLineNamesNetCDF;
 char pointObsName[MAX_STRING_SIZE];
-char** fluxNamesNetCDF;
 
 Index_t observerTimeSlice;
 Index_t pointObserverTimeSlice;
-Index_t fluxTimeSlice;
 Index_t domainTimeSlice;
 Index_t unstructuredDomainTimeSlice;
 Index_t unifiedOutputInit;
 Index_t pointObserverOutputInit;
-Index_t fluxOutputInit;
 Index_t domainDumpInit;
 Index_t unstructuredDomainInit;
 
@@ -110,16 +107,18 @@ Index_t strideSize = sizeof(Node_t) / sizeof(double);
 
   // allocate memory for the output names
   outputLineNamesNetCDF=(char **)malloc(sizeof(char*)*NUM_STREAMS);
-  fluxNamesNetCDF=(char **)malloc(sizeof(char*)*NUM_STREAMS);
   for(i=0;i<NUM_STREAMS;i++){
     outputLineNamesNetCDF[i]=(char *)malloc(sizeof(char)*MAX_STRING_SIZE);
-    fluxNamesNetCDF[i]=(char *)malloc(sizeof(char*)*MAX_STRING_SIZE);
   }
 
-  for (stream = 0; stream < NUM_STREAMS; stream++)
-  {
-    sprintf(outputLineNamesNetCDF[stream], "obs%06d.nc", stream);
-    sprintf(fluxNamesNetCDF[stream], "flux%06d.nc", stream);
+  if (config.streamFluxOutput == 1) {
+    for (stream = 0; stream < NUM_STREAMS; stream++) {
+      sprintf(outputLineNamesNetCDF[stream], "flux%06d.nc", stream);
+    }
+  } else {
+    for (stream = 0; stream < NUM_STREAMS; stream++) {
+      sprintf(outputLineNamesNetCDF[stream], "obs%06d.nc", stream);
+    }
   }
 
   if (mpi_rank == 0) {
@@ -146,6 +145,41 @@ Index_t strideSize = sizeof(Node_t) / sizeof(double);
 /*------------------------------------------------------------------*/
 
 
+/*------------------------------------------------------------------*/
+/*------------------------------------------------------------------*/
+/*------------------------------------------------------------------*/
+/*--*/     void                                                 /*--*/
+/*--*/     computeFlux(Scalar_t *streamFlux)                    /*--*/
+/*--                                                              --*/
+/*------------------------------------------------------------------*/
+{/*-----------------------------------------------------------------*/
+
+  Index_t shell, species, energy, mu;
+  const double two = 2.0;
+  Scalar_t isoDist;
+
+  for (shell = 0; shell < TOTAL_NUM_SHELLS; shell++) {
+    for (species = 0; species < NUM_SPECIES; species++) {
+      for (energy = 0; energy < NUM_ESTEPS; energy++) {
+
+        // Average distribution over all pitch angles
+        isoDist = 0.0;
+        for (mu = 0; mu < NUM_MUSTEPS; mu++) {
+          isoDist += ePartsStream[idx_sspem(shell, species, energy, mu)];
+        }
+        isoDist /= NUM_MUSTEPS;
+
+        // Result: flux = 2 * energy * distribution (all normalized)
+        streamFlux[idx_sspe(shell, species, energy)] = two * egrid[idx_se(species, energy)] * isoDist;
+
+      }
+    }
+  }
+
+}/*--------------------- END computeFlux( ) ------------------------*/
+/*------------------------------------------------------------------*/
+
+
 
 // netCDF variables for observer output
 int err;
@@ -153,6 +187,7 @@ int ncid;
 
 int fieldDims[2];
 int gridDims[2];
+int fluxDims[4];
 int distDims[5];
 
 int timeObs_dimid, shellObs_dimid, speciesObs_dimid, energyObs_dimid, muObs_dimid;
@@ -166,6 +201,7 @@ int * rObs_varid, * tObs_varid, * pObs_varid;
 int * brObs_varid, * btObs_varid, * bpObs_varid;
 int * vrObs_varid, * vtObs_varid, * vpObs_varid;
 int * rhoObs_varid;
+int * fluxObs_varid;
 int * distObs_varid;
 
 
@@ -201,6 +237,7 @@ int * distObs_varid;
   vtObs_varid =     (int *) malloc(sizeof(int) * NUM_STREAMS);
   vpObs_varid =     (int *) malloc(sizeof(int) * NUM_STREAMS);
   rhoObs_varid =    (int *) malloc(sizeof(int) * NUM_STREAMS);
+  fluxObs_varid =   (int *) malloc(sizeof(int) * NUM_STREAMS);
   distObs_varid =   (int *) malloc(sizeof(int) * NUM_STREAMS);
 
   preEruptionObs_varid = (int *) malloc(sizeof(int) * NUM_STREAMS);
@@ -267,6 +304,11 @@ int * distObs_varid;
         gridDims[0] =  speciesObs_dimid;
         gridDims[1] =  energyObs_dimid;
 
+        fluxDims[0] = timeObs_dimid;
+        fluxDims[1] = shellObs_dimid;
+        fluxDims[2] = speciesObs_dimid;
+        fluxDims[3] = energyObs_dimid;
+
         distDims[0] =  timeObs_dimid;
         distDims[1] =  shellObs_dimid;
         distDims[2] =  speciesObs_dimid;
@@ -278,7 +320,7 @@ int * distObs_varid;
         err = nc_def_var(ncid, "vgrid", nc_precision, 2, gridDims, &vgridObs_varid[observerIndex]);
 
         // units and scale for static 2D variables
-        tempScale = MP*C*C / MEV;
+        tempScale = MP*C*C / MEV; // This needs atomic number!
         err = nc_put_att_text(ncid, egridObs_varid[observerIndex], "units", strlen("MeV"),  "MeV");
         err = nc_put_att_double(ncid, egridObs_varid[observerIndex], "scale_factor", nc_precision, 1, &tempScale);
 
@@ -297,7 +339,11 @@ int * distObs_varid;
         err = nc_def_var(ncid, "Vt",   nc_precision, 2, fieldDims, &vtObs_varid[observerIndex]);
         err = nc_def_var(ncid, "Vp",   nc_precision, 2, fieldDims, &vpObs_varid[observerIndex]);
         err = nc_def_var(ncid, "Rho",  nc_precision, 2, fieldDims, &rhoObs_varid[observerIndex]);
-        err = nc_def_var(ncid, "Dist", nc_precision, 5, distDims,  &distObs_varid[observerIndex]);
+        if (config.streamFluxOutput == 1) {
+          err = nc_def_var(ncid, "flux", nc_precision, 4, fluxDims,  &fluxObs_varid[observerIndex]);
+        } else {
+          err = nc_def_var(ncid, "Dist", nc_precision, 5, distDims,  &distObs_varid[observerIndex]);
+        }
 
         // units and scale for dynamic 2D+ variables
         tempScale = config.rScale;
@@ -327,9 +373,15 @@ int * distObs_varid;
         err = nc_put_att_text(ncid, rhoObs_varid[observerIndex], "units", strlen("cm^-3"), "cm^-3");
         err = nc_put_att_double(ncid, rhoObs_varid[observerIndex], "scale_factor", nc_precision, 1, &tempScale);
 
-        tempScale = 1.0 / 27.0;
-        err = nc_put_att_text(ncid, distObs_varid[observerIndex], "units", strlen("s^3/km^6"), "s^3/km^6");
-        err = nc_put_att_double(ncid, distObs_varid[observerIndex], "scale_factor", nc_precision, 1, &tempScale);
+        if (config.streamFluxOutput == 1) {
+          tempScale = ((MHD_DENSITY_NORM * C) / (MP * C * C)) * MEV;
+          err = nc_put_att_text(ncid, fluxObs_varid[observerIndex], "units", strlen("# / cm^2 s sr MeV"), "# / cm^2 s sr MeV");
+          err = nc_put_att_double(ncid, fluxObs_varid[observerIndex], "scale_factor", nc_precision, 1, &tempScale);
+        } else {
+          tempScale = 1.0 / 27.0;
+          err = nc_put_att_text(ncid, distObs_varid[observerIndex], "units", strlen("s^3/km^6"), "s^3/km^6");
+          err = nc_put_att_double(ncid, distObs_varid[observerIndex], "scale_factor", nc_precision, 1, &tempScale);
+        }
 
         // definitions are finished
         err = nc_enddef(ncid);
@@ -361,7 +413,11 @@ int * distObs_varid;
         err = nc_inq_varid(ncid, "Vt",     &vtObs_varid[observerIndex]);
         err = nc_inq_varid(ncid, "Vp",     &vpObs_varid[observerIndex]);
         err = nc_inq_varid(ncid, "Rho",    &rhoObs_varid[observerIndex]);
-        err = nc_inq_varid(ncid, "Dist",   &distObs_varid[observerIndex]);
+        if (config.streamFluxOutput == 1) {
+          err = nc_inq_varid(ncid, "flux",   &fluxObs_varid[observerIndex]);
+        } else {
+          err = nc_inq_varid(ncid, "Dist",   &distObs_varid[observerIndex]);
+        }
 
       }
 
@@ -394,6 +450,7 @@ int * distObs_varid;
   size_t startTime[1]  = {0};
   size_t start1D[1]    = {0};
   size_t start2D[2]    = {0,0};
+  size_t start4D[4]    = {0,0,0,0};
   size_t start5D[5]    = {0,0,0,0,0};
 
   size_t countMu[1]            = {NUM_MUSTEPS};
@@ -405,11 +462,16 @@ int * distObs_varid;
   ptrdiff_t strideTimeShell[2] = {1, 1};
   ptrdiff_t mapTimeShell[2]    = {0, strideSize};
 
+  size_t countTimeShellSpeciesEnergy[4]       = {1, TOTAL_NUM_SHELLS, NUM_SPECIES, NUM_ESTEPS};
   size_t countTimeShellSpeciesEnergyMu[5]     = {1, TOTAL_NUM_SHELLS, NUM_SPECIES, NUM_ESTEPS, NUM_MUSTEPS};
+
+  Scalar_t *streamFlux;
+  Index_t NUM_FLUX_POINTS = TOTAL_NUM_SHELLS * NUM_SPECIES * NUM_ESTEPS;
+
+  streamFlux = (Scalar_t *)malloc(NUM_FLUX_POINTS*sizeof(Scalar_t));
 
   int* shellStream;
   shellStream = (int *) malloc(sizeof(int)*TOTAL_NUM_SHELLS);
-
 
   if (observerTimeSlice == 0)
     for (shell = 0; shell < TOTAL_NUM_SHELLS; shell++)
@@ -466,8 +528,14 @@ int * distObs_varid;
       err = nc_put_varm_double (ncid, vpObs_varid[observerIndex],  start2D, countTimeShell, strideTimeShell, mapTimeShell, &streamGrid[0].mhdVphi);
       err = nc_put_varm_double (ncid, rhoObs_varid[observerIndex], start2D, countTimeShell, strideTimeShell, mapTimeShell, &streamGrid[0].mhdDensity);
 
-      start5D[0] = observerTimeSlice;
-      err = nc_put_vara_double (ncid, distObs_varid[observerIndex], start5D, countTimeShellSpeciesEnergyMu, &ePartsStream[0]);
+      if (config.streamFluxOutput == 1) {
+        computeFlux(streamFlux);
+        start4D[0] = observerTimeSlice;
+        err = nc_put_vara_double (ncid, fluxObs_varid[observerIndex], start4D, countTimeShellSpeciesEnergy, &streamFlux[0]);
+      } else {
+        start5D[0] = observerTimeSlice;
+        err = nc_put_vara_double (ncid, distObs_varid[observerIndex], start5D, countTimeShellSpeciesEnergyMu, &ePartsStream[0]);
+      }
 
       err = nc_close(ncid);
 
@@ -479,8 +547,6 @@ int * distObs_varid;
 
 }/*--------- END writeObserverDataNetCDF( ) -------------------------*/
 /*-------------------------------------------------------------------*/
-
-
 
 
 // netCDF variables for point observer output
@@ -901,237 +967,6 @@ int * po_distObs_varid;
   free(tempDist);
 
 }/*--------- END writePointObserverDataNetCDF( ) --------------------*/
-/*-------------------------------------------------------------------*/
-
-// netCDF variables for flux output
-int flux_fieldDims[2];
-int flux_gridDims[2];
-int flux_distDims[4];
-
-int flux_timeObs_dimid, flux_shellObs_dimid, flux_speciesObs_dimid, flux_energyObs_dimid, flux_muObs_dimid;
-
-int *flux_timeObs_varid, *flux_egridObs_varid;
-int *flux_rObs_varid, *flux_tObs_varid, *flux_pObs_varid;
-int *flux_jObs_varid, *flux_iObs_varid;
-
-/*------------------------------------------------------------------*/
-/*------------------------------------------------------------------*/
-/*------------------------------------------------------------------*/
-/*--*/     void                                                 /*--*/
-/*--*/     initFluxDataNetCDF(void)                             /*--*/
-/*--                                                              --*/
-/*------------------------------------------------------------------*/
-{/*-----------------------------------------------------------------*/
-
-
-  Index_t numIters = NUM_STREAMS / N_PROCS;
-
-  Index_t fluxStreamIndex, iterIndex;
-  Scalar_t tempScale;
-
-  flux_timeObs_varid =   (int *) malloc(sizeof(int) * NUM_STREAMS);
-  flux_egridObs_varid =  (int *) malloc(sizeof(int) * NUM_STREAMS);
-  flux_rObs_varid =      (int *) malloc(sizeof(int) * NUM_STREAMS);
-  flux_tObs_varid =      (int *) malloc(sizeof(int) * NUM_STREAMS);
-  flux_pObs_varid =      (int *) malloc(sizeof(int) * NUM_STREAMS);
-  flux_jObs_varid =      (int *) malloc(sizeof(int) * NUM_STREAMS);
-  flux_iObs_varid =      (int *) malloc(sizeof(int) * NUM_STREAMS);
-
-  // set the output precision
-  if (config.outputFloat > 0)
-    nc_precision = NC_FLOAT;
-  else
-    nc_precision = NC_DOUBLE;
-
-  for (iterIndex = 0; iterIndex <= numIters; iterIndex++) {
-
-    fluxStreamIndex = mpi_rank + N_PROCS * iterIndex;
-
-    if (fluxStreamIndex < NUM_STREAMS) {
-
-      if (fluxOutputInit == 0)
-      {
-        // create the netCDF file
-        err = nc_create(fluxNamesNetCDF[fluxStreamIndex], NC_CLOBBER, &ncid);
-
-        // dimension definitions
-        err = nc_def_dim(ncid, "time",    NC_UNLIMITED,            &flux_timeObs_dimid);
-        err = nc_def_dim(ncid, "shell",   TOTAL_NUM_SHELLS,        &flux_shellObs_dimid);
-        err = nc_def_dim(ncid, "species", NUM_SPECIES,             &flux_speciesObs_dimid);
-        err = nc_def_dim(ncid, "energy",  NUM_ESTEPS,              &flux_energyObs_dimid);
-
-        // 1D static variables
-        err = nc_def_var(ncid, "time",    nc_precision, 1, &flux_timeObs_dimid, &flux_timeObs_varid[fluxStreamIndex]);
-
-        // units and scale for 1D static variables
-        tempScale = DAY;
-        err = nc_put_att_text(ncid, flux_timeObs_varid[fluxStreamIndex], "units", strlen("julian date"), "julian date");
-        err = nc_put_att_double(ncid, flux_timeObs_varid[fluxStreamIndex], "scale_factor", nc_precision, 1, &tempScale);
-
-        // dimension arrays for 2D+ variables
-        flux_fieldDims[0] = flux_timeObs_dimid;
-        flux_fieldDims[1] = flux_shellObs_dimid;
-
-        flux_gridDims[0] =  flux_speciesObs_dimid;
-        flux_gridDims[1] =  flux_energyObs_dimid;
-
-        flux_distDims[0] =  flux_timeObs_dimid;
-        flux_distDims[1] =  flux_shellObs_dimid;
-        flux_distDims[2] =  flux_speciesObs_dimid;
-        flux_distDims[3] =  flux_energyObs_dimid;
-
-        // static 2D variables
-        err = nc_def_var(ncid, "egrid", nc_precision, 2, flux_gridDims, &flux_egridObs_varid[fluxStreamIndex]);
-
-        // units and scale for static 2D variables
-        tempScale = MP * C * C / MEV;
-        err = nc_put_att_text(ncid, flux_egridObs_varid[fluxStreamIndex], "units", strlen("MeV"), "Mev");
-        err = nc_put_att_double(ncid, flux_egridObs_varid[fluxStreamIndex], "scale_factor", nc_precision, 1, &tempScale);
-
-        // dynamic 2D+ variables
-        err = nc_def_var(ncid, "R",    nc_precision, 2, flux_fieldDims, &flux_rObs_varid[fluxStreamIndex]);
-        err = nc_def_var(ncid, "T",    nc_precision, 2, flux_fieldDims, &flux_tObs_varid[fluxStreamIndex]);
-        err = nc_def_var(ncid, "P",    nc_precision, 2, flux_fieldDims, &flux_pObs_varid[fluxStreamIndex]);
-        err = nc_def_var(ncid, "flux", nc_precision, 4, flux_distDims,  &flux_jObs_varid[fluxStreamIndex]);
-
-        // units and scale for dynamical 2D+ variables
-        tempScale = config.rScale;
-        err = nc_put_att_text(ncid, flux_rObs_varid[fluxStreamIndex], "units", strlen("au"), "au");
-        err = nc_put_att_double(ncid, flux_rObs_varid[fluxStreamIndex], "scale_factor", nc_precision, 1, &tempScale);
-        err = nc_put_att_text(ncid, flux_tObs_varid[fluxStreamIndex], "units", strlen("radian"), "radian");
-        err = nc_put_att_text(ncid, flux_pObs_varid[fluxStreamIndex], "units", strlen("radian"), "radian");
-        err = nc_put_att_text(ncid, flux_jObs_varid[fluxStreamIndex], "units", strlen("# / cm^2 s sr MeV"), "# / cm^2 s sr MeV");
-        tempScale = ((MHD_DENSITY_NORM * C) / (MP * C * C)) * MEV;
-        err = nc_put_att_double(ncid, flux_jObs_varid[fluxStreamIndex], "scale_factor", nc_precision, 1, &tempScale);
-
-        // definitions are finished
-        err = nc_enddef(ncid);
-      }
-      else
-      {
-        // open netCDF file
-        sprintf(fluxNamesNetCDF[fluxStreamIndex], NC_WRITE, &ncid);
-
-        // read variable ids
-        err = nc_inq_varid(ncid, "time",  &flux_timeObs_varid[fluxStreamIndex]);
-        err = nc_inq_varid(ncid, "egrid", &flux_egridObs_varid[fluxStreamIndex]);
-        err = nc_inq_varid(ncid, "R",     &flux_rObs_varid[fluxStreamIndex]);
-        err = nc_inq_varid(ncid, "T",     &flux_tObs_varid[fluxStreamIndex]);
-        err = nc_inq_varid(ncid, "P",     &flux_pObs_varid[fluxStreamIndex]);
-        err = nc_inq_varid(ncid, "flux",  &flux_jObs_varid[fluxStreamIndex]);
-      }
-
-      // close the file
-      err = nc_close(ncid);
-
-    }
-
-  }
-
-  fluxOutputInit = 1;
-
-}/*--------- END initFluxDataNetCDF( ) -----------------------------*/
-/*------------------------------------------------------------------*/
-
-
-
-/*------------------------------------------------------------------*/
-/*------------------------------------------------------------------*/
-/*------------------------------------------------------------------*/
-/*--*/     void                                                 /*--*/
-/*--*/     writeFluxDataNetCDF(void)                            /*--*/
-/*--                                                              --*/
-/*------------------------------------------------------------------*/
-{/*-----------------------------------------------------------------*/
-
-  Index_t fluxStreamIndex, shell, species, energy, mu;
-  Index_t numIters = NUM_STREAMS / N_PROCS;
-  Index_t iterIndex;
-
-  size_t startTime[1] = {0};
-  size_t start2D[2]   = {0,0};
-  size_t start4D[4]   = {0,0,0,0};
-
-  size_t countSpeciesEnergy[2] = {NUM_SPECIES, NUM_ESTEPS};
-
-  size_t countTimeShell[2]     = {1, TOTAL_NUM_SHELLS};
-  ptrdiff_t strideTimeShell[2] = {1, 1};
-  ptrdiff_t mapTimeShell[2]    = {0, strideSize};
-
-  Scalar_t *streamFlux;
-  Scalar_t isoDist;
-  const double two = 2.0;
-  Index_t NUM_FLUX_POINTS = TOTAL_NUM_SHELLS * NUM_SPECIES * NUM_ESTEPS;
-
-  size_t countTimeShellSpeciesEnergy[4] = {1, TOTAL_NUM_SHELLS, NUM_SPECIES, NUM_ESTEPS};
-
-  // compute flux
-  streamFlux = (Scalar_t *)malloc(NUM_FLUX_POINTS*sizeof(Scalar_t));
-
-  for (shell = 0; shell < TOTAL_NUM_SHELLS; shell++) {
-    for (species = 0; species < NUM_SPECIES; species++) {
-      for (energy = 0; energy < NUM_ESTEPS; energy++) {
-
-        // average distribution over all pitch angles
-        isoDist = 0.0;
-        for (mu = 0; mu < NUM_MUSTEPS; mu++) {
-          isoDist += ePartsStream[idx_sspem(shell, species, energy, mu)];
-        }
-        isoDist /= NUM_MUSTEPS;
-
-        // flux = 2 * energy * distribution (all normalized)
-        streamFlux[idx_sspe(shell, species, energy)] = two * egrid[idx_se(species, energy)] * isoDist;
-
-      }
-    }
-  }
-
-  for (iterIndex = 0; iterIndex <= numIters; iterIndex++) {
-
-    update_stream_from_shells(iterIndex);
-    fluxStreamIndex = mpi_rank + N_PROCS * iterIndex;
-
-    if (fluxStreamIndex < NUM_STREAMS) {
-
-      err = nc_open(fluxNamesNetCDF[fluxStreamIndex], NC_WRITE, &ncid);
-
-      if (fluxTimeSlice == 0) {
-
-        err = nc_put_vara_double(ncid, flux_egridObs_varid[fluxStreamIndex], start2D, countSpeciesEnergy, &egrid[0]);
-
-      }
-
-      // set the angles before writing to the cdf file
-      for (shell = 0; shell < TOTAL_NUM_SHELLS; shell++) {
-
-        streamGrid[shell].zen = acos(streamGrid[shell].r.z / streamGrid[shell].rmag);
-        streamGrid[shell].azi = atan2(streamGrid[shell].r.y, streamGrid[shell].r.z);
-
-        if (streamGrid[shell].azi < 0.0) streamGrid[shell].azi += 2.0 * PI;
-        if (streamGrid[shell].azi > (2.0 * PI)) streamGrid[shell].azi -= 2.0 * PI;
-
-      }
-
-      startTime[0] = fluxTimeSlice;
-      err = nc_put_var1_double(ncid, flux_timeObs_varid[fluxStreamIndex], startTime, &t_global);
-
-      start2D[0] = fluxTimeSlice;
-      err = nc_put_varm_double(ncid, flux_rObs_varid[fluxStreamIndex], start2D, countTimeShell, strideTimeShell, mapTimeShell, &streamGrid[0].rmag);
-      err = nc_put_varm_double(ncid, flux_tObs_varid[fluxStreamIndex], start2D, countTimeShell, strideTimeShell, mapTimeShell, &streamGrid[0].zen);
-      err = nc_put_varm_double(ncid, flux_pObs_varid[fluxStreamIndex], start2D, countTimeShell, strideTimeShell, mapTimeShell, &streamGrid[0].azi);
-
-      start4D[0] = fluxTimeSlice;
-      err = nc_put_vara_double(ncid, flux_jObs_varid[fluxStreamIndex], start4D, countTimeShellSpeciesEnergy, &streamFlux[0]);
-
-      err = nc_close(ncid);
-
-    }
-
-  }
-
-  free(streamFlux);
-
-}/*--------- END writeFluxDataNetCDF( ) -------------------------*/
 /*-------------------------------------------------------------------*/
 
 
@@ -1655,14 +1490,6 @@ int unstructuredDims2D[2];
         writePointObserverDataNetCDF();
         pointObserverTimeSlice++;
         if (mpi_rank==0) printf("  --> IO: Wrote point observer data to file.\n");
-      }
-
-      // pre-computed flux output
-      if ( (config.streamFluxOutput > 0) && (t_global*DAY >= config.streamFluxOutputTime) )
-      {
-        writeFluxDataNetCDF();
-        fluxTimeSlice++;
-        if (mpi_rank == 0) printf(" --> IO: Wrote flux to file.\n");
       }
 
       // domain output

@@ -95,7 +95,6 @@ Index_t sync_hel=0;
 
   observerTimeSlice = 0;
   pointObserverTimeSlice = 0;
-  fluxTimeSlice = 0;
   domainTimeSlice = 0;
   unstructuredDomainTimeSlice = 0;
 
