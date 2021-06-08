@@ -47,6 +47,15 @@ class Logger:
         return False
 
 
+class BuildError(Exception):
+    """There was an error while building EPREM."""
+    def __init__(self, stage: str) -> None:
+        self.stage = stage
+
+    def __str__(self) -> str:
+        return f"Build failed during '{self.stage}'"
+
+
 class EPREMBuilder:
     """A class to manage EPREM building commands."""
     def __init__(
@@ -108,10 +117,6 @@ class EPREMBuilder:
         success = exe.stat().st_ctime > reffile.stat().st_ctime
         reffile.unlink()
         return success
-
-
-class BuildError(Exception):
-    """There was an error while building EPREM."""
 
 
 def execute(
