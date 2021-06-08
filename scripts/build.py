@@ -36,6 +36,16 @@ class Logger:
         """True if the logger is currently logging."""
         return self._logging
 
+    def __enter__(self) -> 'Logger':
+        """Enter a logging context."""
+        self.start
+        return self
+
+    def __exit__(self) -> bool:
+        """Exit the current logging context."""
+        self.stop
+        return False
+
 
 class EPREMBuilder:
     """A class to manage EPREM building commands."""
