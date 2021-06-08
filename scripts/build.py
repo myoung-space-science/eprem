@@ -95,8 +95,8 @@ class EPREMBuilder:
         except subprocess.CalledProcessError:
             return False
 
-    def build(self) -> bool:
-        """Build the source code."""
+    def make(self) -> bool:
+        """Create an executable from the source code."""
         reffile = Path().cwd() / '.buildref'
         reffile.touch()
         src = self._build / 'src'
@@ -149,7 +149,7 @@ def main(
         "Configuring EPREM",
         ['config', 'hdf4', 'netcdf'],
     )
-    execute(eprem.build, logger, "Building EPREM")
+    execute(eprem.make, logger, "Building EPREM")
     if logger:
         logger.stop
 
