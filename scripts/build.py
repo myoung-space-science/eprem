@@ -143,19 +143,16 @@ class EPREMBuilder:
         except IndexError:
             raise StopIteration
 
-    def _run(self, *args, **kwargs) -> str:
+    def _run(self, *args, **kwargs) -> subprocess.CompletedProcess:
         """Run a process and capture output."""
         kwargs.update(stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         return subprocess.run(*args, **kwargs)
 
     def _prepare(self) -> bool:
         """Prepare the dependencies."""
-        try:
-            result = self._run('./prepare', cwd=self._build)
-            self._logger.log(result)
-            return True
-        except subprocess.CalledProcessError:
-            return False
+        result = self._run('./prepare', cwd=self._build)
+        self._logger.log(result)
+        return result.returncode == 0
 
     def _configure(self) -> bool:
         """Configure the dependencies."""
@@ -166,12 +163,9 @@ class EPREMBuilder:
             args.append(f"--with-hdf4={self._ext_deps / 'hdf4'}")
         if 'netcdf' in self._deps:
             args.append(f"--with-netcdf={self._ext_deps / 'netcdf'}")
-        try:
-            result = self._run(args, cwd=self._build)
-            self._logger.log(result)
-            return True
-        except subprocess.CalledProcessError:
-            return False
+        result = self._run(args, cwd=self._build)
+        self._logger.log(result)
+        return result.returncode == 0
 
     def _make(self) -> bool:
         """Create an executable from the source code."""
@@ -206,7 +200,7 @@ class BuildRunner:
                     self._status_logger.log("Succeeded")
                 else:
                     self._status_logger.log("Failed")
-                    raise BuildError(step.name)
+                    raise BuildError(step.name) from None
         if self._status_logger:
             self._status_logger.stop
 
