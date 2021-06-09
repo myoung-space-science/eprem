@@ -75,7 +75,6 @@ class BuildStep:
     @property
     def succeeded(self):
         """"""
-        # return self._method(*self._args, **self._kwargs)
         return self._method()
 
 
