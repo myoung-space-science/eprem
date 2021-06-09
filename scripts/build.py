@@ -41,7 +41,7 @@ class Logger:
         self.start
         return self
 
-    def __exit__(self) -> bool:
+    def __exit__(self, _type, _value, _traceback) -> bool:
         """Exit the current logging context."""
         self.stop
         return False
@@ -56,108 +56,173 @@ class BuildError(Exception):
         return f"Build failed during '{self.stage}'"
 
 
+class BuildStep:
+    """A class to represent a step in the build process."""
+    def __init__(
+        self,
+        name: str,
+        description: str,
+        method: Callable[..., bool],
+        *args,
+        **kwargs,
+    ) -> None:
+        self.name = name
+        self.description = description
+        self._method = method
+        self._args = args,
+        self._kwargs = kwargs
+
+    @property
+    def succeeded(self):
+        """"""
+        # return self._method(*self._args, **self._kwargs)
+        return self._method()
+
+
 class EPREMBuilder:
     """A class to manage EPREM building commands."""
     def __init__(
         self,
         target: str=None,
         ext_deps: str=None,
-        logfile: str=None,
+        mode: str=None,
     ) -> None:
         self._target = make_path(target, '.')
         self._build = self._target / 'source' / 'eprem'
-        self._ext_deps = make_path(ext_deps, '~')
-        self._logger = Logger(logfile) if logfile else None
+        self._ext_deps = make_path(ext_deps, '~') / 'deps'
+        self._mode = mode
+        self._logger = Logger('build.log')
+        self._iteration = None
+        self.steps = ['prepare', 'configure', 'make']
+        self._recipes = {
+            'prepare': {
+                'method': self._prepare,
+                'description': "Preparing dependencies",
+            },
+            'configure': {
+                'method': self._configure,
+                'description': "Configuring EPREM",
+                # 'deps': ['libconfig', 'hdf4', 'netcdf'],
+            },
+            'make': {
+                'method': self._make,
+                'description': "Building EPREM",
+            },
+        }
+
+    @property
+    def _deps(self) -> List[str]:
+        """The dependencies for this mode."""
+        _all = {
+            'MAS': ['config', 'hdf4', 'netcdf'],
+            'ENLIL': ['config', 'netcdf'],
+        }
+        return _all.get(self._mode, ['config', 'netcdf'])
+
+    def __enter__(self) -> 'EPREMBuilder':
+        """Enter the building context."""
+        self._logger.start
+        return self
+
+    def __exit__(self, _type, _value, _traceback) -> bool:
+        """Exit the building context."""
+        self._logger.stop
+        return False
+
+    def __iter__(self) -> Iterator:
+        """Iterate over steps in the build process."""
+        self._iteration = 0
+        return self
+
+    def __next__(self) -> BuildStep:
+        """Produce the next step in the process."""
+        try:
+            step = self.steps[self._iteration]
+            self._iteration += 1
+            return BuildStep(step, **self._recipes[step])
+        except IndexError:
+            raise StopIteration
 
     def _run(self, *args, **kwargs) -> str:
         """Run a process and capture output."""
         kwargs.update(stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         return subprocess.run(*args, **kwargs)
 
-    def _log(self, message: str, **kwargs) -> None:
-        """Log the given message, if using a logger."""
-        if self._logger:
-            self._logger.log(message, **kwargs)
-
-    def prepare(self) -> bool:
+    def _prepare(self) -> bool:
         """Prepare the dependencies."""
         try:
             result = self._run('./prepare', cwd=self._build)
-            self._log(result)
+            self._logger.log(result)
             return True
         except subprocess.CalledProcessError:
             return False
 
-    def configure(self, deps: Iterable[str]=None) -> bool:
+    def _configure(self) -> bool:
         """Configure the dependencies."""
         args = ['./configure', 'CC=mpicc', 'CXX=mpic++']
-        if 'config' in deps:
+        if 'config' in self._deps:
             args.append(f"--with-config={self._ext_deps / 'libconfig'}")
-        if 'hdf4' in deps:
+        if 'hdf4' in self._deps:
             args.append(f"--with-hdf4={self._ext_deps / 'hdf4'}")
-        if 'netcdf' in deps:
+        if 'netcdf' in self._deps:
             args.append(f"--with-netcdf={self._ext_deps / 'netcdf'}")
         try:
             result = self._run(args, cwd=self._build)
-            self._log(result)
+            self._logger.log(result)
             return True
         except subprocess.CalledProcessError:
             return False
 
-    def make(self) -> bool:
+    def _make(self) -> bool:
         """Create an executable from the source code."""
         reffile = Path().cwd() / '.buildref'
         reffile.touch()
         src = self._build / 'src'
         result = self._run(["make", "clean"], cwd=src)
-        self._log(result)
+        self._logger.log(result)
         result = self._run(["make", "-j", "4"], cwd=src)
-        self._log(result)
+        self._logger.log(result)
         exe = src / 'eprem'
         success = exe.stat().st_ctime > reffile.stat().st_ctime
         reffile.unlink()
         return success
 
 
-def execute(
-    step: Callable[..., bool],
-    logger: Logger,
-    preamble: str,
-    *args,
-    **kwargs,
-) -> None:
-    """Execute the given step in the build process."""
-    logger.log(preamble, end=' ...')
-    if step(*args, **kwargs):
-        logger.log("Success!")
-    else:
-        logger.log("FAILED")
-        logger.stop
-        raise BuildError
+class BuildRunner:
+    """"""
+    def __init__(self, logger: Logger) -> None:
+        self._status_logger = logger
+
+    def build(self, builder: EPREMBuilder, verbose: bool=False):
+        """"""
+        if verbose:
+            self._status_logger.start
+        with builder as b:
+            for step in b:
+                self._status_logger.log(
+                    step.description, end=' ... ', flush=True
+                )
+                if step.succeeded:
+                    self._status_logger.log("Succeeded")
+                else:
+                    self._status_logger.log("Failed")
+                    raise BuildError(step.name)
+        if self._status_logger:
+            self._status_logger.stop
 
 
 def main(
     target: str=None,
+    mode: str=None,
     ext_deps: str=None,
     logfile: str=None,
     verbose: bool=False,
 ) -> None:
     """Build an EPREM distribution."""
-    logger = Logger()
-    eprem = EPREMBuilder(target=target, ext_deps=ext_deps, logfile=logfile)
-    if verbose:
-        logger.start
-    execute(eprem.prepare, logger, "Preparing dependencies")
-    execute(
-        eprem.configure,
-        logger,
-        "Configuring EPREM",
-        ['config', 'hdf4', 'netcdf'],
-    )
-    execute(eprem.make, logger, "Building EPREM")
-    if logger:
-        logger.stop
-
+    logger = Logger(logfile)
+    eprem = EPREMBuilder(target=target, ext_deps=ext_deps, mode=mode)
+    runner = BuildRunner(logger)
+    runner.build(eprem, verbose=verbose)
 
 
 def make_path(arg: str, default: str=None) -> Optional[Path]:
@@ -180,6 +245,13 @@ if __name__ == "__main__":
         '-t',
         '--target',
         help="the EPREM distribution to build (default: current directory)"
+    )
+    p.add_argument(
+        '-m',
+        '--mode',
+        help="the mode of the target EPREM distribution",
+        choices=('MAS', 'ENLIL', 'default'),
+        default='default',
     )
     p.add_argument(
         '-e',
