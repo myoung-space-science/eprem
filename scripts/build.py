@@ -5,7 +5,7 @@ from typing import *
 
 
 class Logger:
-    """Log events and print them, if requested."""
+    """A tool to log user events."""
     def __init__(self, filename: str=None) -> None:
         try:
             self.filename = Path(filename).expanduser().resolve()
@@ -20,11 +20,16 @@ class Logger:
         self._fp = self.filename.open('w') if self.filename else None
         self._logging = True
 
-    def log(self, message: str, **kwargs):
-        """Log a single user-defined event."""
+    def log(self, message: Union[str, Iterable[str]], **kwargs):
+        """Log a user-defined message."""
         if self._logging:
-            print(message, file=self._fp, **kwargs)
-
+            if isinstance(message, (list, tuple)):
+                [
+                    print(line, file=self._fp, **kwargs)
+                    for line in message
+                ]
+            else:
+                print(message, file=self._fp, **kwargs)
     @property
     def stop(self) -> None:
         """Stop logging."""
@@ -41,10 +46,16 @@ class Logger:
         self.start
         return self
 
-    def __exit__(self, _type, _value, _traceback) -> bool:
+    def __exit__(self, exc_type, exc_value, exc_tb) -> bool:
         """Exit the current logging context."""
+        if exc_value:
+            message = f"{self} caught {exc_value} while exiting."
+            self.log(message)
         self.stop
-        return False
+
+    def __repr__(self) -> str:
+        """An unabiguous representation of this instance."""
+        return f"{self.__class__.__qualname__}({self.filename!r})"
 
 
 class BuildError(Exception):
