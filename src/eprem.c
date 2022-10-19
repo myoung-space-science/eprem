@@ -343,7 +343,6 @@ int main(int argc, char *argv[]) {
   
   DumpRunTimes();
   config_destroy(&cfg);
-  cleanupMPIWindows();
   MPI_Finalize();
   
   return(0);
