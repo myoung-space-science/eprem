@@ -1,8 +1,8 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ(2.59)
-AC_INIT(eprem,0.1)
+AC_PREREQ([2.71])
+AC_INIT([eprem],[0.1])
 AM_INIT_AUTOMAKE
 
 AC_CONFIG_SRCDIR([src/])
@@ -171,4 +171,5 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM(
 ]
 )
 
-AC_OUTPUT([Makefile src/Makefile])
+AC_CONFIG_FILES([Makefile src/Makefile])
+AC_OUTPUT
