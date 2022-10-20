@@ -65,21 +65,6 @@ AS_IF([test "$with_config" != ""],
    LDFLAGS="  $LDFLAGS  $CFLIB "
 ])
 
-AC_ARG_WITH([hdf4], [AS_HELP_STRING([--with-hdf4],
-            [Location of the hdf4 package (contains /include, /lib, etc.) @<:@default=$hdf4_home@:>@])],
-            [],
-            [with_hdf4=$hdf4_home])
-AS_IF([test "$with_hdf4" == "yes"],[with_hdf4="/usr"])
-AS_IF([test "$with_hdf4" != ""],
-[
-   HDINC=" -I$with_hdf4/include "
-   HDLIB=" -L$with_hdf4/lib -Wl,-rpath,$with_hdf4/lib"
-   CXXFLAGS=" $CXXFLAGS $HDINC "
-   CPPFLAGS=" $CPPFLAGS $HDINC "
-   CFLAGS="   $CFLAGS   $HDINC "
-   LDFLAGS="  $LDFLAGS  $HDLIB "
-])
-
 # Set compiler flags.
 CXXFLAGS=" $CXXFLAGS -O3 -DNDEBUG -Wall -Wextra -mtune=native"
 CPPFLAGS=" $CPPFLAGS -O3 -DNDEBUG -Wall -Wextra -mtune=native"
@@ -87,7 +72,6 @@ CFLAGS="   $CFLAGS   -O3 -std=c99 -DNDEBUG -Wall -Wextra -mtune=native"
 
 # Check for header files.
 AC_CHECK_HEADERS([mpi.h],,AC_MSG_ERROR([MPI and headers required]))
-AC_CHECK_HEADERS([mfhdf.h],,AC_MSG_ERROR([HDF4 and headers required]))
 AC_CHECK_HEADERS([netcdf.h],,AC_MSG_ERROR([NETCDF4 and headers required]))
 
 AC_CHECK_HEADERS([execinfo.h])
@@ -98,8 +82,6 @@ AC_CHECK_HEADERS([execinfo.h])
 AC_CHECK_LIB([z],[zlibVersion],,AC_MSG_ERROR([libz installation required]))
 AC_CHECK_LIB([jpeg],[jpeg_destroy],,AC_MSG_ERROR([libjpeg installation required]))
 AC_CHECK_LIB([netcdf],[nc_inq_libvers],,AC_MSG_ERROR([NetCDF installation required]))
-AC_CHECK_LIB([df],[Hopen],,AC_MSG_ERROR([HDF4 installation required]))
-AC_CHECK_LIB([mfhdf],[SDstart],,AC_MSG_ERROR([HDF4 installation required]))
 AC_CHECK_LIB([config],[config_init],,AC_MSG_ERROR([libconfig installation required]))
 
 # Special tests, -lstdc++ needed, or -DMPICH_IGNORE_CXX_SEEK (darwin issues?)
