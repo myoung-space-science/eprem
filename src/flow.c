@@ -52,7 +52,7 @@
         for (shell = INNER_ACTIVE_SHELL; shell < LOCAL_NUM_SHELLS; shell++ )
         {
 
-	      idx = idx_frcs(face,row,col,shell);
+          idx = idx_frcs(face,row,col,shell);
 
           // Save current time MHD values for use with derivatives below.
           grid[idx].mhdBmagOld       = grid[idx].mhdBmag;
@@ -272,7 +272,7 @@
 
     *Btheta = 0.0;
 
-		*Bphi = -1.0 * rr * (*Br) * (config.omegaSun / (Vr + VERYSMALL) ) * sin(theta);
+    *Bphi = -1.0 * rr * (*Br) * (config.omegaSun / (Vr + VERYSMALL) ) * sin(theta);
 
     // ideal shock test
     if ( (config.idealShock > 0) && (idealShockNode > 0) ) {
@@ -386,14 +386,14 @@
 /*-----------------------------------------------------------------------*/
 {
 
-	SphVec_t B;
+  SphVec_t B;
 
 
-	B.r = config.mhdBsAu / (r * r);
+  B.r = config.mhdBsAu / (r * r);
 
-	B.theta = 0.0;
+  B.theta = 0.0;
 
-	B.phi = -1.0 * r * B.r * (config.omegaSun / (Vr + VERYSMALL) ) * sin(theta);
+  B.phi = -1.0 * r * B.r * (config.omegaSun / (Vr + VERYSMALL) ) * sin(theta);
 
   if ( (config.idealShock > 0) && (idealShockNode > 0) ) {
 
@@ -403,7 +403,7 @@
 
   }
 
-	return B;
+  return B;
 
 }
 /*-----------------------------------------------------------------------*/
@@ -525,7 +525,7 @@
 
   // r
   A = (0.5 / thetaCellWidth) * ( B_tp.phi * sin(thetaPlus.theta) / (Bmag_tp * Bmag_tp) -
-																B_tm.phi * sin(thetaMinus.theta) / (Bmag_tm * Bmag_tm) );
+                                B_tm.phi * sin(thetaMinus.theta) / (Bmag_tm * Bmag_tm) );
 
   B = (0.5 / phiCellWidth) * ( B_pp.theta / (Bmag_pp * Bmag_pp) - B_pm.theta / (Bmag_pm * Bmag_pm) );
 
@@ -535,19 +535,19 @@
   A = (1.0 / sin(r.theta)) * (0.5 / phiCellWidth) * ( B_pp.r / (Bmag_pp * Bmag_pp) - B_pm.r / (Bmag_pm * Bmag_pm) );
 
   B = (0.5 / rCellWidthAU) * ( rPlus.r * B_rp.phi / (Bmag_rp * Bmag_rp) -
-															rMinus.r * B_rm.phi / (Bmag_rm * Bmag_rm) );
+                              rMinus.r * B_rm.phi / (Bmag_rm * Bmag_rm) );
 
   curl.theta = (1.0 / rAU) * (A - B);
 
   // phi
   A = (0.5 / rCellWidthAU) * ( rPlus.r * B_rp.theta / (Bmag_rp * Bmag_rp) -
-															rMinus.r * B_rm.theta / (Bmag_rm * Bmag_rm) );
+                              rMinus.r * B_rm.theta / (Bmag_rm * Bmag_rm) );
 
   B = (0.5 / thetaCellWidth) * ( B_tp.r / (Bmag_tp * Bmag_tp)  - B_tm.r / (Bmag_tm * Bmag_tm) );
 
   curl.phi = (1.0 / rAU) * (A - B);
 
-	return curl;
+  return curl;
 
 }
 /*-----------------------------------------------------------------------*/
