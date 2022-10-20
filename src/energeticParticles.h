@@ -28,7 +28,6 @@
 extern "C" {
 #endif
 
-int preErupt;
 
 /*-- Evaluate current particle distributions for all energy --*/
 /*-- ranges, for all shells and every shell node in each.   --*/

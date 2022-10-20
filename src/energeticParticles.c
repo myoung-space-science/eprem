@@ -46,7 +46,6 @@ Index_t* shockFlag;
 Index_t* shockCalcFlag;
 
 Scalar_t dsMin;
-int preErupt=0;
 
 
 /*---------------------------------------------------------------*/
