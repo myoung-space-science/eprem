@@ -1,1 +1,17 @@
 **/.vscode/*
+autom4te.cache/*
+aclocal.m4
+compile
+config.*
+configure
+depcomp
+install-sh
+**/Makefile
+**/Makefile.in
+missing
+src/*.o
+src/.deps/*
+src/epremDefs*
+src/eprem
+src/libeprem.a
+src/stamp-h1
