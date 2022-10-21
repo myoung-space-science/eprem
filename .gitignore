@@ -1,6 +1,28 @@
+# Auto-generated backup files
+*~
+
+# Source-code object files
+src/*.o
+
+# Visual Studio Code
 **/.vscode/*
+
+# GNU Autotools
+autom4te.cache/*
+aclocal.m4
+compile
+config.*
+configure
+depcomp
+install-sh
 **/Makefile
 **/Makefile.in
-src/*.o
+missing
+src/.deps/*
 src/epremDefs*
 src/eprem
+src/libeprem.a
+src/stamp-h1
+
+# Meson
+meson.build
