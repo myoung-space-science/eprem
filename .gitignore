@@ -1,6 +1,12 @@
 # Auto-generated backup files
 *~
 
+# Compiled binary files
+bin
+
+# Development files
+dev
+
 # Source-code object files
 src/*.o
 
