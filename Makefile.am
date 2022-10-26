@@ -24,5 +24,9 @@ eprem_SOURCES = \
 distclean-local:
 	find . -type f -name '*~' -exec rm {} \;
 
-install:
-	mv src/eprem bin/eprem
+maintainer-clean-local:
+	rm -f autoscan.log
+	rm -f configure.scan
+
+install-exec-hook:
+	mv eprem bin/eprem
