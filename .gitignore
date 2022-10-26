@@ -1,3 +1,8 @@
+# EPREM .gitignore
+#
+# Note that portions of this file have been copied or adapted from
+# (https://github.com/github/gitignore/blob/main/Autotools.gitignore).
+
 # Auto-generated backup files
 *~
 
@@ -13,22 +18,33 @@ src/*.o
 # Visual Studio Code
 **/.vscode/*
 
-# GNU Autotools
-autom4te.cache/*
+# Location of Autotools build scripts
+build-aux
+
+# Automake (http://www.gnu.org/software/automake)
+Makefile.in
+.deps/
+
+# Autoconf (http://www.gnu.org/software/autoconf)
+autodefs.h
+autodefs.h.in
+autom4te.cache
+autoscan.log
+autoscan-*.log
 aclocal.m4
 compile
-config.*
+config.cache
+config.guess
+config.log
+config.status
+config.sub
 configure
+configure.scan
 depcomp
 install-sh
-**/Makefile
-**/Makefile.in
 missing
-src/.deps/*
-src/epremDefs*
-src/eprem
-src/libeprem.a
-src/stamp-h1
+stamp-h1
 
-# Meson
-meson.build
+# Generated Makefile (meta build system like autotools can automatically
+# generate from config.status script, which ./configure calls).
+Makefile
