@@ -20,3 +20,9 @@ eprem_SOURCES = \
   src/search.c \
   src/simCore.c \
   src/unifiedOutput.c
+
+dist-hook:
+	find $(PACKAGE) -type f -name '*~' -exec rm {} \;
+
+install:
+	mv src/eprem bin/eprem
