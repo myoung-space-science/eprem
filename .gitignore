@@ -25,6 +25,7 @@ build-aux
 Makefile.in
 .deps/
 .dirstamp
+eprem*.tar.gz
 
 # Autoconf (http://www.gnu.org/software/autoconf)
 autodefs.h
