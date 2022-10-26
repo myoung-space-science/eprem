@@ -24,6 +24,7 @@ build-aux
 # Automake (http://www.gnu.org/software/automake)
 Makefile.in
 .deps/
+.dirstamp
 
 # Autoconf (http://www.gnu.org/software/autoconf)
 autodefs.h
