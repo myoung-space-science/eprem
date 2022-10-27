@@ -11,6 +11,9 @@ AC_CONFIG_SRCDIR([src/eprem.c])
 # close to the EPREM header file `configuration.h`.
 AC_CONFIG_HEADERS([src/autodefs.h])
 
+# Determinte the canonical host-system (sets $host).
+AC_CANONICAL_HOST
+
 # Set the pre-processor, compiler, and linker flags to be empty by default.
 : ${CFLAGS=""}
 : ${CXXFLAGS=""}
