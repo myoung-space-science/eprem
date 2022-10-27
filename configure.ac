@@ -122,9 +122,6 @@ AC_SEARCH_LIBS(
 
 # Checks for header files.
 
-# DEV: Copied from `prediccs` version. Necessary?
-# AC_CHECK_HEADERS([execinfo.h])
-
 # --> ZLIB (dependency of NetCDF)
 AC_CHECK_HEADERS(
     zlib.h,
