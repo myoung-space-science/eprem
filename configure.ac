@@ -262,11 +262,5 @@ AC_SUBST([AM_CFLAGS], ["${AM_CFLAGS} ${final_CFLAGS}"])
 AC_SUBST([AM_CXXFLAGS], ["${AM_CXXFLAGS} ${final_CXXFLAGS}"])
 AC_SUBST([AM_CPPFLAGS], ["${AM_CPPFLAGS} ${final_CPPFLAGS}"])
 
-# Generate output variables from environment variables.
-AC_SUBST([CFLAGS])
-AC_SUBST([CXXFLAGS])
-AC_SUBST([CPPFLAGS])
-AC_SUBST([LDFLAGS])
-
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
