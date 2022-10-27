@@ -14,10 +14,7 @@ AC_CONFIG_HEADERS([src/autodefs.h])
 # Determinte the canonical host-system (sets $host).
 AC_CANONICAL_HOST
 
-# Define the MPI command.
-#
-# DEV: I adapted this from the `prediccs` version without fully understanding
-# its relevance or usefulness.
+# Define the MPI command. This is relevant to MPI library tests.
 AC_MSG_CHECKING([setting MPIRUN])
 case ${host} in
     *-aix*)  MPIRUN="aprun -n 2";;
@@ -26,9 +23,8 @@ esac
 AC_MSG_RESULT([${MPIRUN}])
 AC_SUBST([MPIRUN])
 
-# Save the user's environment variables.
-#
-# DEV: Adapted from HDF5.
+# Save the user's environment variables. We want to preserve these in case
+# subsequent tests of libraries and header files modify them.
 user_CFLAGS="$CFLAGS"
 user_CXXFLAGS="$CXXFLAGS"
 user_FCFLAGS="$FCFLAGS"
@@ -42,10 +38,8 @@ user_CPPFLAGS="$CPPFLAGS"
 : ${CFLAGS=""}
 
 # Augment environment variable values with Automake values, to ensure proper
-# configuration. See
+# configuration during subsequent tests. See
 # https://www.gnu.org/software/automake/manual/html_node/Program-Variables.html
-#
-# DEV: Adapted from HDF5
 CFLAGS="${AM_CFLAGS} ${CFLAGS}"
 FCFLAGS="${AM_FCFLAGS} ${FCFLAGS}"
 CXXFLAGS="${AM_CXXFLAGS} ${CXXFLAGS}"
