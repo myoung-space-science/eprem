@@ -80,12 +80,13 @@ AC_PROG_RANLIB
 # DEV: Consider setting `CC=mpicc CXX=mpic++` by default, and implementing a
 # `--disable-mpi` option for serial applications.
 
-# Make sure we have required math functions.
-#
-# DEV: It may be better to combine this with `AC_CHECK_FUNCS([floor memset pow
-# sqrt strstr])`, but I'm not sure about the correct order with respect to the
-# following macros (e.g., `AC_CHECK_HEADER`).
-AC_SEARCH_LIBS([exp], [m])
+# Make sure we have a math library with certain functions.
+AC_SEARCH_LIBS(
+    [exp],
+    [m],
+    [],
+    AC_MSG_ERROR([can't find a suitable math library.])
+)
 
 # Make sure we have zlib.
 AC_SEARCH_LIBS(
@@ -122,6 +123,13 @@ AC_SEARCH_LIBS(
 
 # Checks for header files.
 
+# --> M (general math functions)
+AC_CHECK_HEADERS(
+    math.h,
+    [],
+    AC_MSG_ERROR([failed: math headers are required])
+)
+
 # --> ZLIB (dependency of NetCDF)
 AC_CHECK_HEADERS(
     zlib.h,
@@ -157,7 +165,6 @@ AC_CHECK_TYPES([ptrdiff_t])
 
 # Checks for library functions.
 AC_FUNC_MALLOC
-# DEV: Put 'exp' here?
 AC_CHECK_FUNCS([floor memset pow sqrt strstr])
 
 
