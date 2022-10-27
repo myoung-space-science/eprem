@@ -58,14 +58,6 @@ CXXFLAGS="${AM_CXXFLAGS} ${CXXFLAGS}"
 CPPFLAGS="${AM_CPPFLAGS} ${CPPFLAGS}"
 LDFLAGS="${AM_LDFLAGS} ${LDFLAGS}"
 
-# Define flags to append after processing.
-#
-# DEV: I adapted this from the `prediccs` version. There may be more canonical
-# ways to set these flags.
-CXXFLAGS="-O3 -DNDEBUG -Wall -Wextra -mtune=native"
-CPPFLAGS="-O3 -DNDEBUG -Wall -Wextra -mtune=native"
-CFLAGS="-O3 -std=c99 -DNDEBUG -Wall -Wextra -mtune=native"
-
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC
@@ -256,11 +248,6 @@ CFLAGS="$user_CFLAGS"
 CXXFLAGS="$user_CXXFLAGS"
 CPPFLAGS="$user_CPPFLAGS"
 LDFLAGS="$user_LDFLAGS"
-
-# Append values to Automake flag variables.
-AC_SUBST([AM_CFLAGS], ["${AM_CFLAGS} ${final_CFLAGS}"])
-AC_SUBST([AM_CXXFLAGS], ["${AM_CXXFLAGS} ${final_CXXFLAGS}"])
-AC_SUBST([AM_CPPFLAGS], ["${AM_CPPFLAGS} ${final_CPPFLAGS}"])
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
