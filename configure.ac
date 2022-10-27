@@ -14,11 +14,57 @@ AC_CONFIG_HEADERS([src/autodefs.h])
 # Determinte the canonical host-system (sets $host).
 AC_CANONICAL_HOST
 
-# Set the pre-processor, compiler, and linker flags to be empty by default.
+# Define the MPI command.
+#
+# DEV: I adapted this from the `prediccs` version without fully understanding
+# its relevance or usefulness.
+AC_MSG_CHECKING([setting MPIRUN])
+case ${host} in
+    *-aix*)  MPIRUN="aprun -n 2";;
+    *)       MPIRUN="mpirun -n 2";;
+esac
+AC_MSG_RESULT([${MPIRUN}])
+AC_SUBST([MPIRUN])
+
+# # Set the pre-processor, compiler, and linker flags to be empty by default.
+# : ${CFLAGS=""}
+# : ${CXXFLAGS=""}
+# : ${LDFLAGS=""}
+# : ${CPPFLAGS=""}
+
+# Save the user's environment variables.
+#
+# DEV: Adapted from HDF5.
+user_CFLAGS="$CFLAGS"
+user_CXXFLAGS="$CXXFLAGS"
+user_FCFLAGS="$FCFLAGS"
+user_LDFLAGS="$LDFLAGS"
+user_CPPFLAGS="$CPPFLAGS"
+
+# Suppress the default compiler flags (namely, -g -O2).
+#
+# DEV: I copied this from the `prediccs` version. It is also common in other
+# packages (e.g., NetCDF) but I don't have any further justification for it.
 : ${CFLAGS=""}
-: ${CXXFLAGS=""}
-: ${LDFLAGS=""}
-: ${CPPFLAGS=""}
+
+# Augment environment variable values with Automake values, to ensure proper
+# configuration. See
+# https://www.gnu.org/software/automake/manual/html_node/Program-Variables.html
+#
+# DEV: Adapted from HDF5
+CFLAGS="${AM_CFLAGS} ${CFLAGS}"
+FCFLAGS="${AM_FCFLAGS} ${FCFLAGS}"
+CXXFLAGS="${AM_CXXFLAGS} ${CXXFLAGS}"
+CPPFLAGS="${AM_CPPFLAGS} ${CPPFLAGS}"
+LDFLAGS="${AM_LDFLAGS} ${LDFLAGS}"
+
+# Define flags to append after processing.
+#
+# DEV: I adapted this from the `prediccs` version. There may be more canonical
+# ways to set these flags.
+CXXFLAGS="-O3 -DNDEBUG -Wall -Wextra -mtune=native"
+CPPFLAGS="-O3 -DNDEBUG -Wall -Wextra -mtune=native"
+CFLAGS="-O3 -std=c99 -DNDEBUG -Wall -Wextra -mtune=native"
 
 # Checks for programs.
 AC_PROG_CXX
@@ -49,67 +95,88 @@ AC_PROG_RANLIB
 #     AM_LDFLAGS="${AM_LDFLAGS} -L${with_config}/lib"
 # fi
 
-# Update compilation flags after reading command-line arguments.
-CXXFLAGS=" ${CXXFLAGS} -O3 -DNDEBUG -Wall -Wextra -mtune=native"
-CPPFLAGS=" ${CPPFLAGS} -O3 -DNDEBUG -Wall -Wextra -mtune=native"
-CFLAGS="   ${CFLAGS}   -O3 -std=c99 -DNDEBUG -Wall -Wextra -mtune=native"
+# # Update compilation flags after reading command-line arguments.
+# CXXFLAGS=" ${CXXFLAGS} -O3 -DNDEBUG -Wall -Wextra -mtune=native"
+# CPPFLAGS=" ${CPPFLAGS} -O3 -DNDEBUG -Wall -Wextra -mtune=native"
+# CFLAGS="   ${CFLAGS}   -O3 -std=c99 -DNDEBUG -Wall -Wextra -mtune=native"
 
 # Checks for libraries.
-
-AC_MSG_CHECKING([setting MPIRUN])
-case ${host} in
-    *-aix*)  MPIRUN="aprun -n 2"
-             MAKE="make";;
-    *)       MPIRUN="mpirun -n 2";;
-esac
-AC_MSG_RESULT([${MPIRUN}])
-AC_SUBST([MPIRUN])
-
-# DEV: Copied from `prediccs` version. Necessary?
-# AC_CHECK_HEADERS([execinfo.h])
 
 # DEV: Consider setting `CC=mpicc CXX=mpic++` by default, and implementing a
 # `--disable-mpi` option for serial applications.
 
-# --> M (required math functions)
+# Make sure we have required math functions.
 #
 # DEV: It may be better to combine this with `AC_CHECK_FUNCS([floor memset pow
 # sqrt strstr])`, but I'm not sure about the correct order with respect to the
 # following macros (e.g., `AC_CHECK_HEADER`).
 AC_SEARCH_LIBS([exp], [m])
 
+# Make sure we have zlib.
+AC_SEARCH_LIBS(
+    [deflate],
+    [z],
+    [],
+    AC_MSG_ERROR([can't find the z library (required for NetCDF).])
+)
+
+# Search for a suitable MPI library. We currently require MPI for parallel runs
+# but it should become optional if we implement a serial version.
+AC_SEARCH_LIBS(
+    [MPI_Init],
+    [mpi mpich],
+    [],
+    AC_MSG_ERROR([can't find a suitable MPI library.])
+)
+
+# Search for libconfig, which we require for processing input.
+AC_SEARCH_LIBS(
+    [config_init],
+    [config],
+    [],
+    AC_MSG_ERROR([can't find a suitable version of the libconfig library.])
+)
+
+# Search for the NetCDF library, which we require for creating output.
+AC_SEARCH_LIBS(
+    [nc_create],
+    [netcdf],
+    [],
+    AC_MSG_ERROR([can't find a suitable version of the NetCDF library.])
+)
+
+# Checks for header files.
+
+# DEV: Copied from `prediccs` version. Necessary?
+# AC_CHECK_HEADERS([execinfo.h])
+
 # --> ZLIB (dependency of NetCDF)
-AC_CHECK_HEADER(
+AC_CHECK_HEADERS(
     zlib.h,
     [],
-    AC_MSG_ERROR([failed: zlib headers are required]),
+    AC_MSG_ERROR([failed: zlib headers are required])
 )
 
 # --> MPI (required for parallel runs)
-AC_SEARCH_LIBS([MPI_Init], [mpi mpich])
-AC_CHECK_HEADER(
+AC_CHECK_HEADERS(
     [mpi.h],
     [],
-    AC_MSG_ERROR([failed: MPI headers are required]),
+    AC_MSG_ERROR([failed: MPI headers are required])
 )
 
 # --> LIBCONFIG (unconditionally required for input)
-AC_SEARCH_LIBS([config_init], [config])
-AC_CHECK_HEADER(
+AC_CHECK_HEADERS(
     [libconfig.h],
     [],
-    AC_MSG_ERROR([failed: libconfig headers are required]),
+    AC_MSG_ERROR([failed: libconfig headers are required])
 )
+
 # --> NETCDF4 (unconditionally required for output)
-AC_SEARCH_LIBS([nc_create], [netcdf])
-AC_CHECK_HEADER(
+AC_CHECK_HEADERS(
     [netcdf.h],
     [],
     AC_MSG_ERROR([failed: NetCDF4 headers are required])
 )
-
-
-# Checks for header files.
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_RESTRICT
@@ -118,10 +185,14 @@ AC_CHECK_TYPES([ptrdiff_t])
 
 # Checks for library functions.
 AC_FUNC_MALLOC
+# DEV: Put 'exp' here?
 AC_CHECK_FUNCS([floor memset pow sqrt strstr])
 
 
-# Special tests, -lstdc++ needed, or -DMPICH_IGNORE_CXX_SEEK (darwin issues?)
+# Special tests, -lstdc++ needed, or -DMPICH_IGNORE_CXX_SEEK (darwin issues?).
+#
+# DEV: I adapted this (almost verbatim) from the `prediccs` version. There may
+# be more canonical ways to perform the same tests, if they're even necessary.
 AC_LANG(C++)
 
 AC_MSG_CHECKING([if empty compile works])
@@ -179,6 +250,23 @@ AS_IF(
     ],
     [AC_MSG_RESULT([no])]
 )
+
+# Restore the user values of environment variables.
+CFLAGS="$user_CFLAGS"
+CXXFLAGS="$user_CXXFLAGS"
+CPPFLAGS="$user_CPPFLAGS"
+LDFLAGS="$user_LDFLAGS"
+
+# Append values to Automake flag variables.
+AC_SUBST([AM_CFLAGS], ["${AM_CFLAGS} ${final_CFLAGS}"])
+AC_SUBST([AM_CXXFLAGS], ["${AM_CXXFLAGS} ${final_CXXFLAGS}"])
+AC_SUBST([AM_CPPFLAGS], ["${AM_CPPFLAGS} ${final_CPPFLAGS}"])
+
+# Generate output variables from environment variables.
+AC_SUBST([CFLAGS])
+AC_SUBST([CXXFLAGS])
+AC_SUBST([CPPFLAGS])
+AC_SUBST([LDFLAGS])
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
