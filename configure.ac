@@ -26,12 +26,6 @@ esac
 AC_MSG_RESULT([${MPIRUN}])
 AC_SUBST([MPIRUN])
 
-# # Set the pre-processor, compiler, and linker flags to be empty by default.
-# : ${CFLAGS=""}
-# : ${CXXFLAGS=""}
-# : ${LDFLAGS=""}
-# : ${CPPFLAGS=""}
-
 # Save the user's environment variables.
 #
 # DEV: Adapted from HDF5.
@@ -86,11 +80,6 @@ AC_PROG_RANLIB
 #     AM_CXXFLAGS="${AM_CXXFLAGS} -I${with_config}/include"
 #     AM_LDFLAGS="${AM_LDFLAGS} -L${with_config}/lib"
 # fi
-
-# # Update compilation flags after reading command-line arguments.
-# CXXFLAGS=" ${CXXFLAGS} -O3 -DNDEBUG -Wall -Wextra -mtune=native"
-# CPPFLAGS=" ${CPPFLAGS} -O3 -DNDEBUG -Wall -Wextra -mtune=native"
-# CFLAGS="   ${CFLAGS}   -O3 -std=c99 -DNDEBUG -Wall -Wextra -mtune=native"
 
 # Checks for libraries.
 
