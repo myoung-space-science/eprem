@@ -62,27 +62,41 @@ AC_PROG_MKDIR_P
 AC_PROG_RANLIB
 
 #-----------------------------------------------------------------------------#
-# Checks for libraries.
+# Make sure we have the C math library. This explicitly checks for the existence
+# of `exp`, which EPREM requires, but it also ensures that we have access to the
+# full library.
 #-----------------------------------------------------------------------------#
-
-# Make sure we have a math library with certain functions.
 AC_SEARCH_LIBS(
     [exp],
     [m],
     [],
-    AC_MSG_ERROR([can't find a suitable math library.])
+    AC_MSG_ERROR([Can't find the math library.])
+)
+AC_CHECK_HEADERS(
+    math.h,
+    [],
+    AC_MSG_ERROR([Can't find math.h.])
 )
 
-# Make sure we have the z compression library.
+#-----------------------------------------------------------------------------#
+# Make sure we have the z compression library; it is a dependency of NetCDF.
+#-----------------------------------------------------------------------------#
 AC_SEARCH_LIBS(
     [deflate],
     [z],
     [],
-    AC_MSG_ERROR([can't find the z library (required for NetCDF).])
+    AC_MSG_ERROR([Can't find the z library (required for NetCDF).])
+)
+AC_CHECK_HEADERS(
+    zlib.h,
+    [],
+    AC_MSG_ERROR([Can't find zlib.h.])
 )
 
+#-----------------------------------------------------------------------------#
 # Search for a suitable MPI library. We currently require MPI for parallel runs
 # but it should become optional if we implement a serial version.
+#-----------------------------------------------------------------------------#
 
 AC_SEARCH_LIBS(
     [MPI_Init],
@@ -90,37 +104,18 @@ AC_SEARCH_LIBS(
     [found_mpi_lib=yes; break;],
     [found_mpi_lib=no]
 )
-
-# Cases
-# - user passed --with-mpi=yes
-#   - search for MPI in system path
-#   - set AC_PROG_CC([mpicc])
-#   - set AC_PROG_CXX([mpic++])
-# - user passed --with-mpi=DIR
-#   - add -I${DIR}/includes to AM_CFLAGS, AM_CPPFLAGS, and AM_CXXFLAGS
-#   - add -L${DIR}/lib -Wl,-rpath,${DIR}/lib
-#   - set AC_PROG_CC([mpicc])
-#   - set AC_PROG_CXX([mpic++])
-# - user passed --with-mpi=no:
-#   - set AC_PROG_CC([cc, gcc])
-#   - set AC_PROG_CXX([c++, g++, cc, gcc])
-# - user passed --with-mpi
-#   - same as --with-mpi=yes
-# - user passed --without-mpi
-#   - same as --with-mpi=no
-# - user did not pass --with-mpi or --without-mpi
-#   - check for system MPI and follow 'yes' or 'no' case, accordingly
 AC_ARG_WITH(
     [mpi],
     AS_HELP_STRING(
         [--with-mpi@<:@=yes,no,DIR@:>@],
-        [Control use of MPI. A value of yes will cause EPREM to use the system MPI installation; a value of no will cause EPREM to build without MPI support. A value of DIR indicates that EPREM should look for MPI header files in DIR/includes and for MPI libraries in DIR/lib. Passing --with-mpi is an alias for --with-mpi=yes; passing --without-mpi is an alias for --with-mpi=no.]
+        [Control use of MPI. A value of yes will cause EPREM to use the system MPI installation; a value of no will cause EPREM to build without MPI support. A value of DIR indicates that EPREM should look for MPI header files in DIR/includes and for MPI libraries in DIR/lib. Passing --with-mpi is an alias for --with-mpi=yes; passing --without-mpi is an alias for --with-mpi=no. Finally, if this option is not present, EPREM will assume a value of yes or no according to the availability of MPI.]
     ),
     [with_mpi=$withval],
     [with_mpi=$found_mpi_lib]
 )
 
-MPIDIR=
+MPI_INCFLAGS=
+MPI_LIBFLAGS=
 AS_CASE(
     [x$with_mpi],
     dnl Enable MPI because...
@@ -133,38 +128,43 @@ AS_CASE(
     dnl The user passed --with-mpi=no
     dnl The user passed --without-mpi
     dnl The user passed nothing and MPI is not available
-    [xno], [use_mpi=0],
+    [xno], [
+        AC_MSG_ERROR([Disabling MPI (--with-mpi=no/--without-mpi) isn't supported yet.])
+    ],
     dnl Default: Assume the user passed --with-mpi=DIR
     [
         use_mpi=1
-        MPIDIR=with_mpi
+        MPI_INCFLAGS="-I$with_mpi/includes"
+        MPI_LIBFLAGS="L$with_mpi/lib -Wl,-rpath,$with_mpi/lib"
     ]
 )
-
-AC_MSG_CHECKING([whether to use MPI])
-AS_IF(
-    [test $use_mpi = 1],
-    AC_MSG_RESULT([yes]),
-    AC_MSG_RESULT([no]),
-)
 AM_CONDITIONAL([MPI_REQUESTED], [test $use_mpi = 1])
+AC_MSG_CHECKING([whether to use MPI])
 AM_COND_IF(
     [MPI_REQUESTED],
     dnl True
     [
-        AC_PROG_CC([mpicc])
-        AC_PROG_CXX([mpic++])
-        MPI_INCFLAGS="-I$with_mpi/includes"
-        MPI_LIBFLAGS="L$DIR/lib -Wl,-rpath,$DIR/lib"
+        AC_MSG_RESULT([yes])
+        CC=mpicc
+        CXX=mpic++
         AM_CFLAGS="$MPI_INCFLAGS $AM_CFLAGS"
         AM_CPPFLAGS="$MPI_INCFLAGS $AM_CPPFLAGS"
         AM_CXXFLAGS="$MPI_INCFLAGS $AM_CXXFLAGS"
         AM_LDFLAGS="$MPI_LIBFLAGS $AM_LDFLAGS"
     ],
     dnl False
+    [AC_MSG_RESULT([no])]
+)
+AC_CHECK_HEADERS(
+    [mpi.h],
+    dnl Found
+    [],
+    dnl Not found
     [
-        AC_PROG_CC([cc, gcc])
-        AC_PROG_CXX([c++, g++, cc, gcc])
+        AM_COND_IF(
+            [MPI_REQUESTED],
+            AC_MSG_ERROR([Can't find MPI headers. Use --with-mpi=no or --without-mpi to build without MPI.]),
+        )
     ]
 )
 
@@ -182,38 +182,6 @@ AC_SEARCH_LIBS(
     [netcdf],
     [],
     AC_MSG_ERROR([can't find a suitable version of the NetCDF library.])
-)
-
-#-----------------------------------------------------------------------------#
-# Checks for header files.
-#-----------------------------------------------------------------------------#
-
-# libm: general math functions
-AC_CHECK_HEADERS(
-    math.h,
-    [],
-    AC_MSG_ERROR([failed: math headers are required])
-)
-
-# libz: dependency of NetCDF
-AC_CHECK_HEADERS(
-    zlib.h,
-    [],
-    AC_MSG_ERROR([failed: zlib headers are required])
-)
-
-# libmpi: required for parallel runs
-AC_CHECK_HEADERS(
-    [mpi.h],
-    dnl Found
-    [],
-    dnl Not found
-    [
-        AM_COND_IF(
-            [MPI_REQUESTED],
-            AC_MSG_ERROR([Can't find MPI headers. Use --with-mpi=no or --without-mpi to build without MPI.])
-        )
-    ]
 )
 
 # libconfig: unconditionally required for input
