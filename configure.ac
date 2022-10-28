@@ -138,10 +138,10 @@ AS_CASE(
         MPI_LIBFLAGS="L$with_mpi/lib -Wl,-rpath,$with_mpi/lib"
     ]
 )
-AM_CONDITIONAL([MPI_REQUESTED], [test $use_mpi = 1])
+AM_CONDITIONAL([USE_MPI], [test $use_mpi = 1])
 AC_MSG_CHECKING([whether to use MPI])
 AM_COND_IF(
-    [MPI_REQUESTED],
+    [USE_MPI],
     dnl True
     [
         AC_MSG_RESULT([yes])
@@ -162,7 +162,7 @@ AC_CHECK_HEADERS(
     dnl Not found
     [
         AM_COND_IF(
-            [MPI_REQUESTED],
+            [USE_MPI],
             AC_MSG_ERROR([Can't find MPI headers. Use --with-mpi=no or --without-mpi to build without MPI.]),
         )
     ]
