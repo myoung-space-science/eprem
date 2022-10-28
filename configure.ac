@@ -6,10 +6,11 @@
 #-----------------------------------------------------------------------------#
 
 AC_PREREQ([2.71])
-AC_INIT([EPREM], [0.1.0], [Matthew.Young@unh.edu], [eprem])
+AC_INIT([EPREM],[0.1.0],[Matthew.Young@unh.edu],[eprem])
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([foreign subdir-objects])
 AC_CONFIG_SRCDIR([src/eprem.c])
+AC_CONFIG_MACRO_DIRS([m4])
 
 # Use `autodefs.h` instead of the default, `config.h`, because the latter is too
 # close to the EPREM header file `configuration.h`.
@@ -145,8 +146,9 @@ AM_COND_IF(
     dnl True
     [
         AC_MSG_RESULT([yes])
-        CC=mpicc
-        CXX=mpic++
+        LX_FIND_MPI
+        CC=$MPICC
+        CXX=$MPICXX
         AM_CFLAGS="$MPI_INCFLAGS $AM_CFLAGS"
         AM_CPPFLAGS="$MPI_INCFLAGS $AM_CPPFLAGS"
         AM_CXXFLAGS="$MPI_INCFLAGS $AM_CXXFLAGS"
