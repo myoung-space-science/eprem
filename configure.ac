@@ -96,9 +96,16 @@ AC_CHECK_HEADERS(
 # Search for a suitable MPI library. We currently require MPI for parallel runs
 # but it should become optional if we implement a serial version.
 #-----------------------------------------------------------------------------#
-AC_MSG_WARN([Unconditionally setting CC=$MPICC and CXX=$MPICXX for parallel execution.])
 LX_FIND_MPI dnl third-party macro in `m4/lx_find_mpi.m4`
+AS_IF(
+    [test "x$MPICC" != x],
+    AC_MSG_WARN([Setting CC=$MPICC for parallel execution.])
+)
 CC=$MPICC
+AS_IF(
+    [test "x$MPICCXX" != x],
+    AC_MSG_WARN([Setting CXX=$MPICXX for parallel execution.])
+)
 CXX=$MPICXX
 mpi_dir=
 AC_ARG_WITH(
