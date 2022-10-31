@@ -29,4 +29,5 @@ maintainer-clean-local:
 	rm -f configure.scan
 
 install-exec-hook:
+	mkdir -p bin
 	mv eprem bin/eprem
