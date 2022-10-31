@@ -124,7 +124,7 @@ AC_SEARCH_LIBS(
 AC_CHECK_HEADERS(
     [mpi.h],
     [],
-    AC_MSG_ERROR([Can't find MPI headers. Try using --with-mpi.])
+    AC_MSG_ERROR([Can't find MPI headers. Try using --with-mpi-dir.])
 )
 
 #-----------------------------------------------------------------------------#
@@ -154,7 +154,7 @@ AC_SEARCH_LIBS(
 AC_CHECK_HEADERS(
     [libconfig.h],
     [],
-    AC_MSG_ERROR([Can't find libconfig headers. Try using --with-config.])
+    AC_MSG_ERROR([Can't find libconfig headers. Try using --with-libconfig-dir.])
 )
 
 #-----------------------------------------------------------------------------#
@@ -179,12 +179,12 @@ AC_SEARCH_LIBS(
     [nc_create],
     [netcdf],
     [],
-    AC_MSG_ERROR([can't find a suitable version of the NetCDF library.])
+    AC_MSG_ERROR([Can't find a suitable version of the NetCDF library.])
 )
 AC_CHECK_HEADERS(
     [netcdf.h],
     [],
-    AC_MSG_ERROR([Can't find NetCDF4 headers. Try using --with-netcdf.])
+    AC_MSG_ERROR([Can't find NetCDF4 headers. Try using --with-netcdf-dir.])
 )
 
 #-----------------------------------------------------------------------------#
