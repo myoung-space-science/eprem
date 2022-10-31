@@ -41,14 +41,6 @@ user_LDFLAGS="$LDFLAGS"
 # packages (e.g., NetCDF) but I don't have any further justification for it.
 : ${CFLAGS=""}
 
-# Augment environment variable values with Automake values, to ensure proper
-# configuration during subsequent tests. See
-# https://www.gnu.org/software/automake/manual/html_node/Program-Variables.html
-CFLAGS="${AM_CFLAGS} ${CFLAGS}"
-CXXFLAGS="${AM_CXXFLAGS} ${CXXFLAGS}"
-CPPFLAGS="${AM_CPPFLAGS} ${CPPFLAGS}"
-LDFLAGS="${AM_LDFLAGS} ${LDFLAGS}"
-
 #-----------------------------------------------------------------------------#
 # Checks for programs.
 #-----------------------------------------------------------------------------#
@@ -59,6 +51,63 @@ AC_PROG_AWK
 AC_PROG_MAKE_SET
 AC_PROG_MKDIR_P
 AC_PROG_RANLIB
+
+#-----------------------------------------------------------------------------#
+# Read command-line options.
+#-----------------------------------------------------------------------------#
+mpi_dir=
+AC_ARG_WITH(
+    [mpi-dir],
+    AS_HELP_STRING([--with-mpi-dir@<:@=DIR@:>@], [Look for MPI header files in DIR/include and libraries in DIR/lib.]),
+    [mpi_dir=$withval]
+)
+AS_IF(
+    [test "x$mpi_dir" != x],
+    [
+        AM_CFLAGS="  -I$mpi_dir/include $AM_CFLAGS"
+        AM_CPPFLAGS="-I$mpi_dir/include $AM_CPPFLAGS"
+        AM_CXXFLAGS="-I$mpi_dir/include $AM_CXXFLAGS"
+        AM_LDFLAGS=" -L$mpi_dir/lib -Wl,-rpath,$mpi_dir/lib $AM_LDFLAGS"
+    ]
+)
+libconfig_dir=
+AC_ARG_WITH(
+    [libconfig-dir],
+    AS_HELP_STRING([--with-libconfig-dir@<:@=DIR@:>@], [Look for libconfig header files in DIR/include and libraries in DIR/lib.]),
+    [libconfig_dir=$withval]
+)
+AS_IF(
+    [test "x$libconfig_dir" != x],
+    [
+        AM_CFLAGS="  -I$libconfig_dir/include $AM_CFLAGS"
+        AM_CPPFLAGS="-I$libconfig_dir/include $AM_CPPFLAGS"
+        AM_CXXFLAGS="-I$libconfig_dir/include $AM_CXXFLAGS"
+        AM_LDFLAGS=" -L$libconfig_dir/lib -Wl,-rpath,$libconfig_dir/lib $AM_LDFLAGS"
+    ]
+)
+netcdf_dir=
+AC_ARG_WITH(
+    [netcdf-dir],
+    AS_HELP_STRING([--with-netcdf-dir@<:@=DIR@:>@], [Look for netcdf header files in DIR/include and libraries in DIR/lib.]),
+    [netcdf_dir=$withval]
+)
+AS_IF(
+    [test "x$netcdf_dir" != x],
+    [
+        AM_CFLAGS="  -I$netcdf_dir/include $AM_CFLAGS"
+        AM_CPPFLAGS="-I$netcdf_dir/include $AM_CPPFLAGS"
+        AM_CXXFLAGS="-I$netcdf_dir/include $AM_CXXFLAGS"
+        AM_LDFLAGS=" -L$netcdf_dir/lib -Wl,-rpath,$netcdf_dir/lib $AM_LDFLAGS"
+    ]
+)
+
+# Augment environment variable values with Automake values, to ensure proper
+# configuration during subsequent tests. See
+# https://www.gnu.org/software/automake/manual/html_node/Program-Variables.html
+CFLAGS="${AM_CFLAGS} ${CFLAGS}"
+CXXFLAGS="${AM_CXXFLAGS} ${CXXFLAGS}"
+CPPFLAGS="${AM_CPPFLAGS} ${CPPFLAGS}"
+LDFLAGS="${AM_LDFLAGS} ${LDFLAGS}"
 
 #-----------------------------------------------------------------------------#
 # Make sure we have the C math library. This explicitly checks for the existence
@@ -107,21 +156,6 @@ AS_IF(
     AC_MSG_WARN([Setting CXX=$MPICXX for parallel execution.])
 )
 CXX=$MPICXX
-mpi_dir=
-AC_ARG_WITH(
-    [mpi-dir],
-    AS_HELP_STRING([--with-mpi-dir@<:@=DIR@:>@], [Look for MPI header files in DIR/includes and libraries in DIR/lib.]),
-    [mpi_dir=$withval]
-)
-AS_IF(
-    [test "x$mpi_dir" != x],
-    [
-        CFLAGS="  -I$mpi_dir/includes $CFLAGS"
-        CPPFLAGS="-I$mpi_dir/includes $CPPFLAGS"
-        CXXFLAGS="-I$mpi_dir/includes $CXXFLAGS"
-        LDFLAGS=" -L$mpi_dir/lib -Wl,-rpath,$mpi_dir/lib $LDFLAGS"
-    ]
-)
 AC_SEARCH_LIBS(
     [MPI_Init],
     [mpi mpich],
@@ -137,21 +171,6 @@ AC_CHECK_HEADERS(
 #-----------------------------------------------------------------------------#
 # Search for libconfig, which we require for processing input.
 #-----------------------------------------------------------------------------#
-libconfig_dir=
-AC_ARG_WITH(
-    [libconfig-dir],
-    AS_HELP_STRING([--with-libconfig-dir@<:@=DIR@:>@], [Look for libconfig header files in DIR/includes and libraries in DIR/lib.]),
-    [libconfig_dir=$withval]
-)
-AS_IF(
-    [test "x$libconfig_dir" != x],
-    [
-        CFLAGS="  -I$libconfig_dir/includes $CFLAGS"
-        CPPFLAGS="-I$libconfig_dir/includes $CPPFLAGS"
-        CXXFLAGS="-I$libconfig_dir/includes $CXXFLAGS"
-        LDFLAGS=" -L$libconfig_dir/lib -Wl,-rpath,$libconfig_dir/lib $LDFLAGS"
-    ]
-)
 AC_SEARCH_LIBS(
     [config_init],
     [config],
@@ -167,21 +186,6 @@ AC_CHECK_HEADERS(
 #-----------------------------------------------------------------------------#
 # Search for the NetCDF library, which we require for creating output.
 #-----------------------------------------------------------------------------#
-netcdf_dir=
-AC_ARG_WITH(
-    [netcdf-dir],
-    AS_HELP_STRING([--with-netcdf-dir@<:@=DIR@:>@], [Look for netcdf header files in DIR/includes and libraries in DIR/lib.]),
-    [netcdf_dir=$withval]
-)
-AS_IF(
-    [test "x$netcdf_dir" != x],
-    [
-        CFLAGS="  -I$netcdf_dir/includes $CFLAGS"
-        CPPFLAGS="-I$netcdf_dir/includes $CPPFLAGS"
-        CXXFLAGS="-I$netcdf_dir/includes $CXXFLAGS"
-        LDFLAGS=" -L$netcdf_dir/lib -Wl,-rpath,$netcdf_dir/lib $LDFLAGS"
-    ]
-)
 AC_SEARCH_LIBS(
     [nc_create],
     [netcdf],
@@ -283,5 +287,9 @@ LDFLAGS="$user_LDFLAGS"
 #-----------------------------------------------------------------------------#
 # Finalization and output.
 #-----------------------------------------------------------------------------#
+AC_SUBST(AM_CFLAGS)
+AC_SUBST(AM_CPPFLAGS)
+AC_SUBST(AM_CXXFLAGS)
+AC_SUBST(AM_LDFLAGS)
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
