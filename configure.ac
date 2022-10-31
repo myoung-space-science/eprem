@@ -96,106 +96,95 @@ AC_CHECK_HEADERS(
 # Search for a suitable MPI library. We currently require MPI for parallel runs
 # but it should become optional if we implement a serial version.
 #-----------------------------------------------------------------------------#
-
+AC_MSG_WARN([Unconditionally setting CC=$MPICC and CXX=$MPICXX for parallel execution.])
+LX_FIND_MPI dnl third-party macro in `m4/lx_find_mpi.m4`
+CC=$MPICC
+CXX=$MPICXX
+mpi_dir=
+AC_ARG_WITH(
+    [mpi-dir],
+    AS_HELP_STRING([--with-mpi-dir@<:@=DIR@:>@], [Look for MPI header files in DIR/includes and libraries in DIR/lib.]),
+    [mpi_dir=$withval]
+)
+AS_IF(
+    [test "x$mpi_dir" != x],
+    [
+        CFLAGS="  -I$mpi_dir/includes $CFLAGS"
+        CPPFLAGS="-I$mpi_dir/includes $CPPFLAGS"
+        CXXFLAGS="-I$mpi_dir/includes $CXXFLAGS"
+        LDFLAGS=" -L$mpi_dir/lib -Wl,-rpath,$mpi_dir/lib $LDFLAGS"
+    ]
+)
 AC_SEARCH_LIBS(
     [MPI_Init],
     [mpi mpich],
-    [found_mpi_lib=yes; break;],
-    [found_mpi_lib=no]
-)
-AC_ARG_WITH(
-    [mpi],
-    AS_HELP_STRING(
-        [--with-mpi@<:@=yes,no,DIR@:>@],
-        [Control use of MPI. A value of yes will cause EPREM to use the system MPI installation; a value of no will cause EPREM to build without MPI support. A value of DIR indicates that EPREM should look for MPI header files in DIR/includes and for MPI libraries in DIR/lib. Passing --with-mpi is an alias for --with-mpi=yes; passing --without-mpi is an alias for --with-mpi=no. Finally, if this option is not present, EPREM will assume a value of yes or no according to the availability of MPI.]
-    ),
-    [with_mpi=$withval],
-    [with_mpi=$found_mpi_lib]
-)
-
-MPI_INCFLAGS=
-MPI_LIBFLAGS=
-AS_CASE(
-    [x$with_mpi],
-    dnl Enable MPI because...
-    dnl The user passed --with-mpi
-    dnl The user passed --with-mpi=yes
-    dnl The user passed nothing and MPI is available
-    [x], [use_mpi=1],
-    [xyes], [use_mpi=1],
-    dnl Disable MPI because...
-    dnl The user passed --with-mpi=no
-    dnl The user passed --without-mpi
-    dnl The user passed nothing and MPI is not available
-    [xno], [
-        AC_MSG_ERROR([Disabling MPI (--with-mpi=no/--without-mpi) isn't supported yet.])
-    ],
-    dnl Default: Assume the user passed --with-mpi=DIR
-    [
-        use_mpi=1
-        MPI_INCFLAGS="-I$with_mpi/includes"
-        MPI_LIBFLAGS="L$with_mpi/lib -Wl,-rpath,$with_mpi/lib"
-    ]
-)
-AM_CONDITIONAL([USE_MPI], [test $use_mpi = 1])
-AC_MSG_CHECKING([whether to use MPI])
-AM_COND_IF(
-    [USE_MPI],
-    dnl True
-    [
-        AC_MSG_RESULT([yes])
-        LX_FIND_MPI
-        CC=$MPICC
-        CXX=$MPICXX
-        AM_CFLAGS="$MPI_INCFLAGS $AM_CFLAGS"
-        AM_CPPFLAGS="$MPI_INCFLAGS $AM_CPPFLAGS"
-        AM_CXXFLAGS="$MPI_INCFLAGS $AM_CXXFLAGS"
-        AM_LDFLAGS="$MPI_LIBFLAGS $AM_LDFLAGS"
-    ],
-    dnl False
-    [AC_MSG_RESULT([no])]
+    [],
+    AC_MSG_ERROR([Can't find a suitable MPI library.])
 )
 AC_CHECK_HEADERS(
     [mpi.h],
-    dnl Found
     [],
-    dnl Not found
-    [
-        AM_COND_IF(
-            [USE_MPI],
-            AC_MSG_ERROR([Can't find MPI headers. Use --with-mpi=no or --without-mpi to build without MPI.]),
-        )
-    ]
+    AC_MSG_ERROR([Can't find MPI headers. Try using --with-mpi.])
 )
 
+#-----------------------------------------------------------------------------#
 # Search for libconfig, which we require for processing input.
+#-----------------------------------------------------------------------------#
+libconfig_dir=
+AC_ARG_WITH(
+    [libconfig-dir],
+    AS_HELP_STRING([--with-libconfig-dir@<:@=DIR@:>@], [Look for libconfig header files in DIR/includes and libraries in DIR/lib.]),
+    [libconfig_dir=$withval]
+)
+AS_IF(
+    [test "x$libconfig_dir" != x],
+    [
+        CFLAGS="  -I$libconfig_dir/includes $CFLAGS"
+        CPPFLAGS="-I$libconfig_dir/includes $CPPFLAGS"
+        CXXFLAGS="-I$libconfig_dir/includes $CXXFLAGS"
+        LDFLAGS=" -L$libconfig_dir/lib -Wl,-rpath,$libconfig_dir/lib $LDFLAGS"
+    ]
+)
 AC_SEARCH_LIBS(
     [config_init],
     [config],
     [],
-    AC_MSG_ERROR([can't find a suitable version of the libconfig library.])
+    AC_MSG_ERROR([Can't find a suitable version of the libconfig library.])
+)
+AC_CHECK_HEADERS(
+    [libconfig.h],
+    [],
+    AC_MSG_ERROR([Can't find libconfig headers. Try using --with-config.])
 )
 
+#-----------------------------------------------------------------------------#
 # Search for the NetCDF library, which we require for creating output.
+#-----------------------------------------------------------------------------#
+netcdf_dir=
+AC_ARG_WITH(
+    [netcdf-dir],
+    AS_HELP_STRING([--with-netcdf-dir@<:@=DIR@:>@], [Look for netcdf header files in DIR/includes and libraries in DIR/lib.]),
+    [netcdf_dir=$withval]
+)
+AS_IF(
+    [test "x$netcdf_dir" != x],
+    [
+        CFLAGS="  -I$netcdf_dir/includes $CFLAGS"
+        CPPFLAGS="-I$netcdf_dir/includes $CPPFLAGS"
+        CXXFLAGS="-I$netcdf_dir/includes $CXXFLAGS"
+        LDFLAGS=" -L$netcdf_dir/lib -Wl,-rpath,$netcdf_dir/lib $LDFLAGS"
+    ]
+)
 AC_SEARCH_LIBS(
     [nc_create],
     [netcdf],
     [],
     AC_MSG_ERROR([can't find a suitable version of the NetCDF library.])
 )
-
-# libconfig: unconditionally required for input
-AC_CHECK_HEADERS(
-    [libconfig.h],
-    [],
-    AC_MSG_ERROR([failed: libconfig headers are required])
-)
-
-# libnetcdf: unconditionally required for output
 AC_CHECK_HEADERS(
     [netcdf.h],
     [],
-    AC_MSG_ERROR([failed: NetCDF4 headers are required])
+    AC_MSG_ERROR([Can't find NetCDF4 headers. Try using --with-netcdf.])
 )
 
 #-----------------------------------------------------------------------------#
