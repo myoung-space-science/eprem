@@ -32,9 +32,8 @@ AC_SUBST([MPIRUN])
 # subsequent tests of libraries and header files modify them.
 user_CFLAGS="$CFLAGS"
 user_CXXFLAGS="$CXXFLAGS"
-user_FCFLAGS="$FCFLAGS"
-user_LDFLAGS="$LDFLAGS"
 user_CPPFLAGS="$CPPFLAGS"
+user_LDFLAGS="$LDFLAGS"
 
 # Suppress the default compiler flags (namely, -g -O2).
 #
@@ -46,7 +45,6 @@ user_CPPFLAGS="$CPPFLAGS"
 # configuration during subsequent tests. See
 # https://www.gnu.org/software/automake/manual/html_node/Program-Variables.html
 CFLAGS="${AM_CFLAGS} ${CFLAGS}"
-FCFLAGS="${AM_FCFLAGS} ${FCFLAGS}"
 CXXFLAGS="${AM_CXXFLAGS} ${CXXFLAGS}"
 CPPFLAGS="${AM_CPPFLAGS} ${CPPFLAGS}"
 LDFLAGS="${AM_LDFLAGS} ${LDFLAGS}"
