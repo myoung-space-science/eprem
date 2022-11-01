@@ -245,7 +245,7 @@ AC_CHECK_FUNCS([exp floor memset pow sqrt strstr])
 # DEV: I adapted this (almost verbatim) from the `prediccs` version. There may
 # be more canonical ways to perform the same tests, if they're even necessary.
 #-----------------------------------------------------------------------------#
-AC_LANG(C++)
+AC_LANG_PUSH(C++)
 
 AC_MSG_CHECKING([if empty compile works])
 AC_LINK_IFELSE(
@@ -302,6 +302,7 @@ AS_IF(
     ],
     [AC_MSG_RESULT([no])]
 )
+AC_LANG_POP(C++)
 
 #-----------------------------------------------------------------------------#
 # Finalize and create output.
