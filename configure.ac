@@ -2,10 +2,16 @@
 # Process this file with autoconf to produce a configure script.
 
 #-----------------------------------------------------------------------------#
-# Initialize and perform setup tasks.
+# Initialize.
 #-----------------------------------------------------------------------------#
 AC_PREREQ([2.71])
 AC_INIT([EPREM],[0.1.0],[Matthew.Young@unh.edu],[eprem])
+
+#-----------------------------------------------------------------------------#
+# Perform global set-up tasks.
+  AS_BOX([Environment and System Setup])
+#-----------------------------------------------------------------------------#
+
 AC_CONFIG_AUX_DIR([build-aux])
 AM_INIT_AUTOMAKE([foreign subdir-objects])
 AC_CONFIG_SRCDIR([src/eprem.c])
@@ -116,6 +122,11 @@ CPPFLAGS="${AM_CPPFLAGS} ${CPPFLAGS}"
 LDFLAGS="${AM_LDFLAGS} ${LDFLAGS}"
 
 #-----------------------------------------------------------------------------#
+# Set up compilers.
+  AS_BOX([Compiler Setup])
+#-----------------------------------------------------------------------------#
+
+#-----------------------------------------------------------------------------#
 # Define the MPI command for MPI library tests.
 #-----------------------------------------------------------------------------#
 AC_MSG_CHECKING([setting MPIRUN])
@@ -155,19 +166,28 @@ AC_ARG_VAR(MPICXX, [MPI C++ compiler command])
 AC_PROG_CXX([$MPICXX])
 
 #-----------------------------------------------------------------------------#
-# Make sure we have the C math library. This explicitly checks for the existence
-# of `exp`, which EPREM requires, but it also ensures that we have access to the
-# full library.
+# Check for typedefs, structures, and compiler characteristics.
+  AS_BOX([Typedefs, Structures, and Compiler Characteristics])
+#
+# NOTE: At this point in the script, `AC_TYPE_SIZE_T` will trigger checks for
+# numerous other standard header files (e.g., stdio.h); this is preferable for
+# the sake of organizing runtime messages.
 #-----------------------------------------------------------------------------#
-AC_SEARCH_LIBS(
-    [exp],
-    [m],
-    [],
-    AC_MSG_ERROR([Can't find the math library.])
-)
+AC_TYPE_SIZE_T
+AC_C_RESTRICT
+AC_CHECK_TYPES([ptrdiff_t])
+
+#-----------------------------------------------------------------------------#
+# Check for required system libraries and header files.
+  AS_BOX([Required System Libraries and Header Files])
+#
+# math.h (standard math functions): If the header file exists on the system,
+# this script will additionally check that the math library defines the exp()
+# function, which EPREM requires.
+#-----------------------------------------------------------------------------#
 AC_CHECK_HEADERS(
     math.h,
-    [],
+    [AC_CHECK_LIB(m, exp, [], AC_MSG_ERROR([EPREM requires the exp() function]))],
     AC_MSG_ERROR([Can't find math.h.])
 )
 
@@ -233,21 +253,15 @@ AC_CHECK_HEADERS(
 )
 
 #-----------------------------------------------------------------------------#
-# Checks for typedefs, structures, and compiler characteristics.
-#-----------------------------------------------------------------------------#
-AC_C_RESTRICT
-AC_TYPE_SIZE_T
-AC_CHECK_TYPES([ptrdiff_t])
-
-#-----------------------------------------------------------------------------#
-# Checks for library functions.
+# Check for library functions.
+  AS_BOX([Required Library Functions])
 #-----------------------------------------------------------------------------#
 AC_FUNC_MALLOC
-AC_CHECK_FUNCS([floor memset pow sqrt strstr])
-
+AC_CHECK_FUNCS([exp floor memset pow sqrt strstr])
 
 #-----------------------------------------------------------------------------#
-# Special tests, -lstdc++ needed, or -DMPICH_IGNORE_CXX_SEEK (darwin issues?).
+# Special tests, -lstdc++ needed, or -DMPICH_IGNORE_CXX_SEEK (Darwin issues?).
+  AS_BOX([Special Tests])
 #
 # DEV: I adapted this (almost verbatim) from the `prediccs` version. There may
 # be more canonical ways to perform the same tests, if they're even necessary.
@@ -320,6 +334,7 @@ LDFLAGS="$user_LDFLAGS"
 
 #-----------------------------------------------------------------------------#
 # Finalize and create output.
+  AS_BOX([Output])
 #-----------------------------------------------------------------------------#
 AC_SUBST(AM_CFLAGS)
 AC_SUBST(AM_CPPFLAGS)
