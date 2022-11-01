@@ -31,23 +31,6 @@ AC_ARG_VAR(MPICXX, [MPI C++ compiler command])
 AC_CANONICAL_HOST
 
 #-----------------------------------------------------------------------------#
-# Preserve the user's environment variables.
-#-----------------------------------------------------------------------------#
-user_CC="$CC"
-user_CXX="$CXX"
-user_CFLAGS="$CFLAGS"
-user_CXXFLAGS="$CXXFLAGS"
-user_CPPFLAGS="$CPPFLAGS"
-user_LDFLAGS="$LDFLAGS"
-
-#-----------------------------------------------------------------------------#
-# Suppress the default compiler flags (namely, -g -O2). See documentation for
-# `AC_PROG_CC` and `AC_PROG_CXX` for more information.
-#-----------------------------------------------------------------------------#
-: ${CFLAGS=""}
-: ${CXXFLAGS=""}
-
-#-----------------------------------------------------------------------------#
 # Check for particular standard programs.
 #-----------------------------------------------------------------------------#
 AC_PROG_INSTALL
@@ -118,10 +101,10 @@ AS_IF(
 # knows very little about the build process, environment variables, etc., and
 # wants to install the program as quickly as possible.
 #-----------------------------------------------------------------------------#
-CFLAGS="${AM_CFLAGS} ${CFLAGS}"
-CXXFLAGS="${AM_CXXFLAGS} ${CXXFLAGS}"
-CPPFLAGS="${AM_CPPFLAGS} ${CPPFLAGS}"
-LDFLAGS="${AM_LDFLAGS} ${LDFLAGS}"
+: ${CFLAGS="${AM_CFLAGS} ${CFLAGS}"}
+: ${CXXFLAGS="${AM_CXXFLAGS} ${CXXFLAGS}"}
+: ${CPPFLAGS="${AM_CPPFLAGS} ${CPPFLAGS}"}
+: ${LDFLAGS="${AM_LDFLAGS} ${LDFLAGS}"}
 
 #-----------------------------------------------------------------------------#
 # Set up compilers.
@@ -318,14 +301,6 @@ AS_IF(
     ],
     [AC_MSG_RESULT([no])]
 )
-
-#-----------------------------------------------------------------------------#
-# Restore the user values of environment variables.
-#-----------------------------------------------------------------------------#
-CFLAGS="$user_CFLAGS"
-CXXFLAGS="$user_CXXFLAGS"
-CPPFLAGS="$user_CPPFLAGS"
-LDFLAGS="$user_LDFLAGS"
 
 #-----------------------------------------------------------------------------#
 # Finalize and create output.
