@@ -30,6 +30,8 @@ AC_SUBST([MPIRUN])
 
 # Save the user's environment variables. We want to preserve these in case
 # subsequent tests of libraries and header files modify them.
+user_CC="$CC"
+user_CXX="$CXX"
 user_CFLAGS="$CFLAGS"
 user_CXXFLAGS="$CXXFLAGS"
 user_CPPFLAGS="$CPPFLAGS"
@@ -44,8 +46,6 @@ user_LDFLAGS="$LDFLAGS"
 #-----------------------------------------------------------------------------#
 # Checks for programs.
 #-----------------------------------------------------------------------------#
-AC_PROG_CXX
-AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_AWK
 AC_PROG_MAKE_SET
@@ -110,6 +110,34 @@ CPPFLAGS="${AM_CPPFLAGS} ${CPPFLAGS}"
 LDFLAGS="${AM_LDFLAGS} ${LDFLAGS}"
 
 #-----------------------------------------------------------------------------#
+# Set the C compiler to a suitable MPI C compiler, if necessary.
+#-----------------------------------------------------------------------------#
+MPICC=$user_CC
+AS_IF(
+    [test "x$MPICC" = x],
+    [
+        AC_CHECK_PROGS(MPICC, [mpicc mpiicc mpixlc mpipgcc], [not-found])
+        AC_MSG_WARN([Setting CC=$MPICC for parallel execution.])
+    ]
+)
+AC_ARG_VAR(MPICC, [MPI C compiler command])
+AC_PROG_CC([$MPICC])
+
+#-----------------------------------------------------------------------------#
+# Set the C++ compiler to a suitable MPI C++ compiler, if necessary.
+#-----------------------------------------------------------------------------#
+MPICXX=$user_CXX
+AS_IF(
+    [test "x$MPICXX" = x],
+    [
+        AC_CHECK_PROGS(MPICXX, [mpicxx mpiCC mpic++ mpig++ mpiicpc mpipgCC mpixlC])
+        AC_MSG_WARN([Setting CXX=$MPICXX for parallel execution.])
+    ]
+)
+AC_ARG_VAR(MPICXX, [MPI C++ compiler command])
+AC_PROG_CXX([$MPICXX])
+
+#-----------------------------------------------------------------------------#
 # Make sure we have the C math library. This explicitly checks for the existence
 # of `exp`, which EPREM requires, but it also ensures that we have access to the
 # full library.
@@ -145,17 +173,6 @@ AC_CHECK_HEADERS(
 # Search for a suitable MPI library. We currently require MPI for parallel runs
 # but it should become optional if we implement a serial version.
 #-----------------------------------------------------------------------------#
-LX_FIND_MPI dnl third-party macro in `m4/lx_find_mpi.m4`
-AS_IF(
-    [test "x$MPICC" != x],
-    AC_MSG_WARN([Setting CC=$MPICC for parallel execution.])
-)
-CC=$MPICC
-AS_IF(
-    [test "x$MPICCXX" != x],
-    AC_MSG_WARN([Setting CXX=$MPICXX for parallel execution.])
-)
-CXX=$MPICXX
 AC_SEARCH_LIBS(
     [MPI_Init],
     [mpi mpich],
