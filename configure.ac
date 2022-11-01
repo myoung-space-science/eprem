@@ -132,10 +132,11 @@ LDFLAGS="${AM_LDFLAGS} ${LDFLAGS}"
 # Define the MPI command for MPI library tests.
 #-----------------------------------------------------------------------------#
 AC_MSG_CHECKING([setting MPIRUN])
-case ${host} in
-    *-aix*)  MPIRUN="aprun -n 2";;
-    *)       MPIRUN="mpirun -n 2";;
-esac
+AS_CASE(
+    [$host],
+    [*-aix*], [MPIRUN="aprun -n 2"],
+    [MPIRUN="mpirun -n 2"]
+)
 AC_MSG_RESULT([${MPIRUN}])
 AC_SUBST([MPIRUN])
 
