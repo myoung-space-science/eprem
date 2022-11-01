@@ -22,6 +22,10 @@ AC_CONFIG_MACRO_DIRS([m4])
 # close to the EPREM header file `configuration.h`.
 #-----------------------------------------------------------------------------#
 AC_CONFIG_HEADERS([src/autodefs.h])
+
+#-----------------------------------------------------------------------------#
+# Identify the variables containing the MPI compilers as "precious".
+#-----------------------------------------------------------------------------#
 AC_ARG_VAR(MPICC, [MPI C compiler command])
 AC_ARG_VAR(MPICXX, [MPI C++ compiler command])
 
