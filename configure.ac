@@ -48,6 +48,7 @@ user_LDFLAGS="$LDFLAGS"
 # `AC_PROG_CC` and `AC_PROG_CXX` for more information.
 #-----------------------------------------------------------------------------#
 : ${CFLAGS=""}
+: ${CXXFLAGS=""}
 
 #-----------------------------------------------------------------------------#
 # Check for particular standard programs.
