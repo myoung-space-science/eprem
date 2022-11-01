@@ -23,17 +23,6 @@ AC_CONFIG_HEADERS([src/autodefs.h])
 AC_CANONICAL_HOST
 
 #-----------------------------------------------------------------------------#
-# Define the MPI command for MPI library tests.
-#-----------------------------------------------------------------------------#
-AC_MSG_CHECKING([setting MPIRUN])
-case ${host} in
-    *-aix*)  MPIRUN="aprun -n 2";;
-    *)       MPIRUN="mpirun -n 2";;
-esac
-AC_MSG_RESULT([${MPIRUN}])
-AC_SUBST([MPIRUN])
-
-#-----------------------------------------------------------------------------#
 # Preserve the user's environment variables.
 #-----------------------------------------------------------------------------#
 user_CC="$CC"
@@ -125,6 +114,17 @@ CFLAGS="${AM_CFLAGS} ${CFLAGS}"
 CXXFLAGS="${AM_CXXFLAGS} ${CXXFLAGS}"
 CPPFLAGS="${AM_CPPFLAGS} ${CPPFLAGS}"
 LDFLAGS="${AM_LDFLAGS} ${LDFLAGS}"
+
+#-----------------------------------------------------------------------------#
+# Define the MPI command for MPI library tests.
+#-----------------------------------------------------------------------------#
+AC_MSG_CHECKING([setting MPIRUN])
+case ${host} in
+    *-aix*)  MPIRUN="aprun -n 2";;
+    *)       MPIRUN="mpirun -n 2";;
+esac
+AC_MSG_RESULT([${MPIRUN}])
+AC_SUBST([MPIRUN])
 
 #-----------------------------------------------------------------------------#
 # Set the C compiler to a suitable MPI C compiler, if necessary.
