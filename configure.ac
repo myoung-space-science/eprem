@@ -310,9 +310,5 @@ AS_IF(
 # Finalize and create output.
   AS_BOX([Output])
 #-----------------------------------------------------------------------------#
-AC_SUBST(AM_CFLAGS)
-AC_SUBST(AM_CPPFLAGS)
-AC_SUBST(AM_CXXFLAGS)
-AC_SUBST(AM_LDFLAGS)
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
