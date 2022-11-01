@@ -22,6 +22,8 @@ AC_CONFIG_MACRO_DIRS([m4])
 # close to the EPREM header file `configuration.h`.
 #-----------------------------------------------------------------------------#
 AC_CONFIG_HEADERS([src/autodefs.h])
+AC_ARG_VAR(MPICC, [MPI C compiler command])
+AC_ARG_VAR(MPICXX, [MPI C++ compiler command])
 
 #-----------------------------------------------------------------------------#
 # Determinte the canonical host-system (sets $host).
@@ -140,30 +142,22 @@ AC_SUBST([MPIRUN])
 #-----------------------------------------------------------------------------#
 # Set the C compiler to a suitable MPI C compiler, if necessary.
 #-----------------------------------------------------------------------------#
-MPICC=$user_CC
+AC_CHECK_PROGS(MPICC, [mpicc mpiicc mpixlc mpipgcc], [missing])
 AS_IF(
-    [test "x$MPICC" = x],
-    [
-        AC_CHECK_PROGS(MPICC, [mpicc mpiicc mpixlc mpipgcc], [not-found])
-        AC_MSG_WARN([Setting CC=$MPICC for parallel execution.])
-    ]
+    [test $MPICC = missing],
+    [AC_MSG_ERROR([EPREM requires an MPI C compiler.])],
+    [AC_PROG_CC([$MPICC])]
 )
-AC_ARG_VAR(MPICC, [MPI C compiler command])
-AC_PROG_CC([$MPICC])
 
 #-----------------------------------------------------------------------------#
 # Set the C++ compiler to a suitable MPI C++ compiler, if necessary.
 #-----------------------------------------------------------------------------#
-MPICXX=$user_CXX
+AC_CHECK_PROGS(MPICXX, [mpicxx mpiCC mpic++ mpig++ mpiicpc mpipgCC mpixlC], [missing])
 AS_IF(
-    [test "x$MPICXX" = x],
-    [
-        AC_CHECK_PROGS(MPICXX, [mpicxx mpiCC mpic++ mpig++ mpiicpc mpipgCC mpixlC])
-        AC_MSG_WARN([Setting CXX=$MPICXX for parallel execution.])
-    ]
+    [test $MPICXX = missing],
+    [AC_MSG_ERROR([EPREM requires an MPI C++ compiler.])],
+    [AC_PROG_CXX([$MPICXX])]
 )
-AC_ARG_VAR(MPICXX, [MPI C++ compiler command])
-AC_PROG_CXX([$MPICXX])
 
 #-----------------------------------------------------------------------------#
 # Check for typedefs, structures, and compiler characteristics.
