@@ -2,9 +2,8 @@
 # Process this file with autoconf to produce a configure script.
 
 #-----------------------------------------------------------------------------#
-# Initialization and setup.
+# Initialize and perform setup tasks.
 #-----------------------------------------------------------------------------#
-
 AC_PREREQ([2.71])
 AC_INIT([EPREM],[0.1.0],[Matthew.Young@unh.edu],[eprem])
 AC_CONFIG_AUX_DIR([build-aux])
@@ -12,14 +11,20 @@ AM_INIT_AUTOMAKE([foreign subdir-objects])
 AC_CONFIG_SRCDIR([src/eprem.c])
 AC_CONFIG_MACRO_DIRS([m4])
 
+#-----------------------------------------------------------------------------#
 # Use `autodefs.h` instead of the default, `config.h`, because the latter is too
 # close to the EPREM header file `configuration.h`.
+#-----------------------------------------------------------------------------#
 AC_CONFIG_HEADERS([src/autodefs.h])
 
+#-----------------------------------------------------------------------------#
 # Determinte the canonical host-system (sets $host).
+#-----------------------------------------------------------------------------#
 AC_CANONICAL_HOST
 
-# Define the MPI command. This is relevant to MPI library tests.
+#-----------------------------------------------------------------------------#
+# Define the MPI command for MPI library tests.
+#-----------------------------------------------------------------------------#
 AC_MSG_CHECKING([setting MPIRUN])
 case ${host} in
     *-aix*)  MPIRUN="aprun -n 2";;
@@ -28,8 +33,9 @@ esac
 AC_MSG_RESULT([${MPIRUN}])
 AC_SUBST([MPIRUN])
 
-# Save the user's environment variables. We want to preserve these in case
-# subsequent tests of libraries and header files modify them.
+#-----------------------------------------------------------------------------#
+# Preserve the user's environment variables.
+#-----------------------------------------------------------------------------#
 user_CC="$CC"
 user_CXX="$CXX"
 user_CFLAGS="$CFLAGS"
@@ -37,14 +43,14 @@ user_CXXFLAGS="$CXXFLAGS"
 user_CPPFLAGS="$CPPFLAGS"
 user_LDFLAGS="$LDFLAGS"
 
-# Suppress the default compiler flags (namely, -g -O2).
-#
-# DEV: I copied this from the `prediccs` version. It is also common in other
-# packages (e.g., NetCDF) but I don't have any further justification for it.
+#-----------------------------------------------------------------------------#
+# Suppress the default compiler flags (namely, -g -O2). See documentation for
+# `AC_PROG_CC` and `AC_PROG_CXX` for more information.
+#-----------------------------------------------------------------------------#
 : ${CFLAGS=""}
 
 #-----------------------------------------------------------------------------#
-# Checks for programs.
+# Check for particular standard programs.
 #-----------------------------------------------------------------------------#
 AC_PROG_INSTALL
 AC_PROG_AWK
@@ -101,9 +107,19 @@ AS_IF(
     ]
 )
 
+#-----------------------------------------------------------------------------#
 # Augment environment variable values with Automake values, to ensure proper
 # configuration during subsequent tests. See
 # https://www.gnu.org/software/automake/manual/html_node/Program-Variables.html
+# We will reset these variables to their original values at the end.
+#
+# Note: This is not entirely consistent with the Autotools philosophy, which
+# prefers to respect the user's environment as much as possible. A more
+# philosophically consistent approach would leverage `config.site` files or the
+# `CONFIG_SITE` variable. However, this script assumes that the typical user
+# knows very little about the build process, environment variables, etc., and
+# wants to install the program as quickly as possible.
+#-----------------------------------------------------------------------------#
 CFLAGS="${AM_CFLAGS} ${CFLAGS}"
 CXXFLAGS="${AM_CXXFLAGS} ${CXXFLAGS}"
 CPPFLAGS="${AM_CPPFLAGS} ${CPPFLAGS}"
@@ -302,7 +318,7 @@ CPPFLAGS="$user_CPPFLAGS"
 LDFLAGS="$user_LDFLAGS"
 
 #-----------------------------------------------------------------------------#
-# Finalization and output.
+# Finalize and create output.
 #-----------------------------------------------------------------------------#
 AC_SUBST(AM_CFLAGS)
 AC_SUBST(AM_CPPFLAGS)
