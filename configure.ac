@@ -147,7 +147,7 @@ AS_IF(
 #-----------------------------------------------------------------------------#
 # Set the C compiler to a suitable MPI C compiler, if necessary.
 #-----------------------------------------------------------------------------#
-AC_PROG_CC([mpicc mpiicc mpixlc mpipgcc])
+AC_PROG_CC(mpi_cc_list)
 
 #-----------------------------------------------------------------------------#
 # Warn the user if CXX is set to a non-MPI compiler.
@@ -172,7 +172,7 @@ AS_IF(
 #-----------------------------------------------------------------------------#
 # Set the C++ compiler to a suitable MPI C++ compiler, if necessary.
 #-----------------------------------------------------------------------------#
-AC_PROG_CXX([mpicxx mpiCC mpic++ mpig++ mpiicpc mpipgCC mpixlC])
+AC_PROG_CXX(mpi_cxx_list)
 
 #-----------------------------------------------------------------------------#
 # Check for typedefs, structures, and compiler characteristics.
