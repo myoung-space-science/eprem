@@ -242,32 +242,19 @@ AC_CHECK_FUNCS([exp floor memset pow sqrt strstr])
 # Special tests, -lstdc++ needed, or -DMPICH_IGNORE_CXX_SEEK (Darwin issues?).
   AS_BOX([Special Tests])
 #
-# DEV: I adapted this (almost verbatim) from the `prediccs` version. There may
-# be more canonical ways to perform the same tests, if they're even necessary.
+# NOTE: I adapted these from an earlier version of this script. I don't know if
+# they're strictly necessary for EPREM.
 #-----------------------------------------------------------------------------#
 AC_LANG_PUSH(C++)
-
 AC_MSG_CHECKING([if empty compile works])
 AC_LINK_IFELSE(
     [AC_LANG_PROGRAM([[#include <iostream>]])],
-    [last_test=0; AC_MSG_RESULT([yes])],
-    [last_test=1; AC_MSG_RESULT([no])]
-)
-
-AS_IF(
-    [test "$last_test" -ne 0],
+    AC_MSG_RESULT([yes (PASS)]),
     [
-        AC_SUBST(orig_LDFLAGS,[$LDFLAGS])
-        AC_SUBST(LDFLAGS,["$LDFLAGS -lstdc++"])
-        AC_MSG_CHECKING([again with -lstdc++])
-        AC_LINK_IFELSE(
-            [AC_LANG_PROGRAM([[#include <iostream>]])],
-            [last_test=0; AC_MSG_RESULT([yes])],
-            [last_test=1; AC_MSG_RESULT([no]); AC_SUBST(LDFLAGS,[$orig_LDFLAGS])]
-        )
+        AC_MSG_RESULT([no (FAIL)])
+        AC_MSG_ERROR([try rerunning with LIBS=-lstdc++])
     ]
 )
-
 AC_MSG_CHECKING([if -DMPICH_IGNORE_CXX_SEEK is needed])
 AC_LINK_IFELSE(
     [
@@ -278,29 +265,11 @@ AC_LINK_IFELSE(
             ]]
         )
     ],
-    [last_test=0],
-    [last_test=1]
-)
-
-AS_IF(
-    [test "$last_test" -ne 0],
+    AC_MSG_RESULT([no (PASS)]),
     [
-        AC_SUBST(orig_CPPFLAGS,[$CPPFLAGS])
-        AC_SUBST(CPPFLAGS,["$CPPFLAGS -DMPICH_IGNORE_CXX_SEEK"])
-        AC_LINK_IFELSE(
-            [
-                AC_LANG_PROGRAM(
-                    [[
-                    #include <iostream>
-                    #include <mpi.h>
-                    ]]
-                )
-            ],
-            [AC_MSG_RESULT([yes])],
-            [AC_MSG_RESULT([error]); AC_SUBST(CPPFLAGS,[$orig_CPPFLAGS])]
-        )
-    ],
-    [AC_MSG_RESULT([no])]
+        AC_MSG_RESULT([yes (FAIL)])
+        AC_MSG_ERROR([try rerunning with CPPFLAGS=-DMPICH_IGNORE_CXX_SEEK])
+    ]
 )
 AC_LANG_POP(C++)
 
