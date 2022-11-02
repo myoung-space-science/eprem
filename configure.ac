@@ -127,22 +127,12 @@ AC_SUBST([MPIRUN])
 #-----------------------------------------------------------------------------#
 # Set the C compiler to a suitable MPI C compiler, if necessary.
 #-----------------------------------------------------------------------------#
-AC_CHECK_PROGS(MPICC, [mpicc mpiicc mpixlc mpipgcc], [missing])
-AS_IF(
-    [test $MPICC = missing],
-    [AC_MSG_ERROR([EPREM requires an MPI C compiler.])],
-    [AC_PROG_CC([$MPICC])]
-)
+AC_PROG_CC([mpicc mpiicc mpixlc mpipgcc])
 
 #-----------------------------------------------------------------------------#
 # Set the C++ compiler to a suitable MPI C++ compiler, if necessary.
 #-----------------------------------------------------------------------------#
-AC_CHECK_PROGS(MPICXX, [mpicxx mpiCC mpic++ mpig++ mpiicpc mpipgCC mpixlC], [missing])
-AS_IF(
-    [test $MPICXX = missing],
-    [AC_MSG_ERROR([EPREM requires an MPI C++ compiler.])],
-    [AC_PROG_CXX([$MPICXX])]
-)
+AC_PROG_CXX([mpicxx mpiCC mpic++ mpig++ mpiicpc mpipgCC mpixlC])
 
 #-----------------------------------------------------------------------------#
 # Check for typedefs, structures, and compiler characteristics.
