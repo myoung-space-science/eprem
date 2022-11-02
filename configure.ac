@@ -125,7 +125,15 @@ AC_MSG_RESULT([${MPIRUN}])
 AC_SUBST([MPIRUN])
 
 #-----------------------------------------------------------------------------#
-# Warn the user if CC is set to a non-MPI compiler.
+# Set CC to a suitable MPI C compiler, if necessary and possible, or raise an
+# error if the user requested a non-MPI C compiler.
+#
+# 1) Define a list of known MPI C compilers.
+# 2) If CC is defined (i.e., non-empty), compare it to each listed compiler
+#    until we find a match or run out of options.
+# 3) If it didn't match any known compilers, raise an error.
+# 4) If it did match a known compiler, use that compiler; if it was undefined to
+#    begin with, use the first available known compiler.
 #-----------------------------------------------------------------------------#
 m4_define([mpi_cc_list], [mpicc mpiicc mpixlc mpipgcc])
 AS_IF(
@@ -143,14 +151,18 @@ AS_IF(
         )
     ]
 )
-
-#-----------------------------------------------------------------------------#
-# Set the C compiler to a suitable MPI C compiler, if necessary.
-#-----------------------------------------------------------------------------#
 AC_PROG_CC(mpi_cc_list)
 
 #-----------------------------------------------------------------------------#
-# Warn the user if CXX is set to a non-MPI compiler.
+# Set CXX to a suitable MPI C++ compiler, if necessary and possible, or raise an
+# error if the user requested a non-MPI C++ compiler.
+#
+# 1) Define a list of known MPI C++ compilers.
+# 2) If CXX is defined (i.e., non-empty), compare it to each listed compiler
+#    until we find a match or run out of options.
+# 3) If it didn't match any known compilers, raise an error.
+# 4) If it did match a known compiler, use that compiler; if it was undefined to
+#    begin with, use the first available known compiler.
 #-----------------------------------------------------------------------------#
 m4_define([mpi_cxx_list], [mpicxx mpiCC mpic++ mpig++ mpiicpc mpipgCC mpixlC])
 AS_IF(
@@ -168,10 +180,6 @@ AS_IF(
         )
     ]
 )
-
-#-----------------------------------------------------------------------------#
-# Set the C++ compiler to a suitable MPI C++ compiler, if necessary.
-#-----------------------------------------------------------------------------#
 AC_PROG_CXX(mpi_cxx_list)
 
 #-----------------------------------------------------------------------------#
