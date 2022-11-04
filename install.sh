@@ -14,9 +14,9 @@ run_stage() {
     print_banner "$@"
     if [ $dry_run != 1 ]; then
         eval "$@"
+        print_banner "Done"
         return $?
     fi
-    print_banner "Done"
 }
 
 # Exit immediately if a pipeline returns non-zero status. See
