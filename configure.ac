@@ -3,8 +3,12 @@
 
 #-----------------------------------------------------------------------------#
 # Initialize.
+#
+# Note: We require version >2.69 because there was a subtle bug related to
+# normalizing the C `restrict` keyword. See
+# https://www.mail-archive.com/autoconf-patches@gnu.org/msg06239.html
 #-----------------------------------------------------------------------------#
-AC_PREREQ([2.69])
+AC_PREREQ([2.71])
 AC_INIT([EPREM],[0.1.0],[Matthew.Young@unh.edu],[eprem])
 
 #-----------------------------------------------------------------------------#
