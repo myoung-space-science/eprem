@@ -135,23 +135,7 @@ AC_SUBST([MPIRUN])
 # 4) If it did match a known compiler, use that compiler; if it was undefined to
 #    begin with, use the first available known compiler.
 #-----------------------------------------------------------------------------#
-m4_define([mpi_cc_list], [mpicc mpiicc mpixlc mpipgcc])
-AS_IF(
-    [test x"$CC" != x],
-    [
-        found_mpi_cc=
-        m4_define(
-            [check_cc],
-            [AS_IF([test "x$CC" = "x$1"], [found_mpi_cc=$CC; break;])]
-        )
-        m4_map([check_cc], [mpi_cc_list])
-        AS_IF(
-            [test "x$found_mpi_cc" = x],
-            [AC_MSG_ERROR([EPREM requires an MPI C compiler (got CC=$CC)])]
-        )
-    ]
-)
-AC_PROG_CC(mpi_cc_list)
+AC_PROG_CC([mpicc mpiicc mpixlc mpipgcc])
 
 #-----------------------------------------------------------------------------#
 # Set CXX to a suitable MPI C++ compiler, if necessary and possible, or raise an
@@ -164,23 +148,7 @@ AC_PROG_CC(mpi_cc_list)
 # 4) If it did match a known compiler, use that compiler; if it was undefined to
 #    begin with, use the first available known compiler.
 #-----------------------------------------------------------------------------#
-m4_define([mpi_cxx_list], [mpicxx mpiCC mpic++ mpig++ mpiicpc mpipgCC mpixlC])
-AS_IF(
-    [test x"$CXX" != x],
-    [
-        found_mpi_cxx=
-        m4_define(
-            [check_cxx],
-            [AS_IF([test "x$CXX" = "x$1"], [found_mpi_cxx=$CXX; break;])]
-        )
-        m4_map([check_cxx], [mpi_cxx_list])
-        AS_IF(
-            [test "x$found_mpi_cxx" = x],
-            [AC_MSG_ERROR([EPREM requires an MPI C++ compiler (got CXX=$CXX)])]
-        )
-    ]
-)
-AC_PROG_CXX(mpi_cxx_list)
+AC_PROG_CXX([mpicxx mpiCC mpic++ mpig++ mpiicpc mpipgCC mpixlC])
 
 #-----------------------------------------------------------------------------#
 # Check for typedefs, structures, and compiler characteristics.
