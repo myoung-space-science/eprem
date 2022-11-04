@@ -169,20 +169,20 @@ done
 CF_ARGS="$@"
 
 # Update flags based on --debug or --optimize. Note that the default behavior is
-# to not include environment variables in `cf_flags`, rather than to include
+# to not include environment variables in `CF_FLAGS`, rather than to include
 # environment variables with existing values (e.g., CFLAGS=${CFLAGS}). This is
 # intended to leave as much control as possible with the user.
 if [ $debug == 1 ]; then
     SH_CFLAGS="-g ${CFLAGS}"
     SH_CPPFLAGS="-DDEBUG ${CPPFLAGS}"
-    cf_flags="CFLAGS=${SH_CFLAGS} CPPFLAGS=${SH_CPPFLAGS} ${CF_ARGS}"
+    CF_FLAGS="CFLAGS=${SH_CFLAGS} CPPFLAGS=${SH_CPPFLAGS} ${CF_ARGS}"
 else
     if [ $optimize == 1 ]; then
         SH_CFLAGS="-O3 ${CFLAGS}"
         SH_CPPFLAGS="-DNDEBUG ${CPPFLAGS}"
-        cf_flags="CFLAGS=${SH_CFLAGS} CPPFLAGS=${SH_CPPFLAGS} ${CF_ARGS}"
+        CF_FLAGS="CFLAGS=${SH_CFLAGS} CPPFLAGS=${SH_CPPFLAGS} ${CF_ARGS}"
     else
-        cf_flags="${CF_ARGS}"
+        CF_FLAGS="${CF_ARGS}"
     fi
 fi
 
@@ -190,20 +190,20 @@ if [ ${dry_run} == 1 ]; then
     DRY_RUN="[DRY RUN] "
 fi
 
-ar_flags="--install --symlink"
+AR_FLAGS="--install --symlink"
 if [ ${verbose} == 1 ]; then
-    ar_flags="${ar_flags} --verbose"
+    AR_FLAGS="${AR_FLAGS} --verbose"
 else
-    cf_flags="${cf_flags} --silent"
+    CF_FLAGS="${CF_FLAGS} --silent"
 fi
 
-run_stage "autoreconf ${ar_flags}"
+run_stage "autoreconf ${AR_FLAGS}"
 
 if [ $install_opt == 1 ] && [ "x${install_dir}" != x ]; then
-    cf_flags="${cf_flags} --bindir=${install_dir}"
+    CF_FLAGS="${CF_FLAGS} --bindir=${install_dir}"
 fi
 
-run_stage "./configure ${cf_flags}"
+run_stage "./configure ${CF_FLAGS}"
 
 run_stage "make"
 
