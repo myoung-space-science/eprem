@@ -50,4 +50,4 @@ maintainer-clean-local:
 
 install-exec-hook:
 	mkdir -p bin
-	mv eprem bin/eprem
+	mv eprem bin/eprem-latest
