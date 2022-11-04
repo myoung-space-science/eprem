@@ -57,6 +57,7 @@ AS_IF(
     [
         AM_CFLAGS="  -I$mpi_dir/include $AM_CFLAGS"
         AM_CXXFLAGS="-I$mpi_dir/include $AM_CXXFLAGS"
+        AM_CPPFLAGS="-I$mpi_dir/include $AM_CPPFLAGS"
         AM_LDFLAGS=" -L$mpi_dir/lib -Wl,-rpath,$mpi_dir/lib $AM_LDFLAGS"
     ]
 )
@@ -71,6 +72,7 @@ AS_IF(
     [
         AM_CFLAGS="  -I$libconfig_dir/include $AM_CFLAGS"
         AM_CXXFLAGS="-I$libconfig_dir/include $AM_CXXFLAGS"
+        AM_CPPFLAGS="-I$libconfig_dir/include $AM_CPPFLAGS"
         AM_LDFLAGS=" -L$libconfig_dir/lib -Wl,-rpath,$libconfig_dir/lib $AM_LDFLAGS"
     ]
 )
@@ -85,6 +87,7 @@ AS_IF(
     [
         AM_CFLAGS="  -I$netcdf_dir/include $AM_CFLAGS"
         AM_CXXFLAGS="-I$netcdf_dir/include $AM_CXXFLAGS"
+        AM_CPPFLAGS="-I$netcdf_dir/include $AM_CPPFLAGS"
         AM_LDFLAGS=" -L$netcdf_dir/lib -Wl,-rpath,$netcdf_dir/lib $AM_LDFLAGS"
     ]
 )
