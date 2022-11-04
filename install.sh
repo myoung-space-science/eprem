@@ -42,7 +42,7 @@ ${textbf}NAME${textnm}
         $cli_name - Run the full build process
 
 ${textbf}SYNOPSIS${textnm}
-        ${textbf}$cli_name${textnm} [${startul}OPTION${endul}] -- ${startul}CFARGS${endul}
+        ${textbf}$cli_name${textnm} [${startul}OPTION${endul}] -- ${startul}ARGS${endul}
 
 ${textbf}DESCRIPTION${textnm}
         This script is designed to provide a single command for quickly (albeit 
@@ -51,11 +51,13 @@ ${textbf}DESCRIPTION${textnm}
         following steps to configure, build, and (optionally) install EPREM:
 
         $ autoreconf --install --symlink [--verbose]
-        $ ./configure ${startul}CFARGS${endul} [--silent]
+        $ ./configure ${startul}ARGS${endul} [--silent]
         $ make
         $ [make install]
 
-        Note that any arguments following '--' will pass to ./configure.
+        Note that any arguments following '--' will pass to ./configure and 
+        will override internally set arguments (e.g., compiler or pre-processor 
+        flags set as a result of passing ${textbf}--debug${textnm} or ${textbf}--optimize${textnm}).
 
         ${textbf}-h${textnm}, ${textbf}--help${textnm}
                 Display help and exit.
@@ -69,6 +71,20 @@ ${textbf}DESCRIPTION${textnm}
                 install the executable in DIR; if not, it will install it to 
                 the default location for the host system. The default action is 
                 to not install the executable.
+        ${textbf}--debug${textnm}
+                Build EPREM for debugging. Specifically, this will pass the 
+                '-g' compiler flag (by modifying the environment variable 
+                ${startul}CFLAGS${endul}) and the '-DDEBUG' pre-processor 
+                directive (by modifying the environment variable 
+                ${startul}CPPFLAGS${endul}) to ./configure. The default 
+                behavior is to not modify the environment variables.
+        ${textbf}--optimize${textnm}
+                Build EPREM for debugging. Specifically, this will pass the 
+                '-O3' compiler flag (by modifying the environment variable 
+                ${startul}CFLAGS${endul}) and the '-DNDEBUG' pre-processor 
+                directive (by modifying the environment variable 
+                ${startul}CPPFLAGS${endul}) to ./configure. The default 
+                behavior is to not modify the environment variables.
         ${textbf}--dry-run${textnm}
                 Display the sequence of commands but don't run anything.
 "
@@ -84,14 +100,16 @@ report_bad_arg()
 verbose=0
 install_opt=0
 dry_run=0
+debug=0
+optimize=0
 
 # Parse command-line options. See
 # `/usr/share/doc/util-linux/examples/getopt-example.bash` and the `getopt`
 # manual page for more information.
 TEMP=$(getopt \
     -n 'install.sh' \
-    -o 'hv' \
-    -l 'help,verbose,install::,dry-run' \
+    -o '+hv' \
+    -l 'help,verbose,install::,debug,optimize,dry-run' \
     -- "$@")
 
 if [ $? -ne 0 ]; then
@@ -130,6 +148,16 @@ while [ $# -gt 0 ]; do
             shift 2
             continue
         ;;
+        '--debug')
+            debug=1
+            shift
+            continue
+        ;;
+        '--optimize')
+            optimize=1
+            shift
+            continue
+        ;;
         '--')
             shift
             break
@@ -137,7 +165,26 @@ while [ $# -gt 0 ]; do
     esac
 done
 
-cf_flags="$@"
+# Store all un-parsed arguments to pass to ./configure.
+CF_ARGS="$@"
+
+# Update flags based on --debug or --optimize. Note that the default behavior is
+# to not include environment variables in `cf_flags`, rather than to include
+# environment variables with existing values (e.g., CFLAGS=${CFLAGS}). This is
+# intended to leave as much control as possible with the user.
+if [ $debug == 1 ]; then
+    SH_CFLAGS="-g ${CFLAGS}"
+    SH_CPPFLAGS="-DDEBUG ${CPPFLAGS}"
+    cf_flags="CFLAGS=${SH_CFLAGS} CPPFLAGS=${SH_CPPFLAGS} ${CF_ARGS}"
+else
+    if [ $optimize == 1 ]; then
+        SH_CFLAGS="-O3 ${CFLAGS}"
+        SH_CPPFLAGS="-DNDEBUG ${CPPFLAGS}"
+        cf_flags="CFLAGS=${SH_CFLAGS} CPPFLAGS=${SH_CPPFLAGS} ${CF_ARGS}"
+    else
+        cf_flags="${CF_ARGS}"
+    fi
+fi
 
 if [ ${dry_run} == 1 ]; then
     DRY_RUN="[DRY RUN] "
