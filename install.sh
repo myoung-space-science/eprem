@@ -1,6 +1,23 @@
 #!/bin/bash
 
-# --- CLI template added by /home/matthew/bin/add_cli ---
+print_banner() {
+    if [ $verbose == 1 ]; then
+        printf "
+=======================================================================
+    ${DRY_RUN}$@
+=======================================================================
+"
+    fi
+}
+
+run_stage() {
+    print_banner "$@"
+    if [ $dry_run != 1 ]; then
+        eval "$@"
+        return $?
+    fi
+    print_banner "Done"
+}
 
 # Exit immediately if a pipeline returns non-zero status. See
 # https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html
@@ -25,15 +42,20 @@ ${textbf}NAME${textnm}
         $cli_name - Run the full build process
 
 ${textbf}SYNOPSIS${textnm}
-        ${textbf}$cli_name${textnm} [${startul}OPTION${endul}] ${startul}ARGS${endul}
+        ${textbf}$cli_name${textnm} [${startul}OPTION${endul}] -- ${startul}CFARGS${endul}
 
 ${textbf}DESCRIPTION${textnm}
-        This script is designed to provide a single command for quickly (albeit prescriptively) setting up EPREM from source code. Assuming that you are running in the top-level build directory, it will execute the following steps to configure, build, and install EPREM:
+        This script is designed to provide a single command for quickly (albeit 
+        prescriptively) setting up EPREM from source code. Assuming that you 
+        are running in the top-level build directory, it will execute the 
+        following steps to configure, build, and (optionally) install EPREM:
 
         $ autoreconf --install --symlink [--verbose]
-        $ ./configure ${startul}ARGS${endul} [--silent]
+        $ ./configure ${startul}CFARGS${endul} [--silent]
         $ make
-        $ make install
+        $ [make install]
+
+        Note that any arguments following '--' will pass to ./configure.
 
         ${textbf}-h${textnm}, ${textbf}--help${textnm}
                 Display help and exit.
@@ -42,6 +64,13 @@ ${textbf}DESCRIPTION${textnm}
                 --verbose argument to autoreconf and will disable the --silent 
                 option to ./configure. By default, --verbose is disabled for 
                 autoreconf and --silent is enabled for ./configure.
+        ${textbf}--install[=DIR]${textnm}
+                Install the executable. If DIR is included, this will directly 
+                install the executable in DIR; if not, it will install it to 
+                the default location for the host system. The default action is 
+                to not install the executable.
+        ${textbf}--dry-run${textnm}
+                Display the sequence of commands but don't run anything.
 "
 }
 
@@ -53,26 +82,66 @@ report_bad_arg()
 
 # Set option defaults.
 verbose=0
-cf_flags=
+install_opt=0
+dry_run=0
 
-while [ "${1}" != "" ]; do
-    case "${1}" in
-        -v | --verbose )
-            verbose=1
-            ;;
-        -h | --help )
+# Parse command-line options. See
+# `/usr/share/doc/util-linux/examples/getopt-example.bash` and the `getopt`
+# manual page for more information.
+TEMP=$(getopt \
+    -n 'install.sh' \
+    -o 'hv' \
+    -l 'help,verbose,install::,dry-run' \
+    -- "$@")
+
+if [ $? -ne 0 ]; then
+    echo "Failed to parse command-line arguments. Terminating."
+    exit 1
+fi
+
+eval set -- "$TEMP"
+unset TEMP
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        '-h'|'--help')
             show_help
             exit
-            ;;
-        * )
-            cf_flags="${cf_flags} ${1}"
-            ;;
+        ;;
+        '-v'|'--verbose')
+            verbose=1
+            shift
+            continue
+        ;;
+        '--dry-run')
+            dry_run=1
+            shift
+            continue
+        ;;
+        '--install')
+            install_opt=1
+            case "$2" in
+                '')
+                    install_dir=
+                ;;
+                *)
+                    install_dir="${2}"
+            esac
+            shift 2
+            continue
+        ;;
+        '--')
+            shift
+            break
+        ;;
     esac
-    shift
 done
 
-# --- End CLI template ---
+cf_flags="$@"
 
+if [ ${dry_run} == 1 ]; then
+    DRY_RUN="[DRY RUN] "
+fi
 
 ar_flags="--install --symlink"
 if [ ${verbose} == 1 ]; then
@@ -81,39 +150,16 @@ else
     cf_flags="${cf_flags} --silent"
 fi
 
-if [ ${verbose} == 1 ]; then
-    echo "=================================================================="
-    echo "  Setup: Running autoreconf ${ar_flags}"
-    echo "=================================================================="
-fi
-autoreconf ${ar_flags}
-if [ ${verbose} == 1 ]; then
-    echo "=================================================================="
-    echo "  Setup: Done"
-    echo "=================================================================="
+run_stage "autoreconf ${ar_flags}"
+
+if [ $install_opt == 1 ] && [ "x${install_dir}" != x ]; then
+    cf_flags="${cf_flags} --bindir=${install_dir}"
 fi
 
-if [ ${verbose} == 1 ]; then
-    echo "=================================================================="
-    echo "  Configure: Running ./configure ${cf_flags}"
-    echo "=================================================================="
-fi
-./configure ${cf_flags}
-if [ ${verbose} == 1 ]; then
-    echo "=================================================================="
-    echo "  Configure: Done"
-    echo "=================================================================="
-fi
+run_stage "./configure ${cf_flags}"
 
-if [ ${verbose} == 1 ]; then
-    echo "=================================================================="
-    echo "  Build: Running make"
-    echo "=================================================================="
-fi
-make
-if [ ${verbose} == 1 ]; then
-    echo "=================================================================="
-    echo "  Build: Done"
-    echo "=================================================================="
-fi
+run_stage "make"
 
+if [ $install_opt == 1 ]; then
+    run_stage "make install"
+fi
