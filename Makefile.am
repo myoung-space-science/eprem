@@ -1,3 +1,5 @@
+EXTRA_DIST = setup.sh
+
 bin_PROGRAMS = eprem
 
 eprem_SOURCES = \
