@@ -19,7 +19,7 @@ Note that the `--` before `--prefix` is necessary to tell `setup.sh` that you wi
 
 Although `setup.sh` intends to get you up and running as quickly as possible, you will likely need to specify some configuration options. In particular, you will need to point `configure.sh` to installations of [libconfig](http://hyperrealm.github.io/libconfig/) and [NetCDF4](https://unidata.github.io/netcdf4-python/) if they are not already in your `$PATH`. To do so, provide the `--with-libconfig-dir=...` and `--with-netcdf-dir=...` arguments. In the less likely event that there is no MPI distribution in your `$PATH`, you will need to provide the `--with-mpi-dir=...` argument. EPREM currently does not support serial operation (though it is possible in certain circumstances); `configure.sh` will do its best to find suitable MPI compilers without the need for explicitly setting `CC=..` and `CXX=...`, but if set-up fails, you may try doing so.
 
-Experienced users are welcome to bypass `setup.sh` and directly run
+Users familiar with the GNU Autotools are welcome to bypass `setup.sh` and directly run
 ```
 ./configure OPTIONS && make && make install
 ```
