@@ -113,7 +113,7 @@ int main(int argc, char *argv[]) {
   simStarted=0;
 
   // Record the starting MPI time and real time.
-  if (mpi_rank == 0) time ( &start_time );
+  if (mpi_rank == 0) time (&start_time);
   timer_start = MPI_Wtime();
 
   // Read and set runtime parameters
@@ -144,7 +144,7 @@ int main(int argc, char *argv[]) {
   initEnergeticParticlesGrids();
 
  // Initialize MHD.
-  updateMhd( config.tDel );
+  updateMhd(config.tDel);
 
   // Initialize the cube / shell structure
   // and set node positions through backward integration.
@@ -233,67 +233,62 @@ int main(int argc, char *argv[]) {
     // -------------------------------------------------------------------------
     // -------------------------------------------------------------------------
     
-    if (mpi_rank == 0){ 
+    if (mpi_rank == 0){
       printf("Step: %06d  TIME: %14.8e  [JD %9.5f]  DTIME: %14.8e  [JD %7.5f]\n", 
              rciter, t_global, t_global*DAY, config.tDel, config.tDel*DAY);
     }
 
-    // -------------------------------------------------------------------------    
+    // -------------------------------------------------------------------------
     // -------------------------------------------------------------------------
     // -------------------  I/O OF CURRENT TIME MHD AND EPART ------------------
-    // -------------------------------------------------------------------------    
+    // -------------------------------------------------------------------------
     // -------------------------------------------------------------------------
 
-    // NOTE!  This MUST be here and not below masGetInterpData.
-    //        This is because the I/O (and moveNodes()) use getMasNode()
-    //        which uses "s_xxx" and the MAS files from the previous step,
-    //        which makes this work right because it makes it at the right time.
-
-    if ( (num_loops % config.dumpFreq) == 0 )
+    if ((num_loops % config.dumpFreq) == 0)
     {
        dataDumpIO();
     }
 
-    // -------------------------------------------------------------------------    
+    // -------------------------------------------------------------------------
     // -------------------------------------------------------------------------
     // ---------------- MOVE NODES USING CURRENT TIME's MHD V ------------------
-    // -------------------------------------------------------------------------    
     // -------------------------------------------------------------------------
-      
-    // Rotate the node seed positions and ripple the shells out
-    rotSunAndSpawnShell( config.tDel );
-    moveNodes( config.tDel );
+    // -------------------------------------------------------------------------
 
-    // -------------------------------------------------------------------------    
+    // Rotate the node seed positions and ripple the shells out
+    rotSunAndSpawnShell(config.tDel);
+    moveNodes(config.tDel);
+
+    // -------------------------------------------------------------------------
     // -------------------------------------------------------------------------
     // --------- UPDATE MHD FOR TIME+DT AND SAVE CURRENT MHD TO MHD-OLD --------
-    // -------------------------------------------------------------------------    
+    // -------------------------------------------------------------------------
     // -------------------------------------------------------------------------
 
     // NOTE:  updateMhd only uses tDel for computing div-V and it is never used.
-    updateMhd( config.tDel );
+    updateMhd(config.tDel);
 
-    // -------------------------------------------------------------------------    
+    // -------------------------------------------------------------------------
     // -------------------------------------------------------------------------
     // ---------------- UPDATE values used for perpendicular solvers -----------
-    // -------------------------------------------------------------------------    
-    // -------------------------------------------------------------------------   
-    
-    if ( (config.useDrift > 0) || (config.useShellDiffusion > 0) )
+    // -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
+
+    if ((config.useDrift > 0) || (config.useShellDiffusion > 0))
     {
       ShellData();
     }
 
-    // -------------------------------------------------------------------------    
+    // -------------------------------------------------------------------------
     // -------------------------------------------------------------------------
     // ----------------  PARTICLE COMPUTATION ----------------------------------
-    // -------------------------------------------------------------------------    
     // -------------------------------------------------------------------------
-    
-    if ( (t_global*DAY >= config.epCalcStartTime) )
+    // -------------------------------------------------------------------------
+
+    if (t_global*DAY >= config.epCalcStartTime)
     {
       timer_tmp = MPI_Wtime();
-      
+
       // Re-intialize seed population of energetic particles.
       // Since nodes are pushed before this point, this needs to be done
       // here.
@@ -302,49 +297,49 @@ int main(int argc, char *argv[]) {
         if (mpi_rank == 0) printf("NOTE:  Reinitializing seed population.\n");
         initEnergeticParticles();
       }
-      
+
       updateEnergeticParticles();
       // For the seed test, re-init seed population.
       if (config.seedFunctionTest > 0){
         initEnergeticParticles();
         if (mpi_rank == 0) printf("NOTE:  Reinitializing seed population.\n");
       }
-      
+
       timer_eptotal = timer_eptotal + (MPI_Wtime() - timer_tmp);
     }
 
-    // -------------------------------------------------------------------------    
+    // -------------------------------------------------------------------------
     // -------------------------------------------------------------------------
     // ----------------  INCREMENT TIME->TIME+DT--------------------------------
-    // -------------------------------------------------------------------------    
     // -------------------------------------------------------------------------
-    
+    // -------------------------------------------------------------------------
+
     t_global += config.tDel;
-    
+
     // IO LOOP counter.
     num_loops++;
-    
+
     timer_tmp = MPI_Wtime();
     if (mpi_rank == 0) printf("  --> Compute time for step: %18.4f seconds.\n",timer_tmp-timer_step);
-    
-    
+
+
   } while(t_global <= config.simStopTimeDay);
-  
+
   //
   // Dump final solution state.
   //
   //dataDumpIO();
 
-  // ---------------------------------------------------------------------------    
+  // ---------------------------------------------------------------------------
   // ---------------------------------------------------------------------------
   // ------------------ CLEAN UP AND EXIT --------------------------------------
-  // ---------------------------------------------------------------------------    
   // ---------------------------------------------------------------------------
-  
+  // ---------------------------------------------------------------------------
+
   DumpRunTimes();
   config_destroy(&cfg);
   MPI_Finalize();
-  
+
   return(0);
 
 }
