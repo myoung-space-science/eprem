@@ -2,6 +2,9 @@
 
 ## NEXT
 
+- Exponentially relax shocked quantities to unshocked values downstream of shock.
+- Allow user to control rate of relaxation with `idealShockFalloff`.
+
 ## v0.1.1
 
 - Fix velocity scaling for ideal shock in `flow.c`.
