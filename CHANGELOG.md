@@ -2,6 +2,8 @@
 
 ## NEXT
 
+## v0.2.0 (10Nov2022)
+
 - Exponentially relax shocked quantities to unshocked values downstream of shock.
 - Allow user to control rate of relaxation with `idealShockFalloff`.
 
