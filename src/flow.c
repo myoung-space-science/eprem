@@ -566,7 +566,7 @@
 /*-----------------------------------------------------------------------*/
 {
 
-  Scalar_t factor, exponent, ratio;
+  Scalar_t factor, exponent, ratio, falloff;
 
   exponent = exp(2.0 *
                  (config.idealShockSharpness / config.idealShockScaleLength) *
@@ -580,8 +580,11 @@
     ratio = (exponent - 1.0) / (exponent + 1.0);
 
   factor = (1.0 + ((1.0 - ratio) * 0.5 * (config.idealShockJump - 1.0)));
+  falloff = exp(config.idealShockFalloff * 
+    (r - ((config.idealShockSpeed / C) * (t_global - config.idealShockInitTime / DAY) + config.rScale))
+  );
 
-  return factor;
+  return 1 + (factor - 1) * falloff;
 
 }
 /*-----------------------------------------------------------------------*/
