@@ -70,7 +70,8 @@ ${textbf}DESCRIPTION${textnm}
                 Install the executable. If DIR is included, this will directly 
                 install the executable in DIR; if not, it will install it to 
                 the default location for the host system. The default action is 
-                to not install the executable.
+                to not install the executable. Including DIR is the equivalent 
+                of passing --bindir=DIR to ./configure.
         ${textbf}--debug${textnm}
                 Build EPREM for debugging. Specifically, this will pass the 
                 '-g' compiler flag (by modifying the environment variable 
@@ -197,7 +198,12 @@ else
     CF_FLAGS="${CF_FLAGS} --silent"
 fi
 
-run_stage "autoreconf ${AR_FLAGS}"
+if [ -d "./build-aux" ]; then
+    print_banner "Autotools Setup"
+    echo "Found ./build-aux directory. Not running autoreconf."
+else
+    run_stage "autoreconf ${AR_FLAGS}"
+fi
 
 if [ $install_opt == 1 ] && [ "x${install_dir}" != x ]; then
     CF_FLAGS="${CF_FLAGS} --bindir=${install_dir}"
