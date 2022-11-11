@@ -328,7 +328,7 @@
 
     // ideal shock test
     if ( (config.idealShock > 0) && (idealShockNode > 0) )
-      *Vr /= idealShockFactor(rmag * config.rScale);
+      *Vr *= idealShockFactor(rmag * config.rScale);
 
     *Vtheta = 0.0;
 
