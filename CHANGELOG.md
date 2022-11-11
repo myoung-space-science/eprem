@@ -2,6 +2,10 @@
 
 ## NEXT
 
+## v0.2.2 (11Nov2022)
+
+- Revert to multiplying velocity by the ideal shock factor because EPREM nodes are not in the frame co-moving with the shock.
+
 ## v0.2.1 (11Nov2022)
 
 - Avoid running `autoreconf` as part of setup.sh if possible.
