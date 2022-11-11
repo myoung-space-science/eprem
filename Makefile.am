@@ -1,5 +1,3 @@
-EXTRA_DIST = setup.sh
-
 bin_PROGRAMS = eprem
 
 eprem_SOURCES = \
@@ -42,6 +40,8 @@ src/searchTypes.h \
 src/simCore.h \
 src/timers.h \
 src/unifiedOutput.h
+
+EXTRA_DIST = setup.sh
 
 distclean-local:
 	find . -type f -name '*~' -exec rm {} \;
