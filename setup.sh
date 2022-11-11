@@ -107,7 +107,7 @@ optimize=0
 # `/usr/share/doc/util-linux/examples/getopt-example.bash` and the `getopt`
 # manual page for more information.
 TEMP=$(getopt \
-    -n 'install.sh' \
+    -n 'setup.sh' \
     -o '+hv' \
     -l 'help,verbose,install::,debug,optimize,dry-run' \
     -- "$@")
