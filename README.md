@@ -21,10 +21,12 @@ Although `setup.sh` intends to get you up and running as quickly as possible, yo
 
 If your system is 'vanilla' (e.g., a new installation) and doesn't have support for autoconf, MPI, libconfig, or netCDF, you'll need to add them. For Debian-based systems (tested with 22.04 Ubuntu), you can run the following commands:
 
+```
 $ sudo apt-get install autoconf
 $ sudo apt install mpich
 $ sudo apt install libconfig-dev
 $ sudo apt install libnetcdf-dev
+```
 
 EPREM currently does not support serial operation (though it is possible in certain circumstances); `configure.sh` will do its best to find suitable MPI compilers without the need for explicitly setting `CC=..` and `CXX=...`, but if set-up fails, you may try doing so.
 
@@ -36,4 +38,6 @@ with whichever `OPTIONS` they require.
 
 Finally, to verify that the installation was successful, run one of the examples, such as: 
 
-./eprem-latest cone.ini 
+```
+mpirun -n 2 eprem-latest cone.ini 
+```
