@@ -6,7 +6,7 @@ A simplified, open-source version of the Energetic Particle Radiation Environmen
 
 First, clone the repository
 ```
-git clone​ https://github.com/myoung-space-science/eprem.git
+git clone https://github.com/myoung-space-science/eprem.git
 ```
 
 The simplest way to configure, build, and install EPREM is by running `setup.sh`. Type `./setup.sh --help` to learn about its options.
