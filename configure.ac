@@ -50,6 +50,12 @@ AC_PROG_RANLIB
 #-----------------------------------------------------------------------------#
 # Read command-line options.
 #-----------------------------------------------------------------------------#
+deps_dir=
+AC_ARG_WITH(
+    [ext-deps],
+    AS_HELP_STRING([--with-ext-deps@<:@=DIR@:>@], [Look for external dependencies in DIR.]),
+    [deps_dir=$withval]
+)
 mpi_dir=
 AC_ARG_WITH(
     [mpi-dir],
@@ -78,6 +84,18 @@ AS_IF(
         AM_CXXFLAGS="-I$libconfig_dir/include $AM_CXXFLAGS"
         AM_CPPFLAGS="-I$libconfig_dir/include $AM_CPPFLAGS"
         AM_LDFLAGS=" -L$libconfig_dir/lib -Wl,-rpath,$libconfig_dir/lib $AM_LDFLAGS"
+    ],
+    [
+        AS_IF(
+            [test "x$deps_dir" != x],
+            [
+                libconfig_dir=$deps_dir/libconfig
+                AM_CFLAGS="  -I$libconfig_dir/include $AM_CFLAGS"
+                AM_CXXFLAGS="-I$libconfig_dir/include $AM_CXXFLAGS"
+                AM_CPPFLAGS="-I$libconfig_dir/include $AM_CPPFLAGS"
+                AM_LDFLAGS=" -L$libconfig_dir/lib -Wl,-rpath,$libconfig_dir/lib $AM_LDFLAGS"
+            ]
+        )
     ]
 )
 netcdf_dir=
@@ -93,6 +111,18 @@ AS_IF(
         AM_CXXFLAGS="-I$netcdf_dir/include $AM_CXXFLAGS"
         AM_CPPFLAGS="-I$netcdf_dir/include $AM_CPPFLAGS"
         AM_LDFLAGS=" -L$netcdf_dir/lib -Wl,-rpath,$netcdf_dir/lib $AM_LDFLAGS"
+    ],
+    [
+        AS_IF(
+            [test "x$deps_dir" != x],
+            [
+                netcdf_dir=$deps_dir/netcdf
+                AM_CFLAGS="  -I$netcdf_dir/include $AM_CFLAGS"
+                AM_CXXFLAGS="-I$netcdf_dir/include $AM_CXXFLAGS"
+                AM_CPPFLAGS="-I$netcdf_dir/include $AM_CPPFLAGS"
+                AM_LDFLAGS=" -L$netcdf_dir/lib -Wl,-rpath,$netcdf_dir/lib $AM_LDFLAGS"
+            ]
+        )
     ]
 )
 
