@@ -28,7 +28,7 @@ $ sudo apt install libconfig-dev
 $ sudo apt install libnetcdf-dev
 ```
 
-EPREM currently does not support serial operation (though it is possible in certain circumstances); `configure.sh` will do its best to find suitable MPI compilers without the need for explicitly setting `CC=..` and `CXX=...`, but if set-up fails, you may try doing so.
+EPREM currently does not support serial operation (although it is possible in certain circumstances); `configure.sh` will do its best to find suitable MPI compilers without the need for explicitly setting `CC=..` and `CXX=...`, but if set-up fails, you may try doing so.
 
 Users familiar with the GNU Autotools are welcome to bypass `setup.sh` and directly run
 ```
