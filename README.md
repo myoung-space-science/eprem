@@ -1,6 +1,6 @@
 # EPREM
 
-A simplified, open-source version of the Energetic Particle Radiation Environment Module
+The Energetic Particle Radiation Environment Module (EPREM) simulates acceleration and transport of energetic particles throughout the heliosphere by modeling the focused transport equation on a Lagragian grid in the frame co-moving with the solar wind. Its primary output product is a set of observer files, with each file representing a stream of linked nodes. Each node represents an element of the Lagrangian grid. It knows its spatial coordinates as functions of time, and records the local time history of plasma quantities (namely, the velocity field, magnetic field, and density) and the distribution of one or more species of energetic particles. It also contains static arrays of mass and charge, as well as speed and energy bins, for each particle species.
 
 ## Installation
 
