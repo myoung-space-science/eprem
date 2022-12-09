@@ -2,7 +2,8 @@
 
 ## NEXT
 
-- Expanded installation instructions in README
+- Expanded installation instructions in README.
+- Added `--with-ext-deps=DIR` to configure options.
 
 ## v0.2.2 (11Nov2022)
 
