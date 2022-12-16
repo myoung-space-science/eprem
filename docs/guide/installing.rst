@@ -3,7 +3,7 @@ Installing
 
 Requirements
 ------------
-To get eprem up and running on a *nix-based system (only fully tested on
+To get eprem up and running on a \*nix-based system (only fully tested on
 Debian-based systems (22.04)), you'll need to follow the following steps. 
 
 First, close a copy of the repository: 

@@ -23,7 +23,7 @@ to anticipate which might be useful for your research).
 
 You can choose to start from one of the example inputs, if that scenario 
 resembles the type of investigation you're undertaking, or you can start from 
-scratch and use the `template.ini' file as your basis. 
+scratch and use the ``template.ini`` file as your basis. 
 
 Here, we'll work from the template.ini file and step through each of the 
 parameters. 
