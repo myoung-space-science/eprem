@@ -80,7 +80,7 @@ ${textbf}DESCRIPTION${textnm}
                 ${startul}CPPFLAGS${endul}) to ./configure. The default 
                 behavior is to not modify the environment variables.
         ${textbf}--optimize${textnm}
-                Build EPREM for debugging. Specifically, this will pass the 
+                Build EPREM for production. Specifically, this will pass the 
                 '-O3' compiler flag (by modifying the environment variable 
                 ${startul}CFLAGS${endul}) and the '-DNDEBUG' pre-processor 
                 directive (by modifying the environment variable 
