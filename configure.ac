@@ -9,7 +9,7 @@
 # https://www.mail-archive.com/autoconf-patches@gnu.org/msg06239.html
 #-----------------------------------------------------------------------------#
 AC_PREREQ([2.71])
-AC_INIT([EPREM],[0.2.2],[Matthew.Young@unh.edu],[eprem])
+AC_INIT([EPREM],[0.2.3],[Matthew.Young@unh.edu],[eprem])
 
 #-----------------------------------------------------------------------------#
 # Perform global set-up tasks.
@@ -65,28 +65,12 @@ AC_MSG_RESULT([${MPIRUN}])
 AC_SUBST([MPIRUN])
 
 #-----------------------------------------------------------------------------#
-# Set CC to a suitable MPI C compiler, if necessary and possible, or raise an
-# error if the user requested a non-MPI C compiler.
-#
-# 1) Define a list of known MPI C compilers.
-# 2) If CC is defined (i.e., non-empty), compare it to each listed compiler
-#    until we find a match or run out of options.
-# 3) If it didn't match any known compilers, raise an error.
-# 4) If it did match a known compiler, use that compiler; if it was undefined to
-#    begin with, use the first available known compiler.
+# Set CC to a suitable MPI C compiler, if possible.
 #-----------------------------------------------------------------------------#
 AC_PROG_CC([mpicc mpiicc mpixlc mpipgcc])
 
 #-----------------------------------------------------------------------------#
-# Set CXX to a suitable MPI C++ compiler, if necessary and possible, or raise an
-# error if the user requested a non-MPI C++ compiler.
-#
-# 1) Define a list of known MPI C++ compilers.
-# 2) If CXX is defined (i.e., non-empty), compare it to each listed compiler
-#    until we find a match or run out of options.
-# 3) If it didn't match any known compilers, raise an error.
-# 4) If it did match a known compiler, use that compiler; if it was undefined to
-#    begin with, use the first available known compiler.
+# Set CXX to a suitable MPI C++ compiler, if possible.
 #-----------------------------------------------------------------------------#
 AC_PROG_CXX([mpicxx mpiCC mpic++ mpig++ mpiicpc mpipgCC mpixlC])
 

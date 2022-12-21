@@ -2,8 +2,12 @@
 
 ## NEXT
 
+## v0.2.3 (20Dec2022)
+
 - Expanded installation instructions in README.
 - Added `--with-ext-deps=DIR` to configure options.
+- Moved `--with`-style configure options to `setup.sh`.
+- Copy `config.log` during `make install`.
 
 ## v0.2.2 (11Nov2022)
 
