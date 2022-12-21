@@ -51,5 +51,6 @@ maintainer-clean-local:
 	rm -f configure.scan
 
 install-exec-hook:
+	cp -u config.log ${prefix} &> /dev/null
 	mkdir -p bin
 	mv -f eprem bin/eprem-latest
