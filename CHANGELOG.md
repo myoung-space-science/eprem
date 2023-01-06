@@ -2,6 +2,10 @@
 
 ## NEXT
 
+## v0.2.4 (06Jan2023)
+
+- Allow `idealShockFalloff` to be 0 and change default value to 0.
+
 ## v0.2.3 (20Dec2022)
 
 - Expanded installation instructions in README.

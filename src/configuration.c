@@ -159,7 +159,7 @@ getParams( char* configFilename)
   config.idealShockSharpness = readDouble("idealShockSharpness", 1.0, VERYSMALL, BADVALUE);
   config.idealShockScaleLength = readDouble("idealShockScaleLength", 0.0046491, VERYSMALL, BADVALUE);
   config.idealShockJump = readDouble("idealShockJump", 4.0, VERYSMALL, BADVALUE);
-  config.idealShockFalloff = readDouble("idealShockFalloff", 1.0, VERYSMALL, BADVALUE);
+  config.idealShockFalloff = readDouble("idealShockFalloff", 0.0, 0.0, BADVALUE);
   config.idealShockSpeed = readDouble("idealShockSpeed", 1500e5, VERYSMALL, BADVALUE);
   config.idealShockInitTime = readDouble("idealShockInitTime", config.simStartTime, config.simStartTime, BADVALUE);
   config.idealShockTheta = readDouble("idealShockTheta", 1.570796, 0.0, PI);
