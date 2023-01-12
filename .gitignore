@@ -3,6 +3,9 @@
 # Note that portions of this file have been copied or adapted from
 # (https://github.com/github/gitignore/blob/main/Autotools.gitignore).
 
+# Python files
+__pycache__
+
 # Auto-generated backup files
 *~
 
