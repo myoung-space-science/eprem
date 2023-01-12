@@ -38,8 +38,9 @@ class ReadTypeError(Exception):
 class RunLog(collections.abc.Mapping):
     """Mapping-based interface to an EPREM project log."""
 
-    def __init__(self, path: PathLike) -> None:
+    def __init__(self, path: PathLike, **common) -> None:
         self._path = fullpath(path)
+        self._common = common
 
     def __len__(self) -> int:
         """Called for len(self)."""
