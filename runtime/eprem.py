@@ -23,7 +23,7 @@ def fullpath(p: PathLike):
     return pathlib.Path(p).expanduser().resolve()
 
 
-class LogKeyError(Exception):
+class LogKeyError(KeyError):
     """The log has no entry for a given key."""
 
 
