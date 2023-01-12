@@ -175,7 +175,7 @@ class RunLog(collections.abc.Mapping):
 
     def __str__(self) -> str:
         """A simplified representation of this object."""
-        return self.path.name
+        return str(self._asdict)
 
     def __repr__(self) -> str:
         """An unambiguous representation of this object."""
