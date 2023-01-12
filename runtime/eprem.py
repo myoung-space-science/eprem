@@ -166,6 +166,14 @@ class RunLog(collections.abc.Mapping):
         """The path to this log file."""
         return self._path
 
+    def __str__(self) -> str:
+        """A simplified representation of this object."""
+        return self.path.name
+
+    def __repr__(self) -> str:
+        """An unambiguous representation of this object."""
+        return f"{self.__class__.__qualname__}({self.path})"
+
 
 class ProjectExistsError(Exception):
     """A project with this name already exists."""
