@@ -202,12 +202,14 @@ class Project:
     ) -> None:
         """Initialize a new project."""
         self._root = fullpath(root)
-        if self._root.exists():
+        try:
+            self._root.mkdir(parents=True)
+        except FileExistsError as error:
             raise ProjectExistsError(
                 f"The project {self._root} already exists."
                 " Please choose a different path"
                 " or remove the existing project."
-            ) from None
+            ) from error
         self._branches = branches
         self._config = config or 'eprem.cfg'
         self._rundir = rundir or 'runs'
