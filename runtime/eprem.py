@@ -167,13 +167,10 @@ class RunLog(collections.abc.Mapping):
         """Internal dictionary representing the current contents."""
         try:
             with self.path.open('r') as fp:
-                current = dict(json.load(fp))
-        except json.JSONDecodeError:
-            current = {}
+                return dict(json.load(fp))
         except FileNotFoundError:
-            self.dump({})
-            current = {}
-        return current
+            self.dump(self._common)
+            return self._asdict
 
     def dump(self, contents):
         """Write `contents` to this log file."""
