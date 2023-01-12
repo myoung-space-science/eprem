@@ -39,6 +39,17 @@ class RunLog(collections.abc.Mapping):
     """Mapping-based interface to an EPREM project log."""
 
     def __init__(self, path: PathLike, **common) -> None:
+        """Create a new project log.
+        
+        Parameters
+        ----------
+        path : path-like
+            The path at which to create the log file. May be relative to the
+            current directory.
+
+        common
+            Key-value pairs of attributes that are common to all runs.
+        """
         self._path = fullpath(path)
         self._common = common
 
