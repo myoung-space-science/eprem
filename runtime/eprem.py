@@ -261,7 +261,7 @@ class Project:
         """The log of runs in this project."""
         if self._log is None:
             logname = pathlib.Path(self._logname).with_suffix('.json').name
-            self._log = RunLog(self.root / logname)
+            self._log = RunLog(self.root / logname, config=self._config)
         return self._log
 
     @property
