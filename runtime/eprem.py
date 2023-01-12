@@ -169,6 +169,14 @@ class RunLog(collections.abc.Mapping):
             json.dump(contents, fp, indent=4, sort_keys=True)
 
     @property
+    def name(self):
+        """The name of this log file.
+        
+        Same as `RunLog.path.name`.
+        """
+        return self.path.name
+
+    @property
     def path(self):
         """The path to this log file."""
         return self._path
