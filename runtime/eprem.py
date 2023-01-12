@@ -10,8 +10,9 @@ import typing
 
 try:
     import yaml
-except ModuleNotFoundError as err:
-    raise ModuleNotFoundError("Check your virtual environment") from err
+    _HAVE_YAML = True
+except ModuleNotFoundError:
+    _HAVE_YAML = False
 
 
 PathLike = typing.Union[str, pathlib.Path]
@@ -28,6 +29,10 @@ class LogKeyError(Exception):
 
 class RunKeyError(Exception):
     """The log entry does not include a given key."""
+
+
+class ReadTypeError(Exception):
+    """There is no support for reading a given file type."""
 
 
 class RunLog(collections.abc.Mapping):
@@ -86,7 +91,9 @@ class RunLog(collections.abc.Mapping):
     def _source_loader(self, filetype: str):
         """Get a format-specific file-reader."""
         if filetype.lower().lstrip('.') == 'yaml':
-            return yaml.safe_load
+            if _HAVE_YAML:
+                return yaml.safe_load
+            raise ReadTypeError("No support for reading YAML") from None
         if filetype.lower().lstrip('.') == 'json':
             return json.load
         raise ValueError(
