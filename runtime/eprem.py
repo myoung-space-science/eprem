@@ -260,6 +260,10 @@ class Project:
         """The top-level directory of this project."""
         return self._root
 
+    def __str__(self) -> str:
+        """A simplified representation of this object."""
+        return self.name
+
     def __repr__(self) -> str:
         """An unambiguous representation of this object."""
         return f"{self.__class__.__qualname__}({self.root})"
