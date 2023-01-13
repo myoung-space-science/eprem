@@ -315,33 +315,60 @@ ProjectType = typing.TypeVar('ProjectType', bound='Project')
 class Project:
     """Interface to an EPREM runtime project."""
 
+    @typing.overload
     def __init__(
         self,
         root: typing.Union[str, pathlib.Path],
-        *branches: str,
+    ) -> None: ...
+
+    @typing.overload
+    def __init__(
+        self,
+        root: typing.Union[str, pathlib.Path],
+        branches: typing.Iterable[str]=None,
         config: str=None,
         rundir: str=None,
         logname: str=None,
-    ) -> None:
+    ) -> None: ...
+
+    database = pathlib.Path('.eprem-runtime.json')
+
+    def __init__(self, root, **kwargs):
         """Initialize a new project."""
-        self._root = fullpath(root)
-        try:
-            self._root.mkdir(parents=True)
-        except FileExistsError as error:
-            raise ProjectExistsError(
-                f"The project {self._root} already exists."
-                " Please choose a different path"
-                " or remove the existing project."
-            ) from error
-        self._branches = branches
-        self._config = config or 'eprem.cfg'
-        self._rundir = rundir or 'runs'
-        self._logname = logname or 'runs'
+        attrs = self._init_attrs(root, kwargs)
         self._log = None
         self._name = None
-        self._directories = None
-        for directory in self.directories:
-            directory.mkdir(parents=True)
+        directories = [
+            attrs.path / branch / attrs.rundir
+            for branch in attrs.branches or ['']
+        ]
+        for directory in directories:
+            directory.mkdir(parents=True, exist_ok=True)
+        self._attrs = attrs
+        self._directories = directories
+
+    def _init_attrs(self, root: pathlib.Path, kwargs: dict):
+        """Initialize arguments from input or the database."""
+        path = fullpath(root)
+        if path.exists() and kwargs:
+            existing = (
+                f"{self.__class__.__qualname__}"
+                f"({os.path.relpath(path)!r})"
+            )
+            raise ProjectExistsError(
+                f"The project {path.name!r} already exists in {path.parent}. "
+                f"You can access the existing project via {existing}"
+            )
+        key = str(path)
+        if path.exists():
+            with self.database.open('r') as fp:
+                existing = dict(json.load(fp))
+            return _ProjectInit(**existing[key])
+        path.mkdir(parents=True)
+        init = _ProjectInit(root=path, **kwargs)
+        with self.database.open('w') as fp:
+            json.dump({key: dict(init)}, fp, indent=4, sort_keys=True)
+        return init
 
     def spawn(
         self: ProjectType,
@@ -359,23 +386,23 @@ class Project:
             {subset} if isinstance(subset, str)
             else set(subset or ())
         )
-        for rundir in self._make_paths(name, directories):
-            branch = rundir.parent
+        for path in self._make_paths(name, directories):
+            branch = path.parent.parent
             mpirun = self._locate('mpirun', branch, runner)
             eprem = self._locate('eprem', branch, target)
-            shutil.copy(config, rundir / self._config)
+            shutil.copy(config, path / self._attrs.config)
             command = (
                 "nice -n 10 ionice -c 2 -n 3 "
                 f"{mpirun} --mca btl_base_warn_component_unused 0 "
                 f"-n {nprocs or 1} {eprem} eprem.cfg"
             )
-            output = rundir / runlog
+            output = path / runlog
             now = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
             with output.open('w') as stdout:
                 process = subprocess.Popen(
                     command,
                     shell=True,
-                    cwd=rundir,
+                    cwd=path,
                     stdout=stdout,
                     stderr=subprocess.STDOUT,
                 )
@@ -387,7 +414,7 @@ class Project:
             logentry = {
                 'mpirun': str(mpirun),
                 'eprem': str(eprem),
-                'directory': str(rundir),
+                'directory': str(path),
                 'time': datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
             }
             self.log.create(branch.name, logentry)
@@ -411,16 +438,53 @@ class Project:
         self: ProjectType,
         source: str,
         target: str,
+        subset: typing.Union[str, typing.Iterable[str]]=None,
         silent: bool=False,
     ) -> ProjectType:
         """Rename an existing EPREM run within this project."""
+        directories = (
+            {subset} if isinstance(subset, str)
+            else set(subset or ())
+        )
+        paths = self._rename_paths(source, target, directories)
+        if not paths:
+            if not silent:
+                print(f"Nothing to rename for {source!r}")
+            return
+        branches = [path.parent.parent.name for path in paths]
+        for branch in branches:
+            self.log.rename(source, target, branch)
+        if not silent:
+            print(f"Updated {self.log.path}")
+            underline(f"{self.root}")
+            for branch in branches:
+                print(f"[{source} -> {target}] in {branch}")
 
     def remove(
         self: ProjectType,
         run: str,
+        subset: typing.Union[str, typing.Iterable[str]]=None,
         silent: bool=False,
     ) -> ProjectType:
         """Remove an existing EPREM run from this project."""
+        directories = (
+            {subset} if isinstance(subset, str)
+            else set(subset or ())
+        )
+        paths = self._remove_paths(run, directories)
+        if not paths:
+            if not silent:
+                print(f"Nothing to remove for {run!r}")
+        branches = [path.parent.parent.name for path in paths]
+        targets = [path.name for path in paths]
+        for branch in branches:
+            self.log.remove(*targets, branch)
+        if not silent:
+            print(f"Updated {self.log.path}")
+            underline(f"{self.root}")
+            for branch in branches:
+                for target in targets:
+                    print(f"removed {target} from {branch}")
 
     def show(self: ProjectType, *runs: str):
         """Display information about this project or the named run(s)."""
@@ -432,7 +496,7 @@ class Project:
         action = self._make_paths_check(*paths)
         for path in paths:
             action(path)
-        return rundirs
+        return paths
 
     def _make_paths_check(self, *paths: pathlib.Path):
         """Return a function to create paths only if safe to do so."""
@@ -511,8 +575,10 @@ class Project:
     def log(self):
         """The log of runs in this project."""
         if self._log is None:
-            logname = pathlib.Path(self._logname).with_suffix('.json').name
-            self._log = RunLog(self.root / logname, config=self._config)
+            self._log = RunLog(
+                self.root / self._attrs.logname,
+                config=self._attrs.config,
+            )
         return self._log
 
     @property
@@ -528,22 +594,23 @@ class Project:
     @property
     def directories(self):
         """The full path to each run directory."""
-        if self._directories is None:
-            self._directories = [
-                self.root / branch / self._rundir
-                for branch in self._branches or ['']
-            ]
         return self._directories
 
     @property
     def base(self):
         """Alias for `Project.root`."""
-        return self._root
+        return self.root
 
     @property
     def root(self):
         """The top-level directory of this project."""
-        return self._root
+        return self._attrs.path
+
+    def __eq__(self, other) -> bool:
+        """True if two projects have the same initializing attributes."""
+        if isinstance(other, Project):
+            return self._attrs == other._attrs
+        return NotImplemented
 
     def __str__(self) -> str:
         """A simplified representation of this object."""
