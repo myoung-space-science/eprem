@@ -209,7 +209,7 @@ class ProjectExistsError(Exception):
     """A project with this name already exists."""
 
 
-_P = typing.TypeVar('_P', pathlib.Path)
+_P = typing.TypeVar('_P', bound=pathlib.Path)
 
 
 ProjectType = typing.TypeVar('ProjectType', bound='Project')
