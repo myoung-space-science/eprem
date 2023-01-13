@@ -243,6 +243,8 @@ class Project:
         self._log = None
         self._name = None
         self._directories = None
+        for directory in self.directories:
+            directory.mkdir(parents=True)
 
     def spawn(
         self: ProjectType,
