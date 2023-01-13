@@ -428,13 +428,14 @@ class Project:
         environment: typing.Dict[str, str]
     ) -> typing.Union[str, pathlib.Path]:
         """Compute an appropriate path to the named element.
-        
-        Intended for internal use by `~eprem.Project`.
 
-        This method will attempt to create a full path (resolving links as
-        necessary) from `environment` or from `path / name`. If neither
-        exist, it will return `name` as-is, thereby allowing calling code to
-        default to the searching the system path.
+        Notes
+        -----
+        * Intended for internal use by `~eprem.Project`.
+        * This method will attempt to create a full path (resolving links as
+          necessary) based on `environment` or from `path / name`. If neither
+          exist, it will return `name` as-is, thereby allowing calling code to
+          default to the searching the system path.
         """
         location = environment.get(name) or path / name
         it = fullpath(os.path.realpath(location))
