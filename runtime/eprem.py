@@ -457,6 +457,12 @@ class Project:
         return f"{self.__class__.__qualname__}({self.root})"
 
 
+def underline(text: str):
+    """Print underlined text."""
+    dashes = '-' * len(text)
+    print(f"\n{text}")
+    print(dashes)
+
 
 def spawn():
     """Set up and execute a new EPREM run."""
