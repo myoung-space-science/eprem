@@ -212,6 +212,97 @@ class ProjectExistsError(Exception):
 _P = typing.TypeVar('_P', bound=pathlib.Path)
 
 
+class _ProjectInit(typing.Mapping):
+    """A mapping of `~Project` initialization attributes."""
+
+    _kwargs = {
+        'branches': {'type': tuple, 'default': ()},
+        'config': {'type': str, 'default': 'eprem.cfg'},
+        'rundir': {'type': str, 'default': 'runs'},
+        'logstem': {'type': str, 'default': 'runs'},
+    }
+
+    def __init__(self, root, **kwargs) -> None:
+        """Create a new instance."""
+        self._attrs = {
+            key: this['type'](kwargs.get(key) or this['default'])
+            for key, this in self._kwargs.items()
+        }
+        self._attrs['root'] = str(root)
+        self._path = None
+        self._root = None
+        self._branches = None
+        self._config = None
+        self._rundir = None
+        self._logname = None
+        self._logstem = None
+
+    @property
+    def path(self):
+        """A fully qualified path to the project root directory."""
+        if self._path is None:
+            self._path = fullpath(self.root)
+        return self._path
+
+    @property
+    def root(self):
+        """The project root directory."""
+        if self._root is None:
+            self._root = str(self._attrs['root'])
+        return self._root
+
+    @property
+    def branches(self):
+        """The distinct project branches, if any."""
+        if self._branches is None:
+            self._branches = tuple(self._attrs['branches'])
+        return self._branches
+
+    @property
+    def config(self):
+        """The name of the standard project configuration file."""
+        if self._config is None:
+            self._config = str(self._attrs['config'])
+        return self._config
+
+    @property
+    def rundir(self):
+        """The name of the standard project run directory."""
+        if self._rundir is None:
+            self._rundir = str(self._attrs['rundir'])
+        return self._rundir
+
+    @property
+    def logname(self):
+        """The name of the project-wide log file."""
+        if self._logname is None:
+            self._logname = pathlib.Path(
+                self.logstem
+            ).with_suffix('.json').name
+        return self._logname
+
+    @property
+    def logstem(self):
+        """The name (without suffix) of the project-wide log file."""
+        if self._logstem is None:
+            self._logstem = str(self._attrs['logstem'])
+        return self._logstem
+
+    def __len__(self) -> int:
+        """Called for len(self)."""
+        return len(self._attrs)
+
+    def __iter__(self) -> typing.Iterable[str]:
+        """Called for iter(self)."""
+        return iter(self._attrs)
+
+    def __getitem__(self, __k: str):
+        """Key-based access to attribute values."""
+        if __k in self._attrs:
+            return self._attrs[__k]
+        raise KeyError(f"Unknown attribute {__k!r}")
+
+
 ProjectType = typing.TypeVar('ProjectType', bound='Project')
 
 
