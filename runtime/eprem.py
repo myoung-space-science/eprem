@@ -375,10 +375,9 @@ class Project:
         config: str,
         name: str=None,
         subset: typing.Union[str, typing.Iterable[str]]=None,
-        target: PathLike=None,
-        runner: PathLike=None,
         nprocs: int=None,
         runlog: str='eprem.log',
+        environment: typing.Dict[str, str]=None,
         silent: bool=False,
     ) -> ProjectType:
         """Set up and execute a new EPREM run within this project."""
@@ -388,8 +387,8 @@ class Project:
         )
         for path in self._make_paths(name, directories):
             branch = path.parent.parent
-            mpirun = self._locate('mpirun', branch, runner)
-            eprem = self._locate('eprem', branch, target)
+            mpirun = self._locate('mpirun', branch, environment or {})
+            eprem = self._locate('eprem', branch, environment or {})
             shutil.copy(config, path / self._attrs.config)
             command = (
                 "nice -n 10 ionice -c 2 -n 3 "
