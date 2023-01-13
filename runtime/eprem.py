@@ -270,7 +270,7 @@ class Project:
                 f"{mpirun} --mca btl_base_warn_component_unused 0 "
                 f"-n {nprocs or 1} {eprem} eprem.cfg"
             )
-            output = rundir / 'eprem.log'
+            output = rundir / runlog
             now = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
             with output.open('w') as stdout:
                 process = subprocess.Popen(
