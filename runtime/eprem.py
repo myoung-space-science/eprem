@@ -127,40 +127,46 @@ class RunLog(collections.abc.Mapping):
         self.dump(contents)
         return self
 
-    def remove(self, *targets: str):
-        """Remove the target run(s) from this log file."""
-        current = self._asdict.copy()
-        if target := next((t for t in targets if t not in current), None):
-            raise LogKeyError(f"Cannot remove unknown run {target!r}")
-        updated = {k: v for k, v in current.items() if k not in targets}
-        self.dump(updated)
-        return self
-
-    def rename(self, source: str, target: str):
+    def rename(self, source: str, target: str, subdir: str=None):
         """Rename `source` to `target` in this log file."""
         current = self._asdict.copy()
-        updated = {k: v for k, v in current.items() if k != source}
         try:
             record = current[source]
         except KeyError as err:
             raise LogKeyError(
                 f"Cannot rename unknown run {source!r}"
             ) from err
-        try:
-            config = record.pop('config')
-        except KeyError as exc:
-            raise RunKeyError(
-                f"The run {source!r} has no associated config file."
-            ) from exc
-        renamed = {'config': config}
-        for version in record:
-            original = record[version]
+        if subdir:
+            original = record[subdir]
             new = pathlib.Path(original['directory']).parent / target
-            renamed[version] = {
+            tmp = {
                 k: v if k != 'directory' else str(new)
                 for k, v in original.items()
             }
+            renamed = {subdir: tmp}
+        else:
+            new = pathlib.Path(record['directory']).parent / target
+            renamed = {
+                k: v if k != 'directory' else str(new)
+                for k, v in record.items()
+            }
+        updated = {k: v for k, v in current.items() if k != source}
         updated[target] = renamed
+        self.dump(updated)
+        return self
+
+    def remove(self, *targets: str, subdir: str=None):
+        """Remove the target run(s) from this log file."""
+        current = self._asdict.copy()
+        if target := next((t for t in targets if t not in current), None):
+            raise LogKeyError(f"Cannot remove unknown run {target!r}")
+        updated = {k: v for k, v in current.items() if k not in targets}
+        if subdir:
+            for run, info in current.items():
+                if run in targets:
+                    updated[run] = {
+                        k: v for k, v in info.items() if k != subdir
+                    }
         self.dump(updated)
         return self
 
