@@ -426,7 +426,7 @@ class Project:
         name: str,
         path: pathlib.Path,
         environment: typing.Dict[str, str]
-    ) -> typing.Union[str, pathlib.Path]:
+    ) -> pathlib.Path:
         """Compute an appropriate path to the named element.
 
         Notes
@@ -439,7 +439,7 @@ class Project:
         """
         location = environment.get(name) or path / name
         it = fullpath(os.path.realpath(location))
-        return it if it.exists() else name
+        return it if it.exists() else pathlib.Path(shutil.which(name))
 
     def rename(
         self: ProjectType,
