@@ -408,7 +408,7 @@ class Project:
                 if not silent:
                     print(
                         f"[PID: {process.pid} @ {now}] "
-                        f"{name} --> {branch.name}/"
+                        f"created {name} in {branch.name}"
                     )
                 process.wait()
             if not silent and process.returncode:
