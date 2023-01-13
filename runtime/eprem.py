@@ -385,6 +385,7 @@ class Project:
             {subset} if isinstance(subset, str)
             else set(subset or ())
         )
+        self.log.create(name)
         for path in self._make_paths(name, directories):
             branch = path.parent.parent
             mpirun = self._locate('mpirun', branch, environment or {})
@@ -419,7 +420,7 @@ class Project:
                 'directory': str(path),
                 'time': datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
             }
-            self.log.create(branch.name, logentry)
+            self.log.append(name, branch.name, logentry)
 
     def _locate(
         self,
