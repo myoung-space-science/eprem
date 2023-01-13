@@ -406,7 +406,10 @@ class Project:
                     stderr=subprocess.STDOUT,
                 )
                 if not silent:
-                    print(f"[{process.pid}] {now} --> {branch.name}")
+                    print(
+                        f"[PID: {process.pid} @ {now}] "
+                        f"{name} --> {branch.name}/"
+                    )
                 process.wait()
             if not silent and process.returncode:
                 print(f"WARNING: Process exited with {process.returncode}\n")
