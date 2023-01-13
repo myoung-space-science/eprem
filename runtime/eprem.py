@@ -419,20 +419,24 @@ class Project:
             }
             self.log.create(branch.name, logentry)
 
-    def _locate(self, name: str, path: pathlib.Path, user: PathLike):
+    def _locate(
+        self,
+        name: str,
+        path: pathlib.Path,
+        environment: typing.Dict[str, str]
+    ) -> typing.Union[str, pathlib.Path]:
         """Compute an appropriate path to the named element.
         
         Intended for internal use by `~eprem.Project`.
 
         This method will attempt to create a full path (resolving links as
-        necessary) from the user-provided path or from `path / name`. If neither
+        necessary) from `environment` or from `path / name`. If neither
         exist, it will return `name` as-is, thereby allowing calling code to
         default to the searching the system path.
         """
-        location = user or path / name
-        with contextlib.suppress(OSError):
-            return fullpath(os.path.realpath(location))
-        return name
+        location = environment.get(name) or path / name
+        it = fullpath(os.path.realpath(location))
+        return it if it.exists() else name
 
     def rename(
         self: ProjectType,
