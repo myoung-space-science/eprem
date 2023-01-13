@@ -576,7 +576,7 @@ class Project:
         """Build an appropriate collection of runtime directories."""
         if not subset:
             return self.directories
-        return [d for d in self.directories if d.name in subset]
+        return [d for d in self.directories if d.parent.name in subset]
 
     @property
     def log(self):
