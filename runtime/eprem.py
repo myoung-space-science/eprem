@@ -1,7 +1,9 @@
 import argparse
 import collections.abc
+import contextlib
 import datetime
 import json
+import os
 import pathlib
 import shutil
 import subprocess
@@ -15,7 +17,7 @@ except ModuleNotFoundError:
     _HAVE_YAML = False
 
 
-PathLike = typing.Union[str, pathlib.Path]
+PathLike = typing.Union[str, os.PathLike]
 
 
 def fullpath(p: PathLike):
@@ -199,8 +201,15 @@ class RunLog(collections.abc.Mapping):
         return f"{self.__class__.__qualname__}({self.path})"
 
 
+class PathOperationError(Exception):
+    """This operation is not allowed on the given path(s)."""
+
+
 class ProjectExistsError(Exception):
     """A project with this name already exists."""
+
+
+_P = typing.TypeVar('_P', pathlib.Path)
 
 
 ProjectType = typing.TypeVar('ProjectType', bound='Project')
@@ -237,24 +246,176 @@ class Project:
 
     def spawn(
         self: ProjectType,
-        config,
-        name=None,
-        subset=None,
-        executable=None,
-        runner=None,
-        np=1,
-        runlog='eprem.log',
+        config: str,
+        name: str=None,
+        subset: typing.Union[str, typing.Iterable[str]]=None,
+        target: PathLike=None,
+        runner: PathLike=None,
+        nprocs: int=None,
+        runlog: str='eprem.log',
+        silent: bool=False,
     ) -> ProjectType:
         """Set up and execute a new EPREM run within this project."""
+        # Steps for each branch (from `subset` or `self.branches`):
+        # - source MPI runner (arg, local path, or $PATH)
+        # - source EPREM executable (arg, local path, or $PATH)
+        # - create run directory
+        # - copy `config` to <run>/self._config
+        # - build command for `subprocess`
+        # - create and open output log
+        # - run EPREM; send stderr to stdout and stdout to the output log
+        # - create log entry if run succeeds
+        directories = (
+            {subset} if isinstance(subset, str)
+            else set(subset or ())
+        )
+        for rundir in self._make_paths(name, directories):
+            branch = rundir.parent
+            mpirun = self._locate('mpirun', branch, runner)
+            eprem = self._locate('eprem', branch, target)
+            shutil.copy(config, rundir / self._config)
+            command = (
+                "nice -n 10 ionice -c 2 -n 3 "
+                f"{mpirun} --mca btl_base_warn_component_unused 0 "
+                f"-n {nprocs or 1} {eprem} eprem.cfg"
+            )
+            output = rundir / 'eprem.log'
+            now = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
+            with output.open('w') as stdout:
+                process = subprocess.Popen(
+                    command,
+                    shell=True,
+                    cwd=rundir,
+                    stdout=stdout,
+                    stderr=subprocess.STDOUT,
+                )
+                if not silent:
+                    print(f"[{process.pid}] {now} --> {branch.name}")
+                process.wait()
+            if not silent and process.returncode:
+                print(f"WARNING: Process exited with {process.returncode}\n")
+            logentry = {
+                'mpirun': str(mpirun),
+                'eprem': str(eprem),
+                'directory': str(rundir),
+                'time': datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
+            }
+            self.log.create(branch.name, logentry)
 
-    def rename(self: ProjectType, source: str, target: str) -> ProjectType:
+    def _locate(self, name: str, path: pathlib.Path, user: PathLike):
+        """Compute an appropriate path to the named element.
+        
+        Intended for internal use by `~eprem.Project`.
+
+        This method will attempt to create a full path (resolving links as
+        necessary) from the user-provided path or from `path / name`. If neither
+        exist, it will return `name` as-is, thereby allowing calling code to
+        default to the searching the system path.
+        """
+        location = user or path / name
+        with contextlib.suppress(OSError):
+            return fullpath(os.path.realpath(location))
+        return name
+
+    def rename(
+        self: ProjectType,
+        source: str,
+        target: str,
+        silent: bool=False,
+    ) -> ProjectType:
         """Rename an existing EPREM run within this project."""
 
-    def remove(self: ProjectType, run: str) -> ProjectType:
+    def remove(
+        self: ProjectType,
+        run: str,
+        silent: bool=False,
+    ) -> ProjectType:
         """Remove an existing EPREM run from this project."""
 
     def show(self: ProjectType, *runs: str):
         """Display information about this project or the named run(s)."""
+
+    def _make_paths(self, name: str, subset: typing.Set[str]):
+        """Create the target subdirectory in each branch."""
+        rundirs = self._get_rundirs(subset)
+        paths = [rundir / name for rundir in rundirs]
+        action = self._make_paths_check(*paths)
+        for path in paths:
+            action(path)
+        return rundirs
+
+    def _make_paths_check(self, *paths: pathlib.Path):
+        """Return a function to create paths only if safe to do so."""
+        def action(path: pathlib.Path):
+            path.mkdir(parents=True)
+        for path in paths:
+            if path.exists():
+                raise PathOperationError(
+                    f"Cannot create {path}: already exists"
+                ) from None
+        return action
+
+    def _rename_paths(self, src: str, dst: str, subset: typing.Set[str]):
+        """Rename `src` to `dst` in all subdirectories."""
+        rundirs = self._get_rundirs(subset)
+        pairs = [(rundir / src, rundir / dst) for rundir in rundirs]
+        action = self._rename_paths_check(*pairs)
+        for pair in pairs:
+            action(*pair)
+        return rundirs
+
+    def _rename_paths_check(self, *pairs: typing.Tuple[_P, _P]):
+        """Return a function to rename paths only if safe to do so."""
+        def action(old: _P, new: _P):
+            old.rename(new)
+        for old, new in pairs:
+            if not old.exists():
+                raise PathOperationError(
+                    f"Cannot rename {old}: does not exist"
+                ) from None
+            if not old.is_dir():
+                raise PathOperationError(
+                    f"Cannot rename {old}: not a directory"
+                ) from None
+            if new.exists():
+                raise PathOperationError(
+                    f"Renaming {old.name!r} to {new.name!r} would "
+                    f"overwrite {new}."
+                ) from None
+        return action
+
+    def _remove_paths(self, name: str, subset: typing.Set[str]):
+        """Remove `target` from all subdirectories."""
+        rundirs = self._get_rundirs(subset)
+        paths = [
+            path for rundir in rundirs
+            for path in rundir.glob(name)
+        ]
+        action = self._remove_paths_check(*paths)
+        for path in paths:
+            action(path)
+        return rundirs
+
+    def _remove_paths_check(self, *paths: pathlib.Path):
+        """Return a function to remove paths only if safe to do so."""
+        def action(path: pathlib.Path):
+            shutil.rmtree(path)
+        for path in paths:
+            if not path.exists():
+                raise PathOperationError(
+                    f"Cannot remove {path}: does not exist"
+                ) from None
+            if not path.is_dir():
+                raise PathOperationError(
+                    f"Cannot remove {path}: not a directory"
+                ) from None
+        return action
+
+    def _get_rundirs(self, subset: typing.Iterable[str]):
+        """Build an appropriate collection of runtime directories."""
+        if not subset:
+            return self.directories
+        return [d for d in self.directories if d.name in subset]
 
     @property
     def log(self):
