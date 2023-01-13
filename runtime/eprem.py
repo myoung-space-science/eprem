@@ -256,15 +256,6 @@ class Project:
         silent: bool=False,
     ) -> ProjectType:
         """Set up and execute a new EPREM run within this project."""
-        # Steps for each branch (from `subset` or `self.branches`):
-        # - source MPI runner (arg, local path, or $PATH)
-        # - source EPREM executable (arg, local path, or $PATH)
-        # - create run directory
-        # - copy `config` to <run>/self._config
-        # - build command for `subprocess`
-        # - create and open output log
-        # - run EPREM; send stderr to stdout and stdout to the output log
-        # - create log entry if run succeeds
         directories = (
             {subset} if isinstance(subset, str)
             else set(subset or ())
