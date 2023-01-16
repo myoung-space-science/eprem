@@ -375,6 +375,14 @@ class Project:
     def remove(self):
         """Delete this project."""
         shutil.rmtree(self.root)
+        with self.database.open('r') as fp:
+            current = dict(json.load(fp))
+        updated = {
+            k: v for k, v in current.items()
+            if k != str(self.root)
+        }
+        with self.database.open('w') as fp:
+            json.dump(updated, fp, indent=4, sort_keys=True)
         self._isvalid = False
 
     def run(
