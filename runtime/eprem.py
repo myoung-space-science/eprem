@@ -395,8 +395,8 @@ class Project:
         self.log.create(name)
         for path in self._make_paths(name, directories):
             branch = path.parent.parent
-            mpirun = self._locate('mpirun', branch, environment or {})
-            eprem = self._locate('eprem', branch, environment or {})
+            mpirun = _locate('mpirun', branch, environment or {})
+            eprem = _locate('eprem', branch, environment or {})
             shutil.copy(config, path / self._attrs.config)
             command = (
                 "nice -n 10 ionice -c 2 -n 3 "
@@ -428,26 +428,6 @@ class Project:
                 'time': datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
             }
             self.log.append(name, branch.name, logentry)
-
-    def _locate(
-        self,
-        name: str,
-        path: pathlib.Path,
-        environment: typing.Dict[str, str]
-    ) -> pathlib.Path:
-        """Compute an appropriate path to the named element.
-
-        Notes
-        -----
-        * Intended for internal use by `~eprem.Project`.
-        * This method will attempt to create a full path (resolving links as
-          necessary) based on `environment` or from `path / name`. If neither
-          exist, it will return `name` as-is, thereby allowing calling code to
-          default to the searching the system path.
-        """
-        location = environment.get(name) or path / name
-        it = fullpath(os.path.realpath(location))
-        return it if it.exists() else pathlib.Path(shutil.which(name))
 
     def mv(
         self: ProjectType,
@@ -638,6 +618,26 @@ class Project:
     def __repr__(self) -> str:
         """An unambiguous representation of this object."""
         return f"{self.__class__.__qualname__}({self.root})"
+
+
+def _locate(
+    name: str,
+    path: pathlib.Path,
+    environment: typing.Dict[str, str]
+) -> pathlib.Path:
+    """Compute an appropriate path to the named element.
+
+    Notes
+    -----
+    * Intended for internal use by `~eprem.Project`.
+    * This method will attempt to create a full path (resolving links as
+        necessary) based on `environment` or from `path / name`. If neither
+        exist, it will return `name` as-is, thereby allowing calling code to
+        default to the searching the system path.
+    """
+    location = environment.get(name) or path / name
+    it = fullpath(os.path.realpath(location))
+    return it if it.exists() else pathlib.Path(shutil.which(name))
 
 
 def underline(text: str):
