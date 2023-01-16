@@ -335,6 +335,7 @@ class Project:
 
     def __init__(self, root, **kwargs):
         """Initialize a new project."""
+        self._isvalid = False
         attrs = self._init_attrs(root, kwargs)
         self._log = None
         self._name = None
@@ -346,6 +347,7 @@ class Project:
             directory.mkdir(parents=True, exist_ok=True)
         self._attrs = attrs
         self._directories = directories
+        self._isvalid = True
 
     def _init_attrs(self, root: pathlib.Path, kwargs: dict):
         """Initialize arguments from input or the database."""
@@ -613,6 +615,10 @@ class Project:
     def root(self):
         """The top-level directory of this project."""
         return self._attrs.path
+
+    def __bool__(self) -> bool:
+        """True if this is a valid project."""
+        return self._isvalid
 
     def __eq__(self, other) -> bool:
         """True if two projects have the same initializing attributes."""
