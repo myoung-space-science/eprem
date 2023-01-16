@@ -127,7 +127,7 @@ class RunLog(collections.abc.Mapping):
         self.dump(contents)
         return self
 
-    def rename(self, source: str, target: str, subdir: str=None):
+    def mv(self, source: str, target: str, subdir: str=None):
         """Rename `source` to `target` in this log file."""
         current = self._asdict.copy()
         try:
@@ -155,7 +155,7 @@ class RunLog(collections.abc.Mapping):
         self.dump(updated)
         return self
 
-    def remove(self, *targets: str, subdir: str=None):
+    def rm(self, *targets: str, subdir: str=None):
         """Remove the target run(s) from this log file."""
         current = self._asdict.copy()
         if target := next((t for t in targets if t not in current), None):
@@ -468,7 +468,7 @@ class Project:
             return
         branches = [path.parent.parent.name for path in paths]
         for branch in branches:
-            self.log.rename(source, target, branch)
+            self.log.mv(source, target, branch)
         if not silent:
             print(f"Updated {self.log.path}")
             underline(f"{self.root}")
@@ -493,7 +493,7 @@ class Project:
         branches = [path.parent.parent.name for path in paths]
         targets = [path.name for path in paths]
         for branch in branches:
-            self.log.remove(*targets, branch)
+            self.log.rm(*targets, branch)
         if not silent:
             print(f"Updated {self.log.path}")
             underline(f"{self.root}")
