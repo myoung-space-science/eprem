@@ -454,7 +454,7 @@ class Project:
             if not silent:
                 print(f"Nothing to rename for {source!r}")
             return
-        branches = [path.parent.parent.name for path in paths]
+        branches = [path[0].parent.parent.name for path in paths]
         for branch in branches:
             self.log.mv(source, target, branch)
         if not silent:
