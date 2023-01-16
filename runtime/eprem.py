@@ -493,7 +493,18 @@ class Project:
         """Display information about this project or the named run(s)."""
 
     def _make_paths(self, name: str, subset: typing.Set[str]):
-        """Create the target subdirectory in each branch."""
+        """Create the target subdirectory in each branch.
+
+        Returns
+        -------
+        list of paths
+            A list whose members are the full paths to the directory in which to
+            create a requested EPREM run.
+
+        Notes
+        -----
+        * Intended for use by `~eprem.Project`.
+        """
         rundirs = self._get_rundirs(subset)
         paths = [rundir / name for rundir in rundirs]
         action = self._make_paths_check(*paths)
