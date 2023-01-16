@@ -565,7 +565,18 @@ class Project:
         return action
 
     def _remove_paths(self, name: str, subset: typing.Set[str]):
-        """Remove `target` from all subdirectories."""
+        """Remove `target` from all subdirectories.
+
+        Returns
+        -------
+        list of paths
+            A list whose members are the full paths to the EPREM runtime
+            directory to remove.
+
+        Notes
+        -----
+        * Intended for use by `~eprem.Project`.
+        """
         rundirs = self._get_rundirs(subset)
         paths = [
             path for rundir in rundirs
@@ -574,7 +585,7 @@ class Project:
         action = self._remove_paths_check(*paths)
         for path in paths:
             action(path)
-        return rundirs
+        return paths
 
     def _remove_paths_check(self, *paths: pathlib.Path):
         """Return a function to remove paths only if safe to do so."""
