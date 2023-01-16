@@ -258,7 +258,7 @@ class _ProjectInit(typing.Mapping):
         return self._root
 
     @property
-    def branches(self):
+    def branches(self) -> typing.Tuple[str]:
         """The distinct project branches, if any."""
         if self._branches is None:
             self._branches = tuple(self._attrs['branches'])
