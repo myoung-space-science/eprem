@@ -372,6 +372,11 @@ class Project:
             json.dump({key: dict(init)}, fp, indent=4, sort_keys=True)
         return init
 
+    def delete(self):
+        """Delete this project."""
+        shutil.rmtree(self.root)
+        self._isvalid = False
+
     def spawn(
         self: ProjectType,
         config: str,
