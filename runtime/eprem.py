@@ -377,7 +377,7 @@ class Project:
         shutil.rmtree(self.root)
         self._isvalid = False
 
-    def spawn(
+    def run(
         self: ProjectType,
         config: str,
         name: str=None,
@@ -449,7 +449,7 @@ class Project:
         it = fullpath(os.path.realpath(location))
         return it if it.exists() else pathlib.Path(shutil.which(name))
 
-    def rename(
+    def mv(
         self: ProjectType,
         source: str,
         target: str,
@@ -475,7 +475,7 @@ class Project:
             for branch in branches:
                 print(f"[{source} -> {target}] in {branch}")
 
-    def remove(
+    def rm(
         self: ProjectType,
         run: str,
         subset: typing.Union[str, typing.Iterable[str]]=None,
