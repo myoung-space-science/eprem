@@ -433,7 +433,8 @@ class Project:
                 'mpirun': str(mpirun),
                 'eprem': str(eprem),
                 'directory': str(path),
-                'time': datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
+                'time': datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S'),
+                'runlog': str(output.name),
             }
             self.log.append(name, branch.name, logentry)
 
