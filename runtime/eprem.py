@@ -524,13 +524,25 @@ class Project:
         return action
 
     def _rename_paths(self, src: str, dst: str, subset: typing.Set[str]):
-        """Rename `src` to `dst` in all subdirectories."""
+        """Rename `src` to `dst` in all subdirectories.
+
+        Returns
+        -------
+        list of tuples of paths
+            A list of tuples whose members are full paths to the
+            source and destination directories, respectively, in the standard
+            sense of path-renaming operations.
+
+        Notes
+        -----
+        * Intended for use by `~eprem.Project`.
+        """
         rundirs = self._get_rundirs(subset)
         pairs = [(rundir / src, rundir / dst) for rundir in rundirs]
         action = self._rename_paths_check(*pairs)
         for pair in pairs:
             action(*pair)
-        return rundirs
+        return pairs
 
     def _rename_paths_check(self, *pairs: typing.Tuple[_P, _P]):
         """Return a function to rename paths only if safe to do so."""
