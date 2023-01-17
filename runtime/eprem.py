@@ -235,6 +235,7 @@ class _ProjectInit(typing.Mapping):
     _kwargs = {
         'branches': {'type': tuple, 'default': ()},
         'config': {'type': str, 'default': 'eprem.cfg'},
+        'output': {'type': str, 'default': 'eprem.log'},
         'rundir': {'type': str, 'default': 'runs'},
         'logstem': {'type': str, 'default': 'runs'},
     }
@@ -250,6 +251,7 @@ class _ProjectInit(typing.Mapping):
         self._root = None
         self._branches = None
         self._config = None
+        self._output = None
         self._rundir = None
         self._logname = None
         self._logstem = None
@@ -281,6 +283,15 @@ class _ProjectInit(typing.Mapping):
         if self._config is None:
             self._config = str(self._attrs['config'])
         return self._config
+
+    @property
+    def output(self):
+        """The name of the standard project output log."""
+        if self._output is None:
+            # Ensure a string file name, even if the initialization argument was
+            # a path. We don't want to write to an arbitrary location on disk!
+            self._output = pathlib.Path(self._attrs['output']).name
+        return self._output
 
     @property
     def rundir(self):
@@ -338,6 +349,7 @@ class Project:
         root: typing.Union[str, pathlib.Path],
         branches: typing.Iterable[str]=None,
         config: str=None,
+        output: str=None,
         rundir: str=None,
         logname: str=None,
     ) -> None: ...
@@ -361,6 +373,7 @@ class Project:
             attrs.path / attrs.logname,
             branches=attrs.branches,
             config=attrs.config,
+            output=attrs.output,
         )
         self._attrs = attrs
         self._directories = directories
@@ -408,7 +421,6 @@ class Project:
         name: str=None,
         subset: typing.Union[str, typing.Iterable[str]]=None,
         nprocs: int=None,
-        runlog: str='eprem.log',
         environment: typing.Dict[str, str]=None,
         silent: bool=False,
     ) -> ProjectType:
@@ -428,7 +440,7 @@ class Project:
                 f"{mpirun} --mca btl_base_warn_component_unused 0 "
                 f"-n {nprocs or 1} {eprem} eprem.cfg"
             )
-            output = path / runlog
+            output = path / self._attrs.output
             now = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
             with output.open('w') as stdout:
                 process = subprocess.Popen(
@@ -451,7 +463,6 @@ class Project:
                 'eprem': str(eprem),
                 'directory': str(path),
                 'time': datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S'),
-                'runlog': str(output.name),
             }
             self.log.append(name, branch.name, logentry)
 
