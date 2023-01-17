@@ -510,7 +510,7 @@ class Project:
     def show(self: ProjectType, *runs: str):
         """Display information about this project or the named run(s)."""
 
-    def _make_paths(self, name: str, subset: typing.Set[str]):
+    def _make_paths(self, name: str, subset: typing.Iterable[str]):
         """Create the target subdirectory in each branch.
 
         Returns
@@ -541,7 +541,7 @@ class Project:
                 ) from None
         return action
 
-    def _rename_paths(self, src: str, dst: str, subset: typing.Set[str]):
+    def _rename_paths(self, src: str, dst: str, subset: typing.Iterable[str]):
         """Rename `src` to `dst` in all subdirectories.
 
         Returns
@@ -582,7 +582,7 @@ class Project:
                 ) from None
         return action
 
-    def _remove_paths(self, name: str, subset: typing.Set[str]):
+    def _remove_paths(self, name: str, subset: typing.Iterable[str]):
         """Remove `target` from all subdirectories.
 
         Returns
