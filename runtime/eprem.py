@@ -40,7 +40,12 @@ class ReadTypeError(Exception):
 class RunLog(collections.abc.Mapping):
     """Mapping-based interface to an EPREM project log."""
 
-    def __init__(self, path: PathLike, **common) -> None:
+    def __init__(
+        self,
+        path: PathLike,
+        branches: typing.Iterable[str]=None,
+        **common
+    ) -> None:
         """Create a new project log.
         
         Parameters
@@ -49,11 +54,15 @@ class RunLog(collections.abc.Mapping):
             The path at which to create the log file. May be relative to the
             current directory.
 
+        branches : iterable of strings, optional
+            The branch names, if any, in the project.
+
         common
             Key-value pairs of attributes that are common to all runs.
         """
         self._path = fullpath(path)
-        self._common = common
+        self._branches = tuple(branches or [])
+        self.dump(common)
 
     def __len__(self) -> int:
         """Called for len(self)."""
@@ -127,45 +136,51 @@ class RunLog(collections.abc.Mapping):
         self.dump(contents)
         return self
 
-    def mv(self, source: str, target: str, subdir: str=None):
+    def mv(self, source: str, target: str):
         """Rename `source` to `target` in this log file."""
         current = self._asdict.copy()
         try:
-            record = current[source]
+            run = current[source]
         except KeyError as err:
             raise LogKeyError(
                 f"Cannot rename unknown run {source!r}"
             ) from err
-        if subdir:
-            original = record[subdir]
-            new = pathlib.Path(original['directory']).parent / target
-            tmp = {
-                k: v if k != 'directory' else str(new)
-                for k, v in original.items()
-            }
-            renamed = {subdir: tmp}
-        else:
-            new = pathlib.Path(record['directory']).parent / target
-            renamed = {
-                k: v if k != 'directory' else str(new)
-                for k, v in record.items()
-            }
         updated = {k: v for k, v in current.items() if k != source}
-        updated[target] = renamed
+        if not self._branches:
+            directory = pathlib.Path(run['directory']).parent / target
+            updated[target] = {
+                k: v if k != 'directory' else str(directory)
+                for k, v in run.items()
+            }
+        else:
+            updated[target] = {}
+            for branch in self._branches:
+                old = run[branch]
+                directory = pathlib.Path(old['directory']).parent / target
+                updated[target][branch] = {
+                    k: v if k != 'directory' else str(directory)
+                    for k, v in old.items()
+                }
         self.dump(updated)
         return self
 
-    def rm(self, *targets: str, subdir: str=None):
+    def rm(self, *targets: str, branch: str=None):
         """Remove the target run(s) from this log file."""
         current = self._asdict.copy()
         if target := next((t for t in targets if t not in current), None):
-            raise LogKeyError(f"Cannot remove unknown run {target!r}")
+            raise LogKeyError(
+                f"Cannot remove unknown run {target!r}"
+            ) from None
         updated = {k: v for k, v in current.items() if k not in targets}
-        if subdir:
-            for run, info in current.items():
-                if run in targets:
-                    updated[run] = {
-                        k: v for k, v in info.items() if k != subdir
+        if branch not in self._branches:
+            raise LogKeyError(
+                f"Cannot remove runs from unknown branch {branch!r}"
+            ) from None
+        if branch:
+            for key, info in current.items():
+                if key in targets:
+                    updated[key] = {
+                        k: v for k, v in info.items() if k != branch
                     }
         self.dump(updated)
         return self
@@ -173,12 +188,8 @@ class RunLog(collections.abc.Mapping):
     @property
     def _asdict(self) -> typing.Dict[str, typing.Dict[str, typing.Any]]:
         """Internal dictionary representing the current contents."""
-        try:
-            with self.path.open('r') as fp:
-                return dict(json.load(fp))
-        except FileNotFoundError:
-            self.dump(self._common)
-            return self._asdict
+        with self.path.open('r') as fp:
+            return dict(json.load(fp))
 
     def dump(self, contents):
         """Write `contents` to this log file."""
