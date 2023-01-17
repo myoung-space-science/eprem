@@ -438,11 +438,11 @@ class Project:
                     stderr=subprocess.STDOUT,
                 )
                 if not silent:
-                    print(
-                        f"[{process.pid} ({now})] "
-                        f"created {name} in branch {branch.name!r}"
-                    )
+                    print(f"\n[{process.pid}]")
+                    print(f"started at {now}")
                 process.wait()
+                if not silent:
+                    print(f"created {name} in branch {branch.name!r}")
             if not silent and process.returncode:
                 print(f"WARNING: Process exited with {process.returncode}\n")
             logentry = {
