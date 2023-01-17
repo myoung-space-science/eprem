@@ -345,6 +345,7 @@ class Project:
         ]
         for directory in directories:
             directory.mkdir(parents=True, exist_ok=True)
+        self._log = RunLog(attrs.path / attrs.logname, config=attrs.config)
         self._attrs = attrs
         self._directories = directories
         self._isvalid = True
@@ -612,11 +613,6 @@ class Project:
     @property
     def log(self):
         """The log of runs in this project."""
-        if self._log is None:
-            self._log = RunLog(
-                self.root / self._attrs.logname,
-                config=self._attrs.config,
-            )
         return self._log
 
     @property
