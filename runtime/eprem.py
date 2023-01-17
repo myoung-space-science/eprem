@@ -350,6 +350,7 @@ class Project:
         attrs = self._init_attrs(root, kwargs)
         self._log = None
         self._name = None
+        self._branches = None
         directories = [
             attrs.path / branch / attrs.rundir
             for branch in attrs.branches or ['']
@@ -639,6 +640,13 @@ class Project:
         if self._name is None:
             self._name = self.root.name
         return self._name
+
+    @property
+    def branches(self):
+        """The names of project branches, if any."""
+        if self._branches is None:
+            self._branches = self._attrs.branches
+        return self._branches
 
     @property
     def directories(self):
