@@ -356,7 +356,11 @@ class Project:
         ]
         for directory in directories:
             directory.mkdir(parents=True, exist_ok=True)
-        self._log = RunLog(attrs.path / attrs.logname, config=attrs.config)
+        self._log = RunLog(
+            attrs.path / attrs.logname,
+            branches=attrs.branches,
+            config=attrs.config,
+        )
         self._attrs = attrs
         self._directories = directories
         self._isvalid = True
