@@ -315,6 +315,10 @@ class _ProjectInit(typing.Mapping):
             return self._attrs[__k]
         raise KeyError(f"Unknown attribute {__k!r}")
 
+    def __repr__(self) -> str:
+        """An unambiguous representation of this object."""
+        return '\n'.join(f"{k}: {v}" for k, v in self.items())
+
 
 ProjectType = typing.TypeVar('ProjectType', bound='Project')
 
