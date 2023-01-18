@@ -435,6 +435,7 @@ class Project:
                 errors=errors,
                 silent=silent,
             )
+        return self
 
     def _create_run(
         self: ProjectType,
@@ -517,6 +518,7 @@ class Project:
             return
         for (run, new) in pairs:
             self._rename_run(run, new, errors=errors, silent=silent)
+        return self
 
     def _rename_run(
         self: ProjectType,
@@ -574,6 +576,7 @@ class Project:
             return
         for path in paths:
             self._remove_run(path, errors=errors, silent=silent)
+        return self
 
     def _remove_run(
         self: ProjectType,
