@@ -390,6 +390,10 @@ class Project:
     def show(self: ProjectType, *runs: str):
         """Display information about this project or the named run(s)."""
 
+    def reset(self):
+        """Reset this project to its initial state."""
+        return self.rm('*')
+
     def remove(self):
         """Delete this project."""
         shutil.rmtree(self.root)
