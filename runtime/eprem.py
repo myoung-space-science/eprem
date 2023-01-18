@@ -37,6 +37,9 @@ class ReadTypeError(Exception):
     """There is no support for reading a given file type."""
 
 
+RunLogType = typing.TypeVar('RunLogType', bound='RunLog')
+
+
 class RunLog(collections.abc.Mapping):
     """Mapping-based interface to an EPREM project log."""
 
@@ -78,28 +81,40 @@ class RunLog(collections.abc.Mapping):
             return self._asdict[__k]
         raise LogKeyError(f"Unknown run {__k!r}")
 
-    def create(self, key: str, source=None, filetype: str=None):
-        """Create a new entry in this log file."""
+    @typing.overload
+    def create(
+        self: RunLogType,
+        key: str,
+        mapping: typing.Mapping
+    ) -> RunLogType:
+        """Create a new entry from a mapping."""
+
+    @typing.overload
+    def create(
+        self: RunLogType,
+        key: str,
+        **items
+    ) -> RunLogType:
+        """Create a new entry from key-value pairs."""
+
+    def create(self, key: PathLike, *mapping: typing.Mapping, **items):
         contents = self._asdict.copy()
-        if source is None:
-            contents[key] = {}
-        contents.update({key: self._normalize_source(source, filetype)})
+        if mapping and items:
+            raise TypeError(
+                f"{self.__class__.__qualname__}.create accepts"
+                " a single mapping or multiple key-value pairs"
+                ", but not both"
+            ) from None
+        new = dict(*mapping) or items
+        contents[str(key)] = new
         self.dump(contents)
         return self
 
-    def _normalize_source(self, source, filetype):
-        """Convert `source` into an appropriate dictionary."""
-        if source is None:
-            return {}
-        if isinstance(source, typing.Mapping):
-            return dict(source)
-        if isinstance(source, str):
-            return self._read_from_file(source, filetype)
-        raise TypeError(f"Unrecognized source type: {type(source)}")
-
-    def load(self, source: str, filetype: str):
+    def load(self, key: PathLike, source: PathLike, filetype: str=None):
         """Create a new entry in this log file from a file."""
-        self.dump(self._read_from_file(source, filetype))
+        contents = self._asdict.copy()
+        contents[str(key)] = self._read_from_file(source, filetype)
+        self.dump(contents)
         return self
 
     def _read_from_file(self, source, filetype):
@@ -136,52 +151,22 @@ class RunLog(collections.abc.Mapping):
         self.dump(contents)
         return self
 
-    def mv(self, source: str, target: str):
+    def mv(self, source: PathLike, target: PathLike):
         """Rename `source` to `target` in this log file."""
-        current = self._asdict.copy()
-        try:
-            run = current[source]
-        except KeyError as err:
+        old = str(source)
+        new = str(target)
+        if old not in self:
             raise LogKeyError(
-                f"Cannot rename unknown run {source!r}"
-            ) from err
-        updated = {k: v for k, v in current.items() if k != source}
-        if not self._branches:
-            directory = pathlib.Path(run['directory']).parent / target
-            updated[target] = {
-                k: v if k != 'directory' else str(directory)
-                for k, v in run.items()
-            }
-        else:
-            updated[target] = {}
-            for branch in self._branches:
-                old = run[branch]
-                directory = pathlib.Path(old['directory']).parent / target
-                updated[target][branch] = {
-                    k: v if k != 'directory' else str(directory)
-                    for k, v in old.items()
-                }
+                f"Cannot rename unknown run {old!r}"
+            ) from None
+        updated = {k: v for k, v in self._asdict.items() if k != old}
+        updated[new] = self._asdict[old]
         self.dump(updated)
         return self
 
-    def rm(self, *targets: str, branch: str=None):
-        """Remove the target run(s) from this log file."""
-        current = self._asdict.copy()
-        if target := next((t for t in targets if t not in current), None):
-            raise LogKeyError(
-                f"Cannot remove unknown run {target!r}"
-            ) from None
-        updated = {k: v for k, v in current.items() if k not in targets}
-        if branch not in self._branches:
-            raise LogKeyError(
-                f"Cannot remove runs from unknown branch {branch!r}"
-            ) from None
-        if branch:
-            for key, info in current.items():
-                if key in targets:
-                    updated[key] = {
-                        k: v for k, v in info.items() if k != branch
-                    }
+    def rm(self, target: PathLike):
+        """Remove the target run from this log file."""
+        updated = {k: v for k, v in self._asdict.items() if k != str(target)}
         self.dump(updated)
         return self
 
