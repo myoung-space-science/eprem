@@ -392,6 +392,37 @@ class Project:
 
     def show(self: ProjectType, *runs: str):
         """Display information about this project or the named run(s)."""
+        if not runs:
+            self._show_project()
+        if len(runs) == 1:
+            self._show_run(run)
+        for run in runs:
+            underline(run)
+            self._show_run(run)
+
+    def _show_project(self):
+        """Display information about this project."""
+        underline("Project")
+        print(self._attrs)
+        if not self.branches:
+            underline("runs")
+            print('\n'.join(self.runs))
+            return
+        for branch, runs in self.branches.items():
+            underline(f"Branch {branch}")
+            print('\n'.join(runs))
+
+    def _show_run(self, run: str):
+        """Display information about the named run."""
+        try:
+            branches = self.runs[run]
+        except KeyError:
+            print(f"No run named {run!r}")
+            return
+        if not branches:
+            print(self.root / self._attrs.rundir / run)
+        for branch in self.runs[run]:
+            print(self.root / branch / self._attrs.rundir / run)
 
     def reset(self, force: bool=False, silent: bool=False):
         """Reset this project to its initial state."""
