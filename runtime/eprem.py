@@ -387,6 +387,9 @@ class Project:
             json.dump({key: dict(init)}, fp, indent=4, sort_keys=True)
         return init
 
+    def show(self: ProjectType, *runs: str):
+        """Display information about this project or the named run(s)."""
+
     def remove(self):
         """Delete this project."""
         shutil.rmtree(self.root)
@@ -404,215 +407,177 @@ class Project:
         self: ProjectType,
         config: str,
         name: str=None,
-        subset: typing.Union[str, typing.Iterable[str]]=None,
+        branches: typing.Union[str, typing.Iterable[str]]=None,
+        errors: bool=False,
         nprocs: int=None,
         environment: typing.Dict[str, str]=None,
         silent: bool=False,
     ) -> ProjectType:
         """Set up and execute a new EPREM run within this project."""
-        directories = (
-            {subset} if isinstance(subset, str)
-            else set(subset or ())
+        subset = (
+            {branches} if isinstance(branches, str)
+            else set(branches or ())
         )
-        for path in self._make_paths(name, directories):
-            branch = path.parent.parent
-            mpirun = _locate('mpirun', branch, environment or {})
-            eprem = _locate('eprem', branch, environment or {})
-            shutil.copy(config, path / self._attrs.config)
-            command = (
-                "nice -n 10 ionice -c 2 -n 3 "
-                f"{mpirun} --mca btl_base_warn_component_unused 0 "
-                f"-n {nprocs or 1} {eprem} eprem.cfg"
-            )
-            output = path / self._attrs.output
-            now = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
-            with output.open('w') as stdout:
-                process = subprocess.Popen(
-                    command,
-                    shell=True,
-                    cwd=path,
-                    stdout=stdout,
-                    stderr=subprocess.STDOUT,
+        rundirs = self._get_rundirs(subset)
+        paths = [rundir / name for rundir in rundirs]
+        for path in paths:
+            if error := self._try_to_make(path):
+                if errors:
+                    raise PathOperationError(error)
+                if not silent:
+                    print(error)
+            else:
+                branch = path.parent.parent
+                mpirun = _locate('mpirun', branch, environment or {})
+                eprem = _locate('eprem', branch, environment or {})
+                shutil.copy(config, path / self._attrs.config)
+                command = (
+                    "nice -n 10 ionice -c 2 -n 3 "
+                    f"{mpirun} --mca btl_base_warn_component_unused 0 "
+                    f"-n {nprocs or 1} {eprem} eprem.cfg"
                 )
-                if not silent:
-                    print(f"\n[{process.pid}]")
-                    print(f"started at {now}")
-                process.wait()
-                if not silent:
-                    print(f"created {name} in branch {branch.name!r}")
-            if not silent and process.returncode:
-                print(f"WARNING: Process exited with {process.returncode}\n")
-            logentry = {
-                'mpirun': str(mpirun),
-                'eprem': str(eprem),
-                'time': datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S'),
-            }
-            self.log.create(str(path), logentry)
+                output = path / self._attrs.output
+                now = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
+                # NOTE: To make this work as a context manager, we could define
+                # a `stdout` attribute on that class, initialize it to `None`,
+                # open it in `__enter__`, and conditionally close it in
+                # `__exit__`.
+                with output.open('w') as stdout:
+                    process = subprocess.Popen(
+                        command,
+                        shell=True,
+                        cwd=path,
+                        stdout=stdout,
+                        stderr=subprocess.STDOUT,
+                    )
+                    if not silent:
+                        print(f"\n[{process.pid}]")
+                        print(f"started at {now}")
+                    process.wait()
+                    if not silent:
+                        print(f"created {name} in branch {branch.name!r}")
+                if process.returncode == 0:
+                    logentry = {
+                        'mpirun': str(mpirun),
+                        'eprem': str(eprem),
+                        'time': now,
+                    }
+                    self.log.create(str(path), logentry)
+                elif not silent:
+                    print(
+                        f"WARNING: Process exited with {process.returncode}",
+                        end='\n\n',
+                    )
+
+    def _try_to_make(self, this: pathlib.Path):
+        """Create `this` only if safe to do so."""
+        if this.exists():
+            raise PathOperationError(
+                f"Cannot create {this}: already exists"
+            ) from None
+        this.mkdir(parents=True)
 
     def mv(
         self: ProjectType,
         source: str,
         target: str,
-        subset: typing.Union[str, typing.Iterable[str]]=None,
+        branches: typing.Union[str, typing.Iterable[str]]=None,
+        errors: bool=False,
         silent: bool=False,
     ) -> ProjectType:
         """Rename an existing EPREM run within this project."""
-        directories = (
-            {subset} if isinstance(subset, str)
-            else set(subset or ())
+        subset = (
+            {branches} if isinstance(branches, str)
+            else set(branches or self.branches)
         )
-        paths = self._rename_paths(source, target, directories)
-        if not paths:
+        rundirs = self._get_rundirs(subset)
+        pairs = [(rundir / source, rundir / target) for rundir in rundirs]
+        if not pairs:
             if not silent:
                 print(f"Nothing to rename for {source!r}")
             return
-        branches = [path[0].parent.parent.name for path in paths]
-        for branch in branches:
-            self.log.mv(source, target, branch)
-        if not silent:
-            print(f"Updated {self.log.path}")
-            underline(f"{self.root}")
-            for branch in branches:
-                print(f"[{source} -> {target}] in {branch}")
+        for (old, new) in pairs:
+            if error := self._try_to_rename(old, new):
+                if errors:
+                    raise PathOperationError(error)
+                if not silent:
+                    print(error)
+            else:
+                if not silent:
+                    base = f"renamed {source!r} to {target!r}"
+                    branch = self._get_branch_name(old)
+                    message = (
+                        f"{base} in branch {branch!r}" if branch
+                        else base
+                    )
+                    print(message)
+
+    def _try_to_rename(self, this: pathlib.Path, that: pathlib.Path):
+        """Rename `this` to `that` only if safe to do so."""
+        if not this.exists():
+            return f"Cannot rename {this}: does not exist"
+        if not this.is_dir():
+            return f"Cannot rename {this}: not a directory"
+        if that.exists():
+            return (
+                f"Renaming {this.name!r} to {that.name!r} would "
+                f"overwrite {that}."
+            )
+        this.rename(that)
+        self.log.mv(this, that)
 
     def rm(
         self: ProjectType,
         run: str,
-        subset: typing.Union[str, typing.Iterable[str]]=None,
+        branches: typing.Union[str, typing.Iterable[str]]=None,
+        errors: bool=False,
         silent: bool=False,
     ) -> ProjectType:
         """Remove an existing EPREM run from this project."""
-        directories = (
-            {subset} if isinstance(subset, str)
-            else set(subset or ())
+        subset = list(
+            {branches} if isinstance(branches, str)
+            else set(branches or self.branches)
         )
-        paths = self._remove_paths(run, directories)
-        if not paths:
-            if not silent:
-                print(f"Nothing to remove for {run!r}")
-        branches = [path.parent.parent.name for path in paths]
-        targets = [path.name for path in paths]
-        for branch in branches:
-            self.log.rm(*targets, branch)
-        if not silent:
-            print(f"Updated {self.log.path}")
-            underline(f"{self.root}")
-            for branch in branches:
-                for target in targets:
-                    print(f"removed {target} from {branch}")
-
-    def show(self: ProjectType, *runs: str):
-        """Display information about this project or the named run(s)."""
-
-    def _make_paths(self, name: str, subset: typing.Iterable[str]):
-        """Create the target subdirectory in each branch.
-
-        Returns
-        -------
-        list of paths
-            A list whose members are the full paths to the directory in which to
-            create a requested EPREM run.
-
-        Notes
-        -----
-        * Intended for use by `~eprem.Project`.
-        """
-        rundirs = self._get_rundirs(subset)
-        paths = [rundir / name for rundir in rundirs]
-        action = self._make_paths_check(*paths)
-        for path in paths:
-            action(path)
-        return paths
-
-    def _make_paths_check(self, *paths: pathlib.Path):
-        """Return a function to create paths only if safe to do so."""
-        def action(path: pathlib.Path):
-            path.mkdir(parents=True)
-        for path in paths:
-            if path.exists():
-                raise PathOperationError(
-                    f"Cannot create {path}: already exists"
-                ) from None
-        return action
-
-    def _rename_paths(self, src: str, dst: str, subset: typing.Iterable[str]):
-        """Rename `src` to `dst` in all subdirectories.
-
-        Returns
-        -------
-        list of tuples of paths
-            A list of tuples whose members are full paths to the
-            source and destination directories, respectively, in the standard
-            sense of path-renaming operations.
-
-        Notes
-        -----
-        * Intended for use by `~eprem.Project`.
-        """
-        rundirs = self._get_rundirs(subset)
-        pairs = [(rundir / src, rundir / dst) for rundir in rundirs]
-        action = self._rename_paths_check(*pairs)
-        for pair in pairs:
-            action(*pair)
-        return pairs
-
-    def _rename_paths_check(self, *pairs: typing.Tuple[_P, _P]):
-        """Return a function to rename paths only if safe to do so."""
-        def action(old: _P, new: _P):
-            old.rename(new)
-        for old, new in pairs:
-            if not old.exists():
-                raise PathOperationError(
-                    f"Cannot rename {old}: does not exist"
-                ) from None
-            if not old.is_dir():
-                raise PathOperationError(
-                    f"Cannot rename {old}: not a directory"
-                ) from None
-            if new.exists():
-                raise PathOperationError(
-                    f"Renaming {old.name!r} to {new.name!r} would "
-                    f"overwrite {new}."
-                ) from None
-        return action
-
-    def _remove_paths(self, name: str, subset: typing.Iterable[str]):
-        """Remove `target` from all subdirectories.
-
-        Returns
-        -------
-        list of paths
-            A list whose members are the full paths to the EPREM runtime
-            directory to remove.
-
-        Notes
-        -----
-        * Intended for use by `~eprem.Project`.
-        """
         rundirs = self._get_rundirs(subset)
         paths = [
             path for rundir in rundirs
-            for path in rundir.glob(name)
+            for path in rundir.glob(run)
         ]
-        action = self._remove_paths_check(*paths)
+        if not paths:
+            if not silent:
+                print(f"Nothing to remove for {run!r}")
+            return
         for path in paths:
-            action(path)
-        return paths
+            if error := self._try_to_remove(path):
+                if errors:
+                    raise PathOperationError(error)
+                if not silent:
+                    print(error)
+            else:
+                if not silent:
+                    base = f"removed {path.name!r}"
+                    branch = self._get_branch_name(path)
+                    message = (
+                        f"{base} from branch {branch!r}" if branch
+                        else base
+                    )
+                    print(message)
 
-    def _remove_paths_check(self, *paths: pathlib.Path):
-        """Return a function to remove paths only if safe to do so."""
-        def action(path: pathlib.Path):
-            shutil.rmtree(path)
-        for path in paths:
-            if not path.exists():
-                raise PathOperationError(
-                    f"Cannot remove {path}: does not exist"
-                ) from None
-            if not path.is_dir():
-                raise PathOperationError(
-                    f"Cannot remove {path}: not a directory"
-                ) from None
-        return action
+    def _try_to_remove(self, this: pathlib.Path):
+        """Remove `this` only if safe to do so."""
+        if not this.exists():
+            return f"Cannot remove {this}: does not exist"
+        if not this.is_dir():
+            return f"Cannot remove {this}: not a directory"
+        shutil.rmtree(this)
+        self.log.rm(this)
+
+    def _get_branch_name(self, path: pathlib.Path):
+        """Get the project branch name, if any, of `path`."""
+        parents = (str(p) for p in path.relative_to(self.root).parents)
+        with contextlib.suppress(StopIteration):
+            if this := next(p for p in parents if p in self.branches):
+                return this
 
     def _get_rundirs(self, subset: typing.Iterable[str]):
         """Build an appropriate collection of runtime directories."""
