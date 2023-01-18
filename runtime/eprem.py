@@ -411,12 +411,12 @@ class Project:
 
     def run(
         self: ProjectType,
-        config: str,
+        config: PathLike,
         name: str=None,
         branches: typing.Union[str, typing.Iterable[str]]=None,
-        errors: bool=False,
         nprocs: int=None,
         environment: typing.Dict[str, str]=None,
+        errors: bool=False,
         silent: bool=False,
     ) -> ProjectType:
         """Set up and execute a new EPREM run within this project."""
@@ -427,53 +427,68 @@ class Project:
         rundirs = self._get_rundirs(subset)
         paths = [rundir / name for rundir in rundirs]
         for path in paths:
-            if error := self._try_to_make(path):
-                if errors:
-                    raise PathOperationError(error)
-                if not silent:
-                    print(error)
-            else:
-                branch = path.parent.parent
-                mpirun = _locate('mpirun', branch, environment or {})
-                eprem = _locate('eprem', branch, environment or {})
-                shutil.copy(config, path / self._attrs.config)
-                command = (
-                    "nice -n 10 ionice -c 2 -n 3 "
-                    f"{mpirun} --mca btl_base_warn_component_unused 0 "
-                    f"-n {nprocs or 1} {eprem} eprem.cfg"
-                )
-                output = path / self._attrs.output
-                now = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
-                # NOTE: To make this work as a context manager, we could define
-                # a `stdout` attribute on that class, initialize it to `None`,
-                # open it in `__enter__`, and conditionally close it in
-                # `__exit__`.
-                with output.open('w') as stdout:
-                    process = subprocess.Popen(
-                        command,
-                        shell=True,
-                        cwd=path,
-                        stdout=stdout,
-                        stderr=subprocess.STDOUT,
-                    )
-                    if not silent:
-                        print(f"\n[{process.pid}]")
-                        print(f"started at {now}")
-                    process.wait()
-                    if not silent:
-                        print(f"created {name} in branch {branch.name!r}")
-                if process.returncode == 0:
-                    logentry = {
-                        'mpirun': str(mpirun),
-                        'eprem': str(eprem),
-                        'time': now,
-                    }
-                    self.log.create(str(path), logentry)
-                elif not silent:
-                    print(
-                        f"WARNING: Process exited with {process.returncode}",
-                        end='\n\n',
-                    )
+            self._create_run(
+                config,
+                path,
+                nprocs=nprocs,
+                environment=environment,
+                errors=errors,
+                silent=silent,
+            )
+
+    def _create_run(
+        self: ProjectType,
+        config: PathLike,
+        path: pathlib.Path,
+        nprocs: int=None,
+        environment: typing.Dict[str, str]=None,
+        errors: bool=False,
+        silent: bool=False,
+    ) -> None:
+        """Create a single run."""
+        if error := self._try_to_make(path):
+            if errors:
+                raise PathOperationError(error)
+            if not silent:
+                print(error)
+            return
+        shutil.copy(config, path / self._attrs.config)
+        branch = path.parent.parent
+        mpirun = _locate('mpirun', branch, environment or {})
+        eprem = _locate('eprem', branch, environment or {})
+        command = (
+            "nice -n 10 ionice -c 2 -n 3 "
+            f"{mpirun} --mca btl_base_warn_component_unused 0 "
+            f"-n {nprocs or 1} {eprem} eprem.cfg"
+        )
+        output = path / self._attrs.output
+        now = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
+        with output.open('w') as stdout:
+            process = subprocess.Popen(
+                command,
+                shell=True,
+                cwd=path,
+                stdout=stdout,
+                stderr=subprocess.STDOUT,
+            )
+            if not silent:
+                print(f"\n[{process.pid}]")
+                print(f"started at {now}")
+            process.wait()
+            if not silent:
+                print(f"created {path.name} in branch {branch.name!r}")
+        if process.returncode == 0:
+            logentry = {
+                'mpirun': str(mpirun),
+                'eprem': str(eprem),
+                'time': now,
+            }
+            self.log.create(str(path), logentry)
+        elif not silent:
+            print(
+                f"WARNING: Process exited with {process.returncode}",
+                end='\n\n',
+            )
 
     def _try_to_make(self, this: pathlib.Path):
         """Create `this` only if safe to do so."""
@@ -500,21 +515,28 @@ class Project:
             if not silent:
                 print(f"Nothing to rename for {source!r}")
             return
-        for (old, new) in pairs:
-            if error := self._try_to_rename(old, new):
-                if errors:
-                    raise PathOperationError(error)
-                if not silent:
-                    print(error)
-            else:
-                if not silent:
-                    base = f"renamed {source!r} to {target!r}"
-                    branch = self._get_branch_name(old)
-                    message = (
-                        f"{base} in branch {branch!r}" if branch
-                        else base
-                    )
-                    print(message)
+        for (run, new) in pairs:
+            self._rename_run(run, new, errors=errors, silent=silent)
+
+    def _rename_run(
+        self: ProjectType,
+        run: pathlib.Path,
+        new: pathlib.Path,
+        errors: bool=False,
+        silent: bool=False,
+    ) -> None:
+        """Rename a single run."""
+        if error := self._try_to_rename(run, new):
+            if errors:
+                raise PathOperationError(error)
+            if not silent:
+                print(error)
+            return
+        self.log.mv(run, new)
+        if not silent:
+            branch = self._get_branch_name(run)
+            base = f"renamed {run.name!r} to {new.name!r}"
+            print(f"{base} in branch {branch!r}" if branch else base)
 
     def _try_to_rename(self, this: pathlib.Path, that: pathlib.Path):
         """Rename `this` to `that` only if safe to do so."""
@@ -528,7 +550,6 @@ class Project:
                 f"overwrite {that}."
             )
         this.rename(that)
-        self.log.mv(this, that)
 
     def rm(
         self: ProjectType,
@@ -552,20 +573,26 @@ class Project:
                 print(f"Nothing to remove for {run!r}")
             return
         for path in paths:
-            if error := self._try_to_remove(path):
-                if errors:
-                    raise PathOperationError(error)
-                if not silent:
-                    print(error)
-            else:
-                if not silent:
-                    base = f"removed {path.name!r}"
-                    branch = self._get_branch_name(path)
-                    message = (
-                        f"{base} from branch {branch!r}" if branch
-                        else base
-                    )
-                    print(message)
+            self._remove_run(path, errors=errors, silent=silent)
+
+    def _remove_run(
+        self: ProjectType,
+        run: pathlib.Path,
+        errors: bool=False,
+        silent: bool=False,
+    ) -> None:
+        """Remove a single run."""
+        if error := self._try_to_remove(run):
+            if errors:
+                raise PathOperationError(error)
+            if not silent:
+                print(error)
+            return
+        self.log.rm(run)
+        if not silent:
+            base = f"removed {run.name!r}"
+            branch = self._get_branch_name(run)
+            print(f"{base} from branch {branch!r}" if branch else base)
 
     def _try_to_remove(self, this: pathlib.Path):
         """Remove `this` only if safe to do so."""
@@ -574,7 +601,6 @@ class Project:
         if not this.is_dir():
             return f"Cannot remove {this}: not a directory"
         shutil.rmtree(this)
-        self.log.rm(this)
 
     def _get_branch_name(self, path: pathlib.Path):
         """Get the project branch name, if any, of `path`."""
