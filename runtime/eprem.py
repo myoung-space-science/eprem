@@ -631,6 +631,20 @@ class Project:
         return self._name
 
     @property
+    def runs(self):
+        """The available runs, and owning branches, if any."""
+        available = {
+            run
+            for runs in self.branches.values()
+            for run in runs
+        }
+        this = {run: set() for run in available}
+        for branch, runs in self.branches.items():
+            for run in runs:
+                this[run] |= {branch}
+        return this
+
+    @property
     def branches(self):
         """The project branches, if any, and their available runs."""
         if not self._attrs.branches:
