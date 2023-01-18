@@ -632,10 +632,16 @@ class Project:
 
     @property
     def branches(self):
-        """The names of project branches, if any."""
-        if self._branches is None:
-            self._branches = self._attrs.branches
-        return self._branches
+        """The project branches, if any, and their available runs."""
+        if not self._attrs.branches:
+            return {}
+        return {
+            branch: {
+                path.name for d in self._get_rundirs([branch])
+                for path in d.glob('*')
+            }
+            for branch in self._attrs.branches
+        }
 
     @property
     def directories(self):
