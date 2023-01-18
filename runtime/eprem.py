@@ -347,7 +347,6 @@ class Project:
         attrs = self._init_attrs(root, kwargs)
         self._log = None
         self._name = None
-        self._branches = None
         directories = [
             attrs.path / branch / attrs.rundir
             for branch in attrs.branches or ['']
