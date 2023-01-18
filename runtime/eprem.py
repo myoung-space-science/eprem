@@ -390,13 +390,13 @@ class Project:
     def show(self: ProjectType, *runs: str):
         """Display information about this project or the named run(s)."""
 
-    def reset(self):
+    def reset(self, force: bool=False, silent: bool=False):
         """Reset this project to its initial state."""
-        return self.rm('*')
+        return self.rm('*', errors=(not force), silent=silent)
 
-    def remove(self):
+    def remove(self, force: bool=False, silent: bool=False):
         """Delete this project."""
-        shutil.rmtree(self.root)
+        shutil.rmtree(self.root, ignore_errors=force)
         with self.database.open('r') as fp:
             current = dict(json.load(fp))
         updated = {
@@ -406,6 +406,8 @@ class Project:
         with self.database.open('w') as fp:
             json.dump(updated, fp, indent=4, sort_keys=True)
         self._isvalid = False
+        if not silent:
+            print(f"removed project at {self.root}")
 
     def run(
         self: ProjectType,
