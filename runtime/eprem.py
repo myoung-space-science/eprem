@@ -478,9 +478,7 @@ class Project:
     def _try_to_make(self, this: pathlib.Path):
         """Create `this` only if safe to do so."""
         if this.exists():
-            raise PathOperationError(
-                f"Cannot create {this}: already exists"
-            ) from None
+            return f"Cannot create {this}: already exists"
         this.mkdir(parents=True)
 
     def mv(
