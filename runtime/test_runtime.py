@@ -50,7 +50,11 @@ class Context: # Should this inherit from `eprem.Project`?
             exc_name = exc_type.__qualname__
             if self.verbose:
                 message = f"\nTests ended due to {exc_name}"
-                extra = f":\n{exc_value}\n" if self.verbosity > 1 else "\n"
+                extra = (
+                    f":\n{exc_value}\n"
+                    if str(exc_value) and self.verbosity > 1
+                    else "\n"
+                )
                 print(f"\n{message}{extra}")
             self.keep or self.remove()
             return True
