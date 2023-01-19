@@ -514,8 +514,7 @@ class Project:
                 print(f"Created {path.name} in branch {branch.name!r}")
         if process.returncode == 0:
             logentry = {
-                'mpirun': str(mpirun),
-                'eprem': str(eprem),
+                'command': command,
                 'time': now,
             }
             self.log.create(str(path), logentry)
