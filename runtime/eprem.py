@@ -391,12 +391,21 @@ class Project:
         return init
 
     def show(self: ProjectType, *runs: str):
-        """Display information about this project or the named run(s)."""
+        """Display information about this project or the named run(s).
+        
+        Parameters
+        ----------
+        *runs : string
+            The named run(s) to display. This method also accepts `'*'`, which
+            will cause it to display information about all available runs.
+        """
         if not runs:
             self._show_project()
-        if len(runs) == 1:
-            self._show_run(run)
-        for run in runs:
+        requested = (
+            tuple(self.runs) if len(runs) == 1 and runs[0] == '*'
+            else runs
+        )
+        for run in requested:
             underline(run)
             self._show_run(run)
 
@@ -818,3 +827,53 @@ if __name__ == "__main__":
         metavar='TARGET',
     )
     cli = vars(parser.parse_args())
+
+# TODO: Implement subparsers for create, run, rename, remove, and list. Note
+# that the main-parser args must appear before the subparser-specific args.
+
+# main parser:
+# * <project name> (1: str)
+# * -v/--verbose (0: bool)
+
+# create => Project.__init__:
+# * -b/--branches (*: str)
+# * -c/--config (1: str)
+# * -o/--output (1: str)
+# * -d/--rundir (1: str)
+# * -l/--logname (1: str)
+# * python project.py "my-proj" -v create -b A B C
+
+# reset => Project.reset
+# * -f/--force (0: bool)
+
+# remove => Project.remove
+# * -f/--force (0: bool)
+
+# run => Project.run:
+# * <config> (1: str)
+# * -n/--name (1: str)
+# * -b/--branches (*: str)
+# * -N/--nproc (1: int)
+# * -E/--environment (1: str) = path to environment config file
+# * -m/--mpirun (1: str) = path to instance of `mpirun` executable
+# * -e/--eprem (1: str) = path to instance of `eprem` executable
+# * -i/--ignore_errors (0: bool)
+# * python project.py "my-proj" -v run config/cone.cfg -n run00
+
+# rename => Project.mv:
+# * <run> (1: str)
+# * <new> (1: str)
+# * -b/--branches (*: str)
+# * -i/--ignore_errors (0: bool)
+# * python project.py "my-proj" -v rename run00 old-run
+
+# remove => Project.rm:
+# * <run> (1: str)
+# * -b/--branches (*: str)
+# * -i/--ignore_errors (0: bool)
+# * python project.py "my-proj" -v remove old-run -b A
+
+# show => Project.show
+# * -r/--run (*: str)
+# * python project.py "my-proj" show
+# * python project.py "my-proj" show -r old-run
