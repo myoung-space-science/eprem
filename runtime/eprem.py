@@ -448,7 +448,7 @@ class Project:
         config: PathLike,
         name: str=None,
         branches: typing.Union[str, typing.Iterable[str]]=None,
-        nprocs: int=None,
+        nproc: int=None,
         environment: typing.Dict[str, str]=None,
         errors: bool=False,
         silent: bool=False,
@@ -464,7 +464,7 @@ class Project:
             self._create_run(
                 config,
                 path,
-                nprocs=nprocs,
+                nproc=nproc,
                 environment=environment,
                 errors=errors,
                 silent=silent,
@@ -475,7 +475,7 @@ class Project:
         self: ProjectType,
         config: PathLike,
         path: pathlib.Path,
-        nprocs: int=None,
+        nproc: int=None,
         environment: typing.Dict[str, str]=None,
         errors: bool=False,
         silent: bool=False,
@@ -494,7 +494,7 @@ class Project:
         command = (
             "nice -n 10 ionice -c 2 -n 3 "
             f"{mpirun} --mca btl_base_warn_component_unused 0 "
-            f"-n {nprocs or 1} {eprem} eprem.cfg"
+            f"-n {nproc or 1} {eprem} eprem.cfg"
         )
         output = path / self._attrs.output
         now = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
