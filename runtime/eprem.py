@@ -351,6 +351,7 @@ class Project:
         attrs = self._init_attrs(root, kwargs)
         self._log = None
         self._name = None
+        self._root = None
         directories = [
             attrs.path / branch / attrs.rundir
             for branch in attrs.branches or ['']
@@ -723,7 +724,9 @@ class Project:
     @property
     def root(self):
         """The top-level directory of this project."""
-        return self._attrs.path
+        if self._root is None:
+            self._root = self._attrs.path
+        return self._root
 
     def __bool__(self) -> bool:
         """True if this is a valid project."""
