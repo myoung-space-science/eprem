@@ -441,7 +441,7 @@ class Project:
             json.dump(updated, fp, indent=4, sort_keys=True)
         self._isvalid = False
         if not silent:
-            print(f"removed project at {self.root}")
+            print(f"Removed project at {self.root}")
 
     def run(
         self: ProjectType,
@@ -508,10 +508,10 @@ class Project:
             )
             if not silent:
                 print(f"\n[{process.pid}]")
-                print(f"started at {now}")
+                print(f"Started at {now}")
             process.wait()
             if not silent:
-                print(f"created {path.name} in branch {branch.name!r}")
+                print(f"Created {path.name} in branch {branch.name!r}")
         if process.returncode == 0:
             logentry = {
                 'mpirun': str(mpirun),
@@ -571,7 +571,7 @@ class Project:
         self.log.mv(run, new)
         if not silent:
             branch = self._get_branch_name(run)
-            base = f"renamed {run.name!r} to {new.name!r}"
+            base = f"Renamed {run.name!r} to {new.name!r}"
             print(f"{base} in branch {branch!r}" if branch else base)
 
     def _try_to_rename(self, this: pathlib.Path, that: pathlib.Path):
@@ -627,7 +627,7 @@ class Project:
             return
         self.log.rm(run)
         if not silent:
-            base = f"removed {run.name!r}"
+            base = f"Removed {run.name!r}"
             branch = self._get_branch_name(run)
             print(f"{base} from branch {branch!r}" if branch else base)
 
