@@ -454,11 +454,7 @@ class Project:
         silent: bool=False,
     ) -> ProjectType:
         """Set up and execute a new EPREM run within this project."""
-        subset = (
-            {branches} if isinstance(branches, str)
-            else set(branches or ())
-        )
-        rundirs = self._get_rundirs(subset)
+        rundirs = self._get_rundirs(branches)
         paths = [rundir / name for rundir in rundirs]
         for path in paths:
             self._create_run(
@@ -540,11 +536,7 @@ class Project:
         silent: bool=False,
     ) -> ProjectType:
         """Rename an existing EPREM run within this project."""
-        subset = (
-            {branches} if isinstance(branches, str)
-            else set(branches or self.branches)
-        )
-        rundirs = self._get_rundirs(subset)
+        rundirs = self._get_rundirs(branches)
         pairs = [(rundir / source, rundir / target) for rundir in rundirs]
         if not pairs:
             if not silent:
@@ -595,11 +587,7 @@ class Project:
         silent: bool=False,
     ) -> ProjectType:
         """Remove an existing EPREM run from this project."""
-        subset = list(
-            {branches} if isinstance(branches, str)
-            else set(branches or self.branches)
-        )
-        rundirs = self._get_rundirs(subset)
+        rundirs = self._get_rundirs(branches)
         paths = [
             path for rundir in rundirs
             for path in rundir.glob(run)
@@ -646,10 +634,17 @@ class Project:
             if this := next(p for p in parents if p in self.branches):
                 return this
 
-    def _get_rundirs(self, subset: typing.Iterable[str]):
+    def _get_rundirs(
+        self,
+        branches: typing.Union[str, typing.Iterable[str]]=None,
+    ) -> typing.List[pathlib.Path]:
         """Build an appropriate collection of runtime directories."""
-        if not subset:
+        if not branches:
             return self.directories
+        subset = (
+            {branches} if isinstance(branches, str)
+            else set(branches)
+        )
         return [d for d in self.directories if d.parent.name in subset]
 
     @property
