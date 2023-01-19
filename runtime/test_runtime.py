@@ -121,7 +121,7 @@ class Context: # Should this inherit from `eprem.Project`?
             raise exc
         else:
             end = ''
-            return reply.lower() in {'y', 'yes'}
+            return reply.lower() not in {'n', 'no'}
         finally:
             print(end)
 
