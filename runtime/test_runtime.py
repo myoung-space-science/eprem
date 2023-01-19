@@ -18,11 +18,13 @@ class Context: # Should this inherit from `eprem.Project`?
         root: str,
         config: str,
         interactive: bool=False,
+        keep: bool=False,
         verbosity: int=0,
     ) -> None:
         self.root = eprem.fullpath(root)
         self.config = eprem.fullpath(config)
         self.interactive = interactive
+        self.keep = keep
         self.verbosity = verbosity
         self.project = None
 
@@ -50,11 +52,11 @@ class Context: # Should this inherit from `eprem.Project`?
                 message = f"\nTests ended due to {exc_name}"
                 extra = f":\n{exc_value}\n" if self.verbosity > 1 else "\n"
                 print(f"\n{message}{extra}")
-            self.remove()
+            self.keep or self.remove()
             return True
         if self.verbose:
             print("\nTests finished normally\n")
-        self.remove()
+        self.keep or self.remove()
 
     def create(self, name: str):
         self.project = eprem.Project(self.root / name, branches=['A', 'B'])
@@ -192,6 +194,15 @@ if __name__ == "__main__":
         '-i',
         '--interactive',
         help="wait for user confirmation before each stage",
+        action='store_true',
+    )
+    parser.add_argument(
+        '-k',
+        '--keep',
+        help=(
+            "do not remove the project"
+            ", or prompt for removal in interactive mode"
+        ),
         action='store_true',
     )
     parser.add_argument(
