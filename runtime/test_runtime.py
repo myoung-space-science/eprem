@@ -44,7 +44,12 @@ class Context: # Should this inherit from `eprem.Project`?
             print("Starting EPREM runtime API test.", end='\n\n')
         return self
 
-    def __exit__(self, exc_type: Exception, exc_value, exc_tb):
+    def __exit__(
+        self,
+        exc_type: typing.Type[Exception],
+        exc_value: Exception,
+        exc_tb,
+    ) -> typing.Optional[typing.Literal[True]]:
         """Tear down the context."""
         if exc_type:
             exc_name = exc_type.__qualname__
