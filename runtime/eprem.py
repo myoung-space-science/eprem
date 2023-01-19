@@ -676,7 +676,7 @@ class Project:
         return self._name
 
     @property
-    def runs(self):
+    def runs(self) -> typing.Dict[str, typing.Set[str]]:
         """The available runs, and owning branches, if any."""
         available = {
             run
