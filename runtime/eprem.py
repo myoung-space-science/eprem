@@ -676,7 +676,7 @@ class Project:
     def name(self):
         """The name of this project.
         
-        Same as `Project.root.name` or `Project.base.name`.
+        This property is an alias for `~Project.root.name`.
         """
         if self._name is None:
             self._name = self.root.name
@@ -713,11 +713,6 @@ class Project:
     def directories(self):
         """The full path to each run directory."""
         return self._directories
-
-    @property
-    def base(self):
-        """Alias for `Project.root`."""
-        return self.root
 
     @property
     def root(self):
