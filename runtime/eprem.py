@@ -129,16 +129,17 @@ class RunLog(collections.abc.Mapping):
             f"Unknown file type: {filetype!r}"
         ) from None
 
-    def append(self, target: str, key: str, metadata):
+    def append(self, target: PathLike, key: str, value):
         """Append metadata to `target`."""
         contents = self._asdict.copy()
+        run = str(target)
         try:
-            record = contents[target]
+            record = contents[run]
         except KeyError as err:
             raise LogKeyError(
-                f"Cannot append to unknown run {target!r}"
+                f"Cannot append to unknown run {run!r}"
             ) from err
-        record[key] = metadata
+        record[key] = value
         self.dump(contents)
         return self
 
