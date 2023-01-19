@@ -421,10 +421,17 @@ class Project:
         except KeyError:
             print(f"No run named {run!r}")
             return
+        for path in self._resolve_runs(run, branches):
+            print(path)
+
+    def _resolve_runs(self, target: str, branches: typing.Iterable[str]=None):
+        """Compute the full path to the target run."""
         if not branches:
-            print(self.root / self._attrs.rundir / run)
-        for branch in self.runs[run]:
-            print(self.root / branch / self._attrs.rundir / run)
+            return [self.root / self._attrs.rundir / target]
+        return [
+            self.root / branch / self._attrs.rundir / target
+            for branch in branches
+        ]
 
     def reset(self, force: bool=False, silent: bool=False):
         """Reset this project to its initial state."""
