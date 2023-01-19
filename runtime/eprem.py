@@ -454,9 +454,7 @@ class Project:
         silent: bool=False,
     ) -> ProjectType:
         """Set up and execute a new EPREM run within this project."""
-        rundirs = self._get_rundirs(branches)
-        paths = [rundir / name for rundir in rundirs]
-        for path in paths:
+        for path in self._build_run_paths(name, branches):
             self._create_run(
                 config,
                 path,
@@ -466,6 +464,12 @@ class Project:
                 silent=silent,
             )
         return self
+
+    def _build_run_paths(self, name: str, branches):
+        """Build a list of paths in which to run the simulation."""
+        rundirs = self._get_rundirs(branches)
+        run = name or datetime.datetime.now().strftime('%Y-%m-%dT%H-%M-%S.%f')
+        return [rundir / run for rundir in rundirs]
 
     def _create_run(
         self: ProjectType,
@@ -536,8 +540,7 @@ class Project:
         silent: bool=False,
     ) -> ProjectType:
         """Rename an existing EPREM run within this project."""
-        rundirs = self._get_rundirs(branches)
-        pairs = [(rundir / source, rundir / target) for rundir in rundirs]
+        pairs = self._build_mv_pairs(source, target, branches)
         if not pairs:
             if not silent:
                 print(f"Nothing to rename for {source!r}")
@@ -545,6 +548,11 @@ class Project:
         for (run, new) in pairs:
             self._rename_run(run, new, errors=errors, silent=silent)
         return self
+
+    def _build_mv_pairs(self, source: str, target: str, branches):
+        """Build a list of path pairs for renaming."""
+        rundirs = self._get_rundirs(branches)
+        return [(rundir / source, rundir / target) for rundir in rundirs]
 
     def _rename_run(
         self: ProjectType,
@@ -587,11 +595,7 @@ class Project:
         silent: bool=False,
     ) -> ProjectType:
         """Remove an existing EPREM run from this project."""
-        rundirs = self._get_rundirs(branches)
-        paths = [
-            path for rundir in rundirs
-            for path in rundir.glob(run)
-        ]
+        paths = self._build_rm_paths(run, branches)
         if not paths:
             if not silent:
                 print(f"Nothing to remove for {run!r}")
@@ -599,6 +603,14 @@ class Project:
         for path in paths:
             self._remove_run(path, errors=errors, silent=silent)
         return self
+
+    def _build_rm_paths(self, target: str, branches):
+        """Build a list of paths to remove."""
+        rundirs = self._get_rundirs(branches)
+        return [
+            path for rundir in rundirs
+            for path in rundir.glob(target)
+        ]
 
     def _remove_run(
         self: ProjectType,
