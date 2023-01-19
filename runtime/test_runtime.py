@@ -42,6 +42,20 @@ class Context: # Should this inherit from `eprem.Project`?
             print("Starting EPREM runtime API test.", end='\n\n')
         return self
 
+    def __exit__(self, exc_type: Exception, exc_value, exc_tb):
+        """Tear down the context."""
+        if exc_type:
+            exc_name = exc_type.__qualname__
+            if self.verbose:
+                message = f"\nTests ended due to {exc_name}"
+                extra = f":\n{exc_value}\n" if self.verbosity > 1 else "\n"
+                print(f"\n{message}{extra}")
+            self.remove()
+            return True
+        if self.verbose:
+            print("\nTests finished normally\n")
+        self.remove()
+
     def create(self, name: str):
         self.project = eprem.Project(self.root / name, branches=['A', 'B'])
         if self.verbose:
@@ -88,13 +102,10 @@ class Context: # Should this inherit from `eprem.Project`?
         if self.prompted("to reset the project"):
             self.project.reset(silent=self.silent)
 
-    def finish(self):
-        """Successfully end the tests."""
-        if self.interactive:
-            input(
-                "Press ENTER to complete the test sequence."
-                "\nNote that this will remove the project:"
-            )
+    def remove(self):
+        """Remove the test project."""
+        if self.prompted("to remove the project"):
+            self.project.remove(silent=self.silent)
 
     def prompted(self, this: str):
         """Interact with the user, if necessary."""
@@ -111,19 +122,6 @@ class Context: # Should this inherit from `eprem.Project`?
             return reply.lower() in {'y', 'yes'}
         finally:
             print(end)
-
-    def __exit__(self, exc_type: Exception, exc_value, exc_tb):
-        """Tear down the context."""
-        self.project.remove()
-        if exc_type:
-            exc_name = exc_type.__qualname__
-            if self.verbose:
-                message = f"\nTests ended due to {exc_name}"
-                extra = f":\n{exc_value}\n" if self.verbosity > 1 else "\n"
-                print(f"\n{message}{extra}")
-            return True
-        if self.verbose:
-            print("\nTests finished normally\n")
 
 
 def main(
@@ -160,7 +158,6 @@ def execute(context: Context):
     for (target, branches) in removed:
         context.rm(target, branches)
     context.reset()
-    context.finish()
 
 
 def branch_string(branches):
