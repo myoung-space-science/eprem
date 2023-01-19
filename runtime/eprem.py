@@ -380,14 +380,15 @@ class Project:
                 f"You can access the existing project via {existing}"
             )
         key = str(path)
+        with self.database.open('r') as fp:
+            existing = dict(json.load(fp))
         if path.exists():
-            with self.database.open('r') as fp:
-                existing = dict(json.load(fp))
             return _ProjectInit(**existing[key])
         path.mkdir(parents=True)
         init = _ProjectInit(root=path, **kwargs)
+        updated = {**existing, key: dict(init)}
         with self.database.open('w') as fp:
-            json.dump({key: dict(init)}, fp, indent=4, sort_keys=True)
+            json.dump(updated, fp, indent=4, sort_keys=True)
         return init
 
     def show(self: ProjectType, *runs: str):
