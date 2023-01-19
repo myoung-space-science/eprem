@@ -43,12 +43,7 @@ RunLogType = typing.TypeVar('RunLogType', bound='RunLog')
 class RunLog(collections.abc.Mapping):
     """Mapping-based interface to an EPREM project log."""
 
-    def __init__(
-        self,
-        path: PathLike,
-        branches: typing.Iterable[str]=None,
-        **common
-    ) -> None:
+    def __init__(self, path: PathLike, **common) -> None:
         """Create a new project log.
         
         Parameters
@@ -57,14 +52,10 @@ class RunLog(collections.abc.Mapping):
             The path at which to create the log file. May be relative to the
             current directory.
 
-        branches : iterable of strings, optional
-            The branch names, if any, in the project.
-
         common
             Key-value pairs of attributes that are common to all runs.
         """
         self._path = fullpath(path)
-        self._branches = tuple(branches or [])
         self.dump(common)
 
     def __len__(self) -> int:
@@ -360,7 +351,6 @@ class Project:
             directory.mkdir(parents=True, exist_ok=True)
         self._log = RunLog(
             attrs.path / attrs.logname,
-            branches=attrs.branches,
             config=attrs.config,
             output=attrs.output,
         )
