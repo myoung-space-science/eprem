@@ -72,10 +72,8 @@ class RunLog(collections.abc.Mapping):
             return self._asdict[__k]
         raise LogKeyError(f"Unknown run {__k!r}")
 
-    def move(self, target: PathLike):
+    def update_directory(self, target: PathLike):
         """Update the directory path to this file.
-
-        This method does not allow changes to the file name.
 
         Parameters
         ----------
@@ -85,14 +83,22 @@ class RunLog(collections.abc.Mapping):
         Raises
         ------
         PathTypeError
-            If `target` does not point to a directory.
+            The target path does not exist or is not a directory.
+
+        Notes
+        -----
+        * This method assumes that the target path exists.
+        * This method does not allow changes to the file name.
         """
         new = fullpath(target)
+        if not new.exists():
+            raise PathTypeError("The new path must exist") from None
         if not new.is_dir():
-            raise PathTypeError(
-                "The new path must point to a directory"
-            ) from None
+            raise PathTypeError("Cannot rename log file") from None
         self._path = new / self.name
+        source = str(self.path.parent)
+        for key in self:
+            self.mv(key, key.replace(source, str(new)))
         return self
 
     @typing.overload
