@@ -344,8 +344,8 @@ class RunPaths(collections.abc.Collection):
     def __init__(
         self,
         root: PathLike,
-        base: str=None,
         branches: typing.Iterable[str]=None,
+        base: str=None,
     ) -> None:
         self._root = fullpath(root)
         self._base = base or 'runs'
@@ -547,7 +547,7 @@ class Project:
             output=attrs.output,
         )
         self._attrs = attrs
-        self._directories = RunPaths(attrs.path, attrs.rundir, attrs.branches)
+        self._directories = RunPaths(attrs.path, attrs.branches, attrs.rundir)
         self._isvalid = True
 
     def _init_attrs(self, root: pathlib.Path, kwargs: dict):
