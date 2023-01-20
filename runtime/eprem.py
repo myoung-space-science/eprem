@@ -354,10 +354,20 @@ class RunPaths(collections.abc.Collection):
         for directory in self.listing:
             directory.mkdir(parents=True, exist_ok=True)
 
-    def change_root(self, target: str):
+    def update(
+        self: RunPathsType,
+        root: PathLike=None,
+        branches: typing.Iterable[str]=None,
+        base: str=None,
+    ) -> RunPathsType:
         """Rename the root directory to `target` and update paths."""
         self._listing = None
-        self._root = fullpath(target)
+        if root:
+            self._root = fullpath(root)
+        if branches:
+            self._branches = branches
+        if base:
+            self._base = base
         return self
 
     def __contains__(self, __x: PathLike) -> bool:
