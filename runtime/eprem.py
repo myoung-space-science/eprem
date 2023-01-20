@@ -72,6 +72,29 @@ class RunLog(collections.abc.Mapping):
             return self._asdict[__k]
         raise LogKeyError(f"Unknown run {__k!r}")
 
+    def move(self, target: PathLike):
+        """Update the directory path to this file.
+
+        This method does not allow changes to the file name.
+
+        Parameters
+        ----------
+        target : path-like
+            The directory to which to move this file. May be relative.
+
+        Raises
+        ------
+        PathTypeError
+            If `target` does not point to a directory.
+        """
+        new = fullpath(target)
+        if not new.is_dir():
+            raise PathTypeError(
+                "The new path must point to a directory"
+            ) from None
+        self._path = new / self.name
+        return self
+
     @typing.overload
     def create(
         self: RunLogType,
