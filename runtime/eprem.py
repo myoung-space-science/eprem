@@ -861,16 +861,14 @@ class Project:
         return self.directories.branches
 
     @property
+    def root(self):
+        """The top-level directory of this project."""
+        return self.directories.root
+
+    @property
     def directories(self):
         """The full path to each run directory."""
         return self._directories
-
-    @property
-    def root(self):
-        """The top-level directory of this project."""
-        if self._root is None:
-            self._root = self._attrs.path
-        return self._root
 
     def __bool__(self) -> bool:
         """True if this is a valid project."""
