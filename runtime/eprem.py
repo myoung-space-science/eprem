@@ -335,6 +335,9 @@ class _ProjectInit(typing.Mapping):
         return '\n'.join(f"{k}: {v}" for k, v in self.items())
 
 
+RunPathsType = typing.TypeVar('RunPathsType', bound='RunPaths')
+
+
 class RunPaths(collections.abc.Collection):
     """Manager for path operations on runtime directories."""
 
