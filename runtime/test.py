@@ -28,6 +28,7 @@ class Context: # Should this inherit from `eprem.Project`?
         self.keep = keep
         self.verbosity = verbosity
         self.project = None
+        self.step = None
 
     @property
     def silent(self):
@@ -189,13 +190,16 @@ class Context: # Should this inherit from `eprem.Project`?
 
     def print_stage(self, message: str):
         """Print the current test stage, if necessary."""
+        if self.step == None:
+            self.step = 0
         if self.verbose:
-            full = f"  Test stage: {message}  "
+            full = f"  Step {self.step}: {message}  "
             length = len(full)
             line = '=' * length
             print(f"\n{line}")
             print(f"{full}")
             print(f"{line}")
+            self.step += 1
 
 
 def main(
