@@ -29,6 +29,10 @@ class LogKeyError(KeyError):
     """The log has no entry for a given key."""
 
 
+class PathTypeError(Exception):
+    """The path is the wrong type."""
+
+
 class RunKeyError(Exception):
     """The log entry does not include a given key."""
 
