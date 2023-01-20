@@ -51,13 +51,32 @@ class Context: # Should this inherit from `eprem.Project`?
         exc_tb,
     ) -> typing.Optional[typing.Literal[True]]:
         """Tear down the context."""
+        self.keep or self.remove()
+        return self._handle(exc_type, exc_value, exc_tb)
+
+    def _handle(
+        self,
+        exc_type: typing.Type[Exception],
+        exc_value: Exception,
+        exc_tb,
+    ) -> bool:
+        """Catch and handle an exception, if necessary."""
         if exc_type:
-            if self.verbose:
-                print(self._format_exception(exc_type, exc_value, exc_tb))
-            self.keep or self.remove()
+            self.print_error(exc_type, exc_value, exc_tb)
             return True
         self.print_status("Tests finished normally")
-        self.keep or self.remove()
+        return False
+
+    def print_error(
+        self,
+        exc_type: typing.Type[Exception],
+        exc_value: Exception,
+        exc_tb,
+    ) -> None:
+        """Print an error message, if necessary."""
+        if self.verbose:
+            print(self._format_exception(exc_type, exc_value, exc_tb))
+            self.print_status(f"Tests ended early due to error")
 
     def _format_exception(
         self,
@@ -66,8 +85,7 @@ class Context: # Should this inherit from `eprem.Project`?
         exc_tb,
     ) -> str:
         """Prepare an exception for printing."""
-        exc_name = exc_type.__qualname__
-        base = f"\nTests ended due to {exc_name}"
+        base = f"\nCaught {exc_type.__qualname__}"
         if self.verbosity <= 1 or not str(exc_value):
             # NOTE: We'll probably never get here when self.verbosity < 1 (i.e.,
             # self.verbosity == 0), but this condition provides completeness.
@@ -76,8 +94,8 @@ class Context: # Should this inherit from `eprem.Project`?
             return f"{base}:\n{exc_value}\n"
         # NOTE: If we're here, self.verbosity > 2.
         exc = traceback.format_exception(exc_type, exc_value, exc_tb)
-        joined = '\n'.join(exc)
-        return f"{base}:\n{exc_value}\n{joined}"
+        joined = ''.join(exc)
+        return f"\n{joined}"
 
     def create(self, name: str):
         self.project = eprem.Project(self.root / name, branches=['A', 'B'])
