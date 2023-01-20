@@ -649,6 +649,46 @@ class Project:
         """Reset this project to its initial state."""
         return self.rm('*', errors=(not force), silent=silent)
 
+    def rename(self, target: str, force: bool=False, silent: bool=False):
+        """Rename this project to `target`."""
+        # Save the current root directory since it will change.
+        old = self.root
+        # Convert the target to a full path.
+        new = fullpath(target)
+        # Handle an existing target path.
+        if new.exists():
+            if not force:
+                raise PathOperationError(
+                    f"Renaming this project to {target!r} would "
+                    f"overwrite {new}."
+                )
+            if not silent:
+                print(f"Overwriting {new}")
+        # Update the runtime paths on disk.
+        self._directories.update(root=new)
+        # Update the log of runtime paths.
+        self.log.update_directory(new)
+        # Update the project database.
+        self._update_database(str(old), str(new))
+        # Echo success, if applicable.
+        if not silent:
+            if self.root.parent == old.parent == pathlib.Path.cwd():
+                result = target
+            else:
+                result = str(self.root)
+            print(f"Renamed project to {result!r}")
+
+    def _update_database(self, source: str, target: str):
+        """Rename this project's path in the project database."""
+        with self.database.open('r') as fp:
+            current = dict(json.load(fp))
+        updated = {k: v for k, v in current.items() if k != source}
+        this = current[source].copy()
+        this['root'] = target
+        updated[target] = this
+        with self.database.open('w') as fp:
+            json.dump(updated, fp, indent=4, sort_keys=True)
+
     def remove(self, force: bool=False, silent: bool=False):
         """Delete this project."""
         shutil.rmtree(self.root, ignore_errors=force)
