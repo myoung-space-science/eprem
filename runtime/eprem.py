@@ -33,10 +33,6 @@ class PathTypeError(Exception):
     """The path is the wrong type."""
 
 
-class RunKeyError(Exception):
-    """The log entry does not include a given key."""
-
-
 class ReadTypeError(Exception):
     """There is no support for reading a given file type."""
 
