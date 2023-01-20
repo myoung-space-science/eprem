@@ -500,7 +500,14 @@ class RunPaths(collections.abc.Collection):
 
     @property
     def listing(self):
-        """Full paths to all runtime directories."""
+        """Full paths to all runtime directories.
+        
+        Notes
+        -----
+        This property does not use the `RunPaths.branches` property to iterate
+        over available branches because that would create an infinite recursion
+        via `RunPaths._get_rundirs`.
+        """
         if self._listing is None:
             self._listing = [
                 self.root / branch / self.base
