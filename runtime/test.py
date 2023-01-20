@@ -127,6 +127,11 @@ class Context: # Should this inherit from `eprem.Project`?
         if self.prompted("to reset the project"):
             self.project.reset(silent=self.silent)
 
+    def rename(self, target: str):
+        """Rename the test project."""
+        if self.prompted(f"to rename the project to {target!r}"):
+            self.project.rename(target, silent=self.silent)
+
     def remove(self):
         """Remove the test project."""
         if self.prompted("to remove the project"):
@@ -182,6 +187,7 @@ def execute(context: Context):
     ]
     for (target, branches) in removed:
         context.rm(target, branches)
+    context.rename(context.project.name.replace('project', 'renamed'))
     context.reset()
 
 
