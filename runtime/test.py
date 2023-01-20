@@ -1,6 +1,7 @@
 import argparse
 import datetime
 import pathlib
+import traceback
 import typing
 import sys
 
@@ -52,20 +53,33 @@ class Context: # Should this inherit from `eprem.Project`?
     ) -> typing.Optional[typing.Literal[True]]:
         """Tear down the context."""
         if exc_type:
-            exc_name = exc_type.__qualname__
             if self.verbose:
-                message = f"\nTests ended due to {exc_name}"
-                extra = (
-                    f":\n{exc_value}\n"
-                    if str(exc_value) and self.verbosity > 1
-                    else "\n"
-                )
-                print(f"\n{message}{extra}")
+                print(self._format_exception(exc_type, exc_value, exc_tb))
             self.keep or self.remove()
             return True
         if self.verbose:
             print("\nTests finished normally\n")
         self.keep or self.remove()
+
+    def _format_exception(
+        self,
+        exc_type: typing.Type[Exception],
+        exc_value: Exception,
+        exc_tb,
+    ) -> str:
+        """Prepare an exception for printing."""
+        exc_name = exc_type.__qualname__
+        base = f"\nTests ended due to {exc_name}"
+        if self.verbosity <= 1 or not str(exc_value):
+            # NOTE: We'll probably never get here when self.verbosity < 1 (i.e.,
+            # self.verbosity == 0), but this condition provides completeness.
+            return f"{base}\n"
+        if self.verbosity == 2:
+            return f"{base}:\n{exc_value}\n"
+        # NOTE: If we're here, self.verbosity > 2.
+        exc = traceback.format_exception(exc_type, exc_value, exc_tb)
+        joined = '\n'.join(exc)
+        return f"{base}:\n{exc_value}\n{joined}"
 
     def create(self, name: str):
         self.project = eprem.Project(self.root / name, branches=['A', 'B'])
