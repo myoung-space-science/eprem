@@ -49,8 +49,8 @@ class RunLog(collections.abc.Mapping):
         Parameters
         ----------
         path : path-like
-            The path at which to create the log file. May be relative to the
-            current directory.
+            The path at which to create the log file, including the file name.
+            May be relative to the current directory.
 
         common
             Key-value pairs of attributes that are common to all runs.
