@@ -171,7 +171,7 @@ class Context: # Should this inherit from `eprem.Project`?
     def print_stage(self, message: str):
         """Print the current test stage, if necessary."""
         if self.verbose:
-            full = f"  Current stage: {message}  "
+            full = f"  Test stage: {message}  "
             length = len(full)
             line = '=' * length
             print(f"\n{line}")
