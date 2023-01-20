@@ -41,8 +41,7 @@ class Context: # Should this inherit from `eprem.Project`?
 
     def __enter__(self):
         """Set up the context."""
-        if self.verbose:
-            print("Starting EPREM runtime API test.", end='\n\n')
+        self.print_status("Starting EPREM runtime API tests")
         return self
 
     def __exit__(
@@ -57,8 +56,7 @@ class Context: # Should this inherit from `eprem.Project`?
                 print(self._format_exception(exc_type, exc_value, exc_tb))
             self.keep or self.remove()
             return True
-        if self.verbose:
-            print("\nTests finished normally\n")
+        self.print_status("Tests finished normally")
         self.keep or self.remove()
 
     def _format_exception(
@@ -84,21 +82,23 @@ class Context: # Should this inherit from `eprem.Project`?
     def create(self, name: str):
         self.project = eprem.Project(self.root / name, branches=['A', 'B'])
         if self.verbose:
-            print(f"Created project {name!r} in {self.root}")
+            print(f"\nCreated project {name!r} in {self.root}")
         return self
 
     def show(self, *runs: str):
         """Show a summary of the project or the named runs."""
-        message = (
-            f"to display run summaries" if runs
-            else f"to display project summary"
-        )
+        target = 'run summaries' if runs else 'project summary'
+        stage = f"display {target}"
+        self.print_stage(stage)
+        message = f"to {stage}"
         if self.prompted(message):
             self.project.show(*runs)
 
     def run(self, target):
         """Create a test run."""
-        if self.prompted(f"to create {target!r} in all branches"):
+        stage = f"create {target!r}"
+        self.print_stage(stage)
+        if self.prompted(f"to {stage} in all branches"):
             self.project.run(self.config, target, nproc=2, silent=self.silent)
 
     def mv(
@@ -108,8 +108,10 @@ class Context: # Should this inherit from `eprem.Project`?
         branches: typing.Union[str, typing.Iterable[str]]=None,
     ) -> None:
         """Rename test runs."""
+        stage = f"rename {old!r} to {new!r}"
+        self.print_stage(stage)
         where = branch_string(branches)
-        if self.prompted(f"to rename {old!r} to {new!r} in {where}"):
+        if self.prompted(f"to {stage} in {where}"):
             self.project.mv(old, new, branches=branches, silent=self.silent)
 
     def rm(
@@ -118,23 +120,31 @@ class Context: # Should this inherit from `eprem.Project`?
         branches: typing.Union[str, typing.Iterable[str]]=None,
     ) -> None:
         """Remove test runs."""
+        stage = f"remove {target!r}"
+        self.print_stage(stage)
         where = branch_string(branches)
-        if self.prompted(f"to remove {target!r} from {where}"):
+        if self.prompted(f"to {stage} from {where}"):
             self.project.rm(target, branches=branches, silent=self.silent)
 
     def reset(self):
         """Reset the test project."""
-        if self.prompted("to reset the project"):
+        stage = "reset the project"
+        self.print_stage(stage)
+        if self.prompted(f"to {stage}"):
             self.project.reset(silent=self.silent)
 
     def rename(self, target: str):
         """Rename the test project."""
-        if self.prompted(f"to rename the project to {target!r}"):
+        stage = "rename the project"
+        self.print_stage(stage)
+        if self.prompted(f"to {stage} to {target!r}"):
             self.project.rename(target, silent=self.silent)
 
     def remove(self):
         """Remove the test project."""
-        if self.prompted("to remove the project"):
+        stage = "remove the project"
+        self.print_stage(stage)
+        if self.prompted(f"to {stage}"):
             self.project.remove(silent=self.silent)
 
     def prompted(self, this: str):
@@ -152,6 +162,21 @@ class Context: # Should this inherit from `eprem.Project`?
             return reply.lower() not in {'n', 'no'}
         finally:
             print(end)
+
+    def print_status(self, message: str):
+        """Print a status message, if necessary."""
+        if self.verbose:
+            print(f"\n*** {message} ***")
+
+    def print_stage(self, message: str):
+        """Print the current test stage, if necessary."""
+        if self.verbose:
+            full = f"  Current stage: {message}  "
+            length = len(full)
+            line = '=' * length
+            print(f"\n{line}")
+            print(f"{full}")
+            print(f"{line}")
 
 
 def main(
