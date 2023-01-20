@@ -360,10 +360,17 @@ class RunPaths(collections.abc.Collection):
         branches: typing.Iterable[str]=None,
         base: str=None,
     ) -> RunPathsType:
-        """Rename the root directory to `target` and update paths."""
+        """Update path components."""
         self._listing = None
         if root:
-            self._root = fullpath(root)
+            path = fullpath(root)
+            if path.exists():
+                raise PathTypeError(
+                    f"Renaming {self.root.name!r} to {path.name!r} would "
+                    f"overwrite {path}."
+                )
+            self.root.rename(path)
+            self._root = path
         if branches:
             self._branches = branches
         if base:
