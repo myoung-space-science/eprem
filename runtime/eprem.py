@@ -964,16 +964,57 @@ def doc2help(func: types.FunctionType):
     return summary[0].lower() + summary[1:]
 
 
-class CLI:
+class Subcommand:
+    """Container for a single CLI subcommand."""
+
+    def __init__(self, **options) -> None:
+        self._options = options
+        self._arguments = None
+
+    def add_argument(self, *args: str, **kwargs):
+        """Cache arguments to add to the command-line parser."""
+        self.arguments.append((args, kwargs))
+
+    def __iter__(self) -> typing.Iterable[typing.Tuple[tuple, dict]]:
+        """Called for iter(self)."""
+        return iter(self.arguments)
+
+    @property
+    def options(self):
+        """Options with which to create this subcommand's parser."""
+        return self._options
+
+    @property
+    def arguments(self) -> typing.List[typing.Tuple[tuple, dict]]:
+        """Arguments to this subcommand."""
+        if self._arguments is None:
+            self._arguments = []
+        return self._arguments
+
+
+class CLI(typing.Mapping):
     """A custom command-line parser for EPREM simulations."""
 
     def __init__(self, *args, **kwargs):
         """Create a new instance."""
-        # self._parser = argparse.ArgumentParser(*args, **kwargs)
         self._args = args
         self._kwargs = kwargs
         self._parser = None
-        self._collected = {}
+        self._subcommands = None
+
+    def __len__(self) -> int:
+        """Called for len(self)."""
+        return len(self.subcommands)
+
+    def __iter__(self) -> typing.Iterator[str]:
+        """Called for iter(self)."""
+        return iter(self.subcommands)
+
+    def __getitem__(self, __k: str) -> Subcommand:
+        """Access subcommands by key."""
+        if __k in self.subcommands:
+            return self.subcommands[__k]
+        raise KeyError(f"No subcommand for {__k!r}")
 
     def include(self, _func=None, **meta):
         """Register a subcommand."""
@@ -981,7 +1022,10 @@ class CLI:
             """Decorate `func` as a command-line action."""
             tmp = {'help': doc2help(func), **meta}
             key = func.__name__
-            self._collected.update({key: tmp})
+            if key in self.subcommands:
+                self.subcommands[key].options.update(tmp)
+            else:
+                self.subcommands[key] = Subcommand(**tmp)
             @functools.wraps(func)
             def wrapper(*args, **kwargs):
                 return func(*args, **kwargs)
@@ -998,16 +1042,18 @@ class CLI:
             subparsers = self._parser.add_subparsers(
                 title="supported sub-commands",
             )
-            for key, meta in self._collected.items():
-                required = meta.pop('required', {})
-                optional = meta.pop('optional', {})
-                meta['formatter_class'] = argparse.RawTextHelpFormatter
-                subparser = subparsers.add_parser(key, **meta)
-                for name, info in required.items():
-                    subparser.add_argument(name, **info)
-                for flags, info in optional.items():
-                    subparser.add_argument(*flags, **info)
+            for key, subcommand in self.subcommands.items():
+                subparser = subparsers.add_parser(key, **subcommand.options)
+                for (args, kwargs) in subcommand:
+                    subparser.add_argument(*args, **kwargs)
         return self._parser
+
+    @property
+    def subcommands(self) -> typing.Dict[str, Subcommand]:
+        """The registered subcommands."""
+        if self._subcommands is None:
+            self._subcommands = {}
+        return self._subcommands
 
 
 cli = CLI(
@@ -1023,44 +1069,50 @@ cli = CLI(
 # * -d/--rundir (1: str)
 # * -l/--logname (1: str)
 # * python project.py "my-proj" -v create -b A B C
-@cli.include(
-    required={},
-    optional={
-        ('-b', '--branches'): {
-            'help': "the affected branches\n(default: all)",
-            'nargs': '*',
-            'metavar': ('A', 'B'),
-        },
-        ('-c', '--config'): {
-            'help': (
-                "the name to give runtime config files"
-                "\n(default: 'eprem.cfg')"
-            ),
-        },
-        ('-o', '--output'): {
-            'help': (
-                "the name to give runtime output logs"
-                "\n(default: 'eprem.log')"
-            ),
-        },
-        ('-d', '--rundir'): {
-            'help': (
-                "the name of the directory that will contain simulation runs"
-                "\n(default: 'runs')"
-            ),
-        },
-        ('-l', '--logfile'): {
-            'help': (
-                "the name of the file to which to log run metadata"
-                "\n(default: runs.json)"
-            ),
-        },
-    },
-)
+@cli.include
 def create(
     path: PathLike,
 ) -> None:
     """Create a new project."""
+cli.subcommands['create'].add_argument(
+    '-b',
+    '--branches',
+    help="the affected branches\n(default: all)",
+    nargs='*',
+    metavar=('A', 'B'),
+)
+cli.subcommands['create'].add_argument(
+    '-c',
+    '--config',
+    help=(
+        "the name to give runtime config files"
+        "\n(default: 'eprem.cfg')"
+    ),
+)
+cli.subcommands['create'].add_argument(
+    '-o',
+    '--output',
+    help=(
+        "the name to give runtime output logs"
+        "\n(default: 'eprem.log')"
+    ),
+)
+cli.subcommands['create'].add_argument(
+    '-d',
+    '--rundir',
+    help=(
+        "the name of the directory that will contain simulation runs"
+        "\n(default: 'runs')"
+    ),
+)
+cli.subcommands['create'].add_argument(
+    '-l',
+    '--logfile',
+    help=(
+        "the name of the file to which to log run metadata"
+        "\n(default: runs.json)"
+    ),
+)
 
 
 # reset => Project.reset
@@ -1094,10 +1146,7 @@ def remove():
 # * -e/--eprem (1: str) = path to instance of `eprem` executable
 # * -i/--ignore_errors (0: bool)
 # * python project.py "my-proj" -v run config/cone.cfg -n run00
-@cli.include(
-    required={},
-    optional={},
-)
+@cli.include
 def run():
     """Set up and execute a new EPREM run."""
 
@@ -1108,27 +1157,7 @@ def run():
 # * -b/--branches (*: str)
 # * -i/--ignore_errors (0: bool)
 # * python project.py "my-proj" -v mv run00 old-run
-@cli.include(
-    required={
-        'source': {
-            'help': "the file to rename",
-        },
-        'target': {
-            'help': "the new file name",
-        },
-    },
-    optional={
-        ('-b', '--branches'): {
-            'help': "the affected branches (default: all)",
-            'nargs': '*',
-            'metavar': ('A', 'B'),
-        },
-        ('-i', '--ignore_errors'): {
-            'help': "do not raise exceptions when renaming files",
-            'action': 'store_true',
-        },
-    },
-)
+@cli.include
 def mv(
     path: PathLike,
     source: str,
@@ -1146,6 +1175,27 @@ def mv(
         errors=(not ignore_errors),
         silent=(not verbose),
     )
+cli.subcommands['mv'].add_argument(
+    'source',
+    help="the file to rename",
+)
+cli.subcommands['mv'].add_argument(
+    'target',
+    help="the new file name",
+)
+cli.subcommands['mv'].add_argument(
+    '-b',
+    '--branches',
+    help="the affected branches (default: all)",
+    nargs='*',
+    metavar=('A', 'B'),
+)
+cli.subcommands['mv'].add_argument(
+    '-i',
+    '--ignore_errors',
+    help="do not raise exceptions when renaming files",
+    action='store_true',
+)
 
 
 # rm => Project.rm:
