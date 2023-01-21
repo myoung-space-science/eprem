@@ -2,6 +2,7 @@ import argparse
 import collections.abc
 import contextlib
 import datetime
+import functools
 import json
 import os
 import pathlib
@@ -956,18 +957,6 @@ def underline(text: str):
     print(dashes)
 
 
-def spawn():
-    """Set up and execute a new EPREM run."""
-
-
-def rename():
-    """Rename an existing EPREM run."""
-
-
-def remove():
-    """Remove an existing EPREM run."""
-
-
 def doc2help(func: types.FunctionType):
     """Convert a function docstring to CLI help text."""
     doclines = func.__doc__.split('\n')
@@ -975,51 +964,57 @@ def doc2help(func: types.FunctionType):
     return summary[0].lower() + summary[1:]
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        formatter_class=argparse.RawTextHelpFormatter,
-        description="Support for operations on EPREM runs.",
-    )
-    parser.add_argument(
-        '-l',
-        '--logfile',
-        help=(
-            "path to the relevant log file"
-            "\n(default: runs.json)"
-        ),
-    )
-    parser.add_argument(
-        '-v',
-        '--verbose',
-        help="print runtime messages",
-        action='store_true',
-    )
-    mode_group = parser.add_mutually_exclusive_group(required=True)
-    mode_group.add_argument(
-        '--spawn',
-        help=doc2help(spawn),
-        nargs=2,
-        metavar=('CONFIG', 'TARGET'),
-    )
-    mode_group.add_argument(
-        '--rename',
-        help=doc2help(rename),
-        nargs=2,
-        metavar=('SOURCE', 'TARGET'),
-    )
-    mode_group.add_argument(
-        '--remove',
-        help=doc2help(remove),
-        metavar='TARGET',
-    )
-    cli = vars(parser.parse_args())
+class CLI:
+    """A custom command-line parser for EPREM simulations."""
 
-# TODO: Implement subparsers for create, run, rename, remove, and list. Note
-# that the main-parser args must appear before the subparser-specific args.
+    def __init__(self, *args, **kwargs):
+        """Create a new instance."""
+        # self._parser = argparse.ArgumentParser(*args, **kwargs)
+        self._args = args
+        self._kwargs = kwargs
+        self._parser = None
+        self._collected = {}
 
-# main parser:
-# * <project name> (1: str)
-# * -v/--verbose (0: bool)
+    def include(self, _func=None, **meta):
+        """Register a subcommand."""
+        def cli_action(func: types.FunctionType):
+            """Decorate `func` as a command-line action."""
+            tmp = {'help': doc2help(func), **meta}
+            key = func.__name__
+            self._collected.update({key: tmp})
+            @functools.wraps(func)
+            def wrapper(*args, **kwargs):
+                return func(*args, **kwargs)
+            return wrapper
+        if _func is None:
+            return cli_action
+        return cli_action(_func)
+
+    @property
+    def parser(self):
+        """The main argument parser."""
+        if self._parser is None:
+            self._parser = argparse.ArgumentParser(*self._args, **self._kwargs)
+            subparsers = self._parser.add_subparsers(
+                title="supported sub-commands",
+            )
+            for key, meta in self._collected.items():
+                required = meta.pop('required', {})
+                optional = meta.pop('optional', {})
+                meta['formatter_class'] = argparse.RawTextHelpFormatter
+                subparser = subparsers.add_parser(key, **meta)
+                for name, info in required.items():
+                    subparser.add_argument(name, **info)
+                for flags, info in optional.items():
+                    subparser.add_argument(*flags, **info)
+        return self._parser
+
+
+cli = CLI(
+    formatter_class=argparse.RawTextHelpFormatter,
+    description="Support for operations on EPREM runs.",
+)
+
 
 # create => Project.__init__:
 # * -b/--branches (*: str)
@@ -1028,12 +1023,66 @@ if __name__ == "__main__":
 # * -d/--rundir (1: str)
 # * -l/--logname (1: str)
 # * python project.py "my-proj" -v create -b A B C
+@cli.include(
+    required={},
+    optional={
+        ('-b', '--branches'): {
+            'help': "the affected branches\n(default: all)",
+            'nargs': '*',
+            'metavar': ('A', 'B'),
+        },
+        ('-c', '--config'): {
+            'help': (
+                "the name to give runtime config files"
+                "\n(default: 'eprem.cfg')"
+            ),
+        },
+        ('-o', '--output'): {
+            'help': (
+                "the name to give runtime output logs"
+                "\n(default: 'eprem.log')"
+            ),
+        },
+        ('-d', '--rundir'): {
+            'help': (
+                "the name of the directory that will contain simulation runs"
+                "\n(default: 'runs')"
+            ),
+        },
+        ('-l', '--logfile'): {
+            'help': (
+                "the name of the file to which to log run metadata"
+                "\n(default: runs.json)"
+            ),
+        },
+    },
+)
+def create(
+    path: PathLike,
+) -> None:
+    """Create a new project."""
+
 
 # reset => Project.reset
 # * -f/--force (0: bool)
+@cli.include
+def reset():
+    """Reset an existing project."""
+
+
+# rename => Project.rename
+# * -f/--force (0: bool)
+@cli.include
+def rename():
+    """Rename an existing EPREM project."""
+
 
 # remove => Project.remove
 # * -f/--force (0: bool)
+@cli.include
+def remove():
+    """Remove an existing EPREM project."""
+
 
 # run => Project.run:
 # * <config> (1: str)
@@ -1045,21 +1094,96 @@ if __name__ == "__main__":
 # * -e/--eprem (1: str) = path to instance of `eprem` executable
 # * -i/--ignore_errors (0: bool)
 # * python project.py "my-proj" -v run config/cone.cfg -n run00
+@cli.include(
+    required={},
+    optional={},
+)
+def run():
+    """Set up and execute a new EPREM run."""
 
-# rename => Project.mv:
+
+# mv => Project.mv:
 # * <run> (1: str)
 # * <new> (1: str)
 # * -b/--branches (*: str)
 # * -i/--ignore_errors (0: bool)
-# * python project.py "my-proj" -v rename run00 old-run
+# * python project.py "my-proj" -v mv run00 old-run
+@cli.include(
+    required={
+        'source': {
+            'help': "the file to rename",
+        },
+        'target': {
+            'help': "the new file name",
+        },
+    },
+    optional={
+        ('-b', '--branches'): {
+            'help': "the affected branches (default: all)",
+            'nargs': '*',
+            'metavar': ('A', 'B'),
+        },
+        ('-i', '--ignore_errors'): {
+            'help': "do not raise exceptions when renaming files",
+            'action': 'store_true',
+        },
+    },
+)
+def mv(
+    path: PathLike,
+    source: str,
+    target: str,
+    branches: typing.Union[str, typing.Iterable[str]]=None,
+    ignore_errors: bool=False,
+    verbose: bool=False,
+) -> None:
+    """Rename an existing EPREM run."""
+    project = Project(path)
+    project.mv(
+        source,
+        target,
+        branches=branches,
+        errors=(not ignore_errors),
+        silent=(not verbose),
+    )
 
-# remove => Project.rm:
+
+# rm => Project.rm:
 # * <run> (1: str)
 # * -b/--branches (*: str)
 # * -i/--ignore_errors (0: bool)
-# * python project.py "my-proj" -v remove old-run -b A
+# * python project.py "my-proj" -v rm old-run -b A
+@cli.include
+def rm():
+    """Remove an existing EPREM run."""
+
 
 # show => Project.show
 # * -r/--run (*: str)
 # * python project.py "my-proj" show
 # * python project.py "my-proj" show -r old-run
+@cli.include
+def show():
+    """Display information about an existing project."""
+
+
+if __name__ == "__main__":
+    cli.parser.add_argument(
+        'path',
+        help="the path to the target project; may be relative",
+    )
+    cli.parser.add_argument(
+        '-v',
+        '--verbose',
+        help="print runtime messages",
+        action='store_true',
+    )
+    cli.parser.parse_args()
+
+# TODO: Implement subparsers for all project-related actions. Note that the
+# main-parser args must appear before the subparser-specific args.
+
+# main parser:
+# * <project name> (1: str)
+# * -v/--verbose (0: bool)
+
