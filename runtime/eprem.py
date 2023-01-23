@@ -961,10 +961,14 @@ def underline(text: str):
     print(dashes)
 
 
-def doc2help(func: types.FunctionType):
+def doc2help(__x) -> None:
     """Convert a function docstring to CLI help text."""
-    doclines = func.__doc__.split('\n')
-    summary = doclines[0]
+    try:
+        target = __x if isinstance(__x, str) else str(__x.__doc__)
+    except AttributeError:
+        raise TypeError(f"Cannot create help text from {__x!r}") from None
+    doclines = target.lstrip('\n').split('\n')
+    summary = doclines[0].rstrip('.')
     return summary[0].lower() + summary[1:]
 
 
