@@ -1,3 +1,7 @@
+"""
+Support for operations on EPREM runs.
+"""
+
 import argparse
 import collections.abc
 import contextlib
