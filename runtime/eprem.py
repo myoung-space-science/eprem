@@ -1028,7 +1028,11 @@ class CLI(typing.Mapping):
         """Register a subcommand."""
         def cli_action(func: types.FunctionType):
             """Decorate `func` as a command-line action."""
-            tmp = {'help': doc2help(func), **meta}
+            tmp = {
+                'help': doc2help(func),
+                'formatter_class': argparse.RawTextHelpFormatter,
+                **meta
+            }
             key = func.__name__
             if key in self.subcommands:
                 self.subcommands[key].options.update(tmp)
