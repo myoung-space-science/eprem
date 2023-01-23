@@ -1033,6 +1033,7 @@ class CLI(typing.Mapping):
                 'formatter_class': argparse.RawTextHelpFormatter,
                 **meta
             }
+            tmp['description'] = tmp['help']
             key = func.__name__
             if key in self.subcommands:
                 self.subcommands[key].options.update(tmp)
