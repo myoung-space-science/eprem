@@ -403,7 +403,7 @@ class RunPaths(collections.abc.Collection):
         return len(self.listing)
 
     def mkdir(self, target: PathLike):
-        """Create a path from `target` only if safe to do so."""
+        """Create a path to `target` only if safe to do so."""
         this = fullpath(target)
         if this.exists():
             return f"Cannot create {str(this)!r}: already exists"
