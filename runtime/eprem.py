@@ -773,7 +773,11 @@ class Project:
                 print(f"Started at {now}")
             process.wait()
             if not silent:
-                print(f"Created {path.name} in branch {branch.name!r}")
+                base = f"Created {path.name!r}"
+                if self.branches:
+                    print(f"{base} in branch {branch.name!r}")
+                else:
+                    print(base)
         if process.returncode == 0:
             logentry = {
                 'command': command,
