@@ -1129,10 +1129,10 @@ cli.subcommands['create'].add_argument(
 )
 cli.subcommands['create'].add_argument(
     '-l',
-    '--logfile',
+    '--logname',
     help=(
         "the name of the file to which to log run metadata"
-        "\n(default: runs.json)"
+        "\n(default: 'runs.json')"
     ),
 )
 
