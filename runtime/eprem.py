@@ -343,7 +343,9 @@ class _ProjectInit(typing.Mapping):
 
     def __repr__(self) -> str:
         """An unambiguous representation of this object."""
-        return '\n'.join(f"{k}: {v}" for k, v in self.items())
+        display = {k: v for k, v in self.items() if k != 'branches'}
+        display['branches'] = self['branches'] or None
+        return '\n'.join(f"{k}: {v}" for k, v in display.items())
 
 
 RunPathsType = typing.TypeVar('RunPathsType', bound='RunPaths')
