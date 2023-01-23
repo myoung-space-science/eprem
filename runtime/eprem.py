@@ -1074,18 +1074,27 @@ cli = CLI(
 )
 
 
-# create => Project.__init__:
-# * -b/--branches (*: str)
-# * -c/--config (1: str)
-# * -o/--output (1: str)
-# * -d/--rundir (1: str)
-# * -l/--logname (1: str)
-# * python project.py "my-proj" -v create -b A B C
 @cli.include
 def create(
     path: PathLike,
+    branches: typing.Union[str, typing.Iterable[str]]=None,
+    config: str=None,
+    output: str=None,
+    rundir: str=None,
+    logname: str=None,
+    verbose: bool=False,
 ) -> None:
     """Create a new project."""
+    project = Project(
+        path,
+        branches=branches,
+        config=config,
+        output=output,
+        rundir=rundir,
+        logname=logname,
+    )
+    if verbose:
+        print(f"Created project {project.name!r} in {project.root}")
 cli.subcommands['create'].add_argument(
     '-b',
     '--branches',
@@ -1127,106 +1136,219 @@ cli.subcommands['create'].add_argument(
 )
 
 
-# reset => Project.reset
-# * -f/--force (0: bool)
 @cli.include
-def reset():
+def reset(
+    path: PathLike,
+    force: bool=False,
+    verbose: bool=False,
+) -> None:
     """Reset an existing project."""
+    project = Project(path)
+    project.reset(force=force, silent=(not verbose))
+cli.subcommands['reset'].add_argument(
+    '-f',
+    '--force',
+    help="do not raise exceptions when resetting a project",
+    action='store_true',
+)
 
 
-# rename => Project.rename
-# * -f/--force (0: bool)
 @cli.include
-def rename():
+def rename(
+    path: PathLike,
+    target: PathLike,
+    force: bool=False,
+    verbose: bool=False,
+) -> None:
     """Rename an existing EPREM project."""
+    project = Project(path)
+    project.rename(target, force=force, silent=(not verbose))
+cli.subcommands['rename'].add_argument(
+    'target',
+    help="the new name of the project",
+)
+cli.subcommands['rename'].add_argument(
+    '-f',
+    '--force',
+    help="do not raise exceptions when renaming a project",
+    action='store_true',
+)
 
 
-# remove => Project.remove
-# * -f/--force (0: bool)
 @cli.include
-def remove():
+def remove(
+    path: PathLike,
+    force: bool=False,
+    verbose: bool=False,
+) -> None:
     """Remove an existing EPREM project."""
+    project = Project(path)
+    project.remove(force=force, silent=(not verbose))
+cli.subcommands['remove'].add_argument(
+    '-f',
+    '--force',
+    help="do not raise exceptions when a removing project",
+    action='store_true',
+)
 
 
-# run => Project.run:
-# * <config> (1: str)
-# * -n/--name (1: str)
-# * -b/--branches (*: str)
-# * -N/--nproc (1: int)
-# * -E/--environment (1: str) = path to environment config file
-# * -m/--mpirun (1: str) = path to instance of `mpirun` executable
-# * -e/--eprem (1: str) = path to instance of `eprem` executable
-# * -i/--ignore_errors (0: bool)
-# * python project.py "my-proj" -v run config/cone.cfg -n run00
 @cli.include
-def run():
-    """Set up and execute a new EPREM run."""
+def run(
+    path: PathLike,
+    config: PathLike,
+    target: str=None,
+    branches: typing.Union[str, typing.Iterable[str]]=None,
+    nproc: int=None,
+    force: bool=False,
+    verbose: bool=False,
+    **environment
+) -> None:
+    """Set up and execute a new EPREM run in all applicable branches."""
+    project = Project(path)
+    project.run(
+        config=config,
+        name=target,
+        branches=branches,
+        nproc=nproc,
+        environment=environment,
+        errors=(not force),
+        silent=(not verbose),
+    )
+cli.subcommands['run'].add_argument(
+    'config',
+    help="path to the EPREM config file to use",
+)
+cli.subcommands['run'].add_argument(
+    '-t',
+    '--target',
+    help="the name to the new run\n(default: created from date and time)",
+)
+cli.subcommands['run'].add_argument(
+    '-b',
+    '--branches',
+    help="the affected branches\n(default: all)",
+    nargs='*',
+    metavar=('A', 'B'),
+)
+cli.subcommands['run'].add_argument(
+    '-n',
+    '--nproc',
+    help="the number of parallel processes to use\n(default: 1)",
+    type=int,
+    default=1,
+    metavar='N',
+)
+cli.subcommands['run'].add_argument(
+    '-f',
+    '--force',
+    help="do not raise exceptions when creating a new run",
+    action='store_true',
+)
+cli.subcommands['run'].add_argument(
+    '-m',
+    '--mpirun',
+    help="path to the MPI binary to use\n(default: $PATH)",
+)
+cli.subcommands['run'].add_argument(
+    '-e',
+    '--eprem',
+    help="path to the EPREM executable to run\n(default: $PATH)",
+)
 
 
-# mv => Project.mv:
-# * <run> (1: str)
-# * <new> (1: str)
-# * -b/--branches (*: str)
-# * -i/--ignore_errors (0: bool)
-# * python project.py "my-proj" -v mv run00 old-run
 @cli.include
 def mv(
     path: PathLike,
     source: str,
     target: str,
     branches: typing.Union[str, typing.Iterable[str]]=None,
-    ignore_errors: bool=False,
+    force: bool=False,
     verbose: bool=False,
 ) -> None:
-    """Rename an existing EPREM run."""
+    """Rename an existing EPREM run in all applicable branches."""
     project = Project(path)
     project.mv(
         source,
         target,
         branches=branches,
-        errors=(not ignore_errors),
+        errors=(not force),
         silent=(not verbose),
     )
 cli.subcommands['mv'].add_argument(
     'source',
-    help="the file to rename",
+    help="the current name of the run(s)",
 )
 cli.subcommands['mv'].add_argument(
     'target',
-    help="the new file name",
+    help="the new name of the run(s)",
 )
 cli.subcommands['mv'].add_argument(
     '-b',
     '--branches',
-    help="the affected branches (default: all)",
+    help="the affected branches\n(default: all)",
     nargs='*',
     metavar=('A', 'B'),
 )
 cli.subcommands['mv'].add_argument(
-    '-i',
-    '--ignore_errors',
-    help="do not raise exceptions when renaming files",
+    '-f',
+    '--force',
+    help="do not raise exceptions when renaming a file",
     action='store_true',
 )
 
 
-# rm => Project.rm:
-# * <run> (1: str)
-# * -b/--branches (*: str)
-# * -i/--ignore_errors (0: bool)
-# * python project.py "my-proj" -v rm old-run -b A
 @cli.include
-def rm():
-    """Remove an existing EPREM run."""
+def rm(
+    path: PathLike,
+    target: str,
+    branches: typing.Union[str, typing.Iterable[str]]=None,
+    force: bool=False,
+    verbose: bool=False,
+) -> None:
+    """Remove an existing EPREM run in all applicable branches."""
+    project = Project(path)
+    project.rm(
+        target,
+        branches=branches,
+        errors=(not force),
+        silent=(not verbose),
+    )
+cli.subcommands['rm'].add_argument(
+    'target',
+    help="the name of the run(s) to remove",
+)
+cli.subcommands['rm'].add_argument(
+    '-b',
+    '--branches',
+    help="the affected branches\n(default: all)",
+    nargs='*',
+    metavar=('A', 'B'),
+)
+cli.subcommands['rm'].add_argument(
+    '-f',
+    '--force',
+    help="do not raise exceptions when removing a file",
+    action='store_true',
+)
 
 
-# show => Project.show
-# * -r/--run (*: str)
-# * python project.py "my-proj" show
-# * python project.py "my-proj" show -r old-run
 @cli.include
-def show():
+def show(
+    path: PathLike,
+    *runs: str,
+) -> None:
     """Display information about an existing project."""
+    project = Project(path)
+    project.show(*runs)
+cli.subcommands['show'].add_argument(
+    '-r',
+    '--run',
+    help=(
+        "display information about the named run"
+        ";\nspecify multiple times to include multiple runs"
+    ),
+    action='extend',
+)
 
 
 if __name__ == "__main__":
@@ -1242,10 +1364,4 @@ if __name__ == "__main__":
     )
     cli.parser.parse_args()
 
-# TODO: Implement subparsers for all project-related actions. Note that the
-# main-parser args must appear before the subparser-specific args.
-
-# main parser:
-# * <project name> (1: str)
-# * -v/--verbose (0: bool)
 
