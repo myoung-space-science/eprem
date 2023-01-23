@@ -1332,7 +1332,10 @@ cli.subcommands['show'].add_argument(
 
 if __name__ == "__main__":
     cli.parser.add_argument(
-        'path',
+        '-p',
+        '--project',
+        dest='path',
+        required=True,
         help="the path to the target project; may be relative",
     )
     cli.parser.add_argument(
