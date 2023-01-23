@@ -1066,7 +1066,7 @@ class CLI(typing.Mapping):
 
 cli = CLI(
     formatter_class=argparse.RawTextHelpFormatter,
-    description="Support for operations on EPREM runs.",
+    description=doc2help(__doc__),
 )
 
 
