@@ -18,11 +18,13 @@ class Context: # Should this inherit from `eprem.Project`?
         self,
         root: str,
         config: str,
+        branches: typing.Union[str, typing.Iterable[str]]=None,
         interactive: bool=False,
         keep: bool=False,
         verbosity: int=0,
     ) -> None:
         self.root = eprem.fullpath(root)
+        self.branches = branches
         self.config = eprem.fullpath(config)
         self.interactive = interactive
         self.keep = keep
@@ -100,7 +102,7 @@ class Context: # Should this inherit from `eprem.Project`?
 
     def create(self, name: str):
         self.print_stage("create the project")
-        self.project = eprem.Project(self.root / name, branches=['A', 'B'])
+        self.project = eprem.Project(self.root / name, branches=self.branches)
         if self.verbose:
             print(f"Created project {name!r} in {self.root}")
         return self
@@ -118,7 +120,10 @@ class Context: # Should this inherit from `eprem.Project`?
         """Create a test run."""
         stage = f"create {target!r}"
         self.print_stage(stage)
-        if self.prompted(f"to {stage} in all branches"):
+        here = self.branch_string()
+        base = f"to {stage}"
+        prompt = f"{base} in {here}" if here else base
+        if self.prompted(prompt):
             self.project.run(self.config, target, nproc=2, silent=self.silent)
 
     def mv(
@@ -130,8 +135,10 @@ class Context: # Should this inherit from `eprem.Project`?
         """Rename test runs."""
         stage = f"rename {old!r} to {new!r}"
         self.print_stage(stage)
-        where = branch_string(branches)
-        if self.prompted(f"to {stage} in {where}"):
+        here = self.branch_string(branches)
+        base = f"to {stage}"
+        prompt = f"{base} in {here}" if here else base
+        if self.prompted(prompt):
             self.project.mv(old, new, branches=branches, silent=self.silent)
 
     def rm(
@@ -142,8 +149,10 @@ class Context: # Should this inherit from `eprem.Project`?
         """Remove test runs."""
         stage = f"remove {target!r}"
         self.print_stage(stage)
-        where = branch_string(branches)
-        if self.prompted(f"to {stage} from {where}"):
+        here = self.branch_string(branches)
+        base = f"to {stage}"
+        prompt = f"{base} from {here}" if here else base
+        if self.prompted(prompt):
             self.project.rm(target, branches=branches, silent=self.silent)
 
     def reset(self):
@@ -201,6 +210,16 @@ class Context: # Should this inherit from `eprem.Project`?
             print(f"{line}")
             self.step += 1
 
+    def branch_string(self, branches=None):
+        """Build a string representing the relevant branches."""
+        if not self.branches:
+            return
+        if not branches:
+            return "all branches"
+        if isinstance(branches, str):
+            return f"branch {branches!r}"
+        return f"branches {', '.join(f'{branch!r}' for branch in branches)}"
+
 
 def main(
     config: str,
@@ -237,15 +256,6 @@ def execute(context: Context):
         context.rm(target, branches)
     context.rename(context.project.name.replace('project', 'renamed'))
     context.reset()
-
-
-def branch_string(branches):
-    """Build a string representing the relevant branches."""
-    if not branches:
-        return "all branches"
-    if isinstance(branches, str):
-        return f"branch {branches!r}"
-    return f"branches {', '.join(f'{branch!r}' for branch in branches)}"
 
 
 if __name__ == "__main__":
@@ -290,4 +300,6 @@ if __name__ == "__main__":
         action='count',
         default=0,
     )
-    main(**vars(parser.parse_args()))
+    cliargs = vars(parser.parse_args())
+    main(**cliargs)
+    main(**cliargs, branches=['A', 'B'])
