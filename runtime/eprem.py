@@ -972,34 +972,6 @@ def doc2help(__x) -> None:
     return summary[0].lower() + summary[1:]
 
 
-class Subcommand:
-    """Container for a single CLI subcommand."""
-
-    def __init__(self, **options) -> None:
-        self._options = options
-        self._arguments = None
-
-    def add_argument(self, *args: str, **kwargs):
-        """Cache arguments to add to the command-line parser."""
-        self.arguments.append((args, kwargs))
-
-    def __iter__(self) -> typing.Iterable[typing.Tuple[tuple, dict]]:
-        """Called for iter(self)."""
-        return iter(self.arguments)
-
-    @property
-    def options(self):
-        """Options with which to create this subcommand's parser."""
-        return self._options
-
-    @property
-    def arguments(self) -> typing.List[typing.Tuple[tuple, dict]]:
-        """Arguments to this subcommand."""
-        if self._arguments is None:
-            self._arguments = []
-        return self._arguments
-
-
 class CLI(typing.Mapping):
     """A custom command-line parser for EPREM simulations."""
 
@@ -1007,7 +979,8 @@ class CLI(typing.Mapping):
         """Create a new instance."""
         self._args = args
         self._kwargs = kwargs
-        self._parser = None
+        self._parser = argparse.ArgumentParser(*self._args, **self._kwargs)
+        self._subparsers = None
         self._subcommands = None
 
     def __len__(self) -> int:
@@ -1018,7 +991,7 @@ class CLI(typing.Mapping):
         """Called for iter(self)."""
         return iter(self.subcommands)
 
-    def __getitem__(self, __k: str) -> Subcommand:
+    def __getitem__(self, __k: str) -> argparse.ArgumentParser:
         """Access subcommands by key."""
         if __k in self.subcommands:
             return self.subcommands[__k]
@@ -1028,17 +1001,16 @@ class CLI(typing.Mapping):
         """Register a subcommand."""
         def cli_action(func: types.FunctionType):
             """Decorate `func` as a command-line action."""
-            tmp = {
-                'help': doc2help(func),
-                'formatter_class': argparse.RawTextHelpFormatter,
-                **meta
-            }
-            tmp['description'] = tmp['help']
             key = func.__name__
-            if key in self.subcommands:
-                self.subcommands[key].options.update(tmp)
-            else:
-                self.subcommands[key] = Subcommand(**tmp)
+            subparser = self.subparsers.add_parser(
+                key,
+                help=doc2help(func),
+                description=doc2help(func),
+                formatter_class=argparse.RawTextHelpFormatter,
+                **meta
+            )
+            subparser.set_defaults(func=func)
+            self.subcommands[key] = subparser
             @functools.wraps(func)
             def wrapper(*args, **kwargs):
                 return func(*args, **kwargs)
@@ -1047,22 +1019,28 @@ class CLI(typing.Mapping):
             return cli_action
         return cli_action(_func)
 
+    def run(self):
+        """Execute operations based on command-like arguments."""
+        parsed = vars(self.parser.parse_args())
+        func = parsed.pop('func')
+        func(**parsed)
+
     @property
     def parser(self):
         """The main argument parser."""
-        if self._parser is None:
-            self._parser = argparse.ArgumentParser(*self._args, **self._kwargs)
-            subparsers = self._parser.add_subparsers(
-                title="supported sub-commands",
-            )
-            for key, subcommand in self.subcommands.items():
-                subparser = subparsers.add_parser(key, **subcommand.options)
-                for (args, kwargs) in subcommand:
-                    subparser.add_argument(*args, **kwargs)
         return self._parser
 
     @property
-    def subcommands(self) -> typing.Dict[str, Subcommand]:
+    def subparsers(self):
+        """The parser for each subcommand."""
+        if self._subparsers is None:
+            self._subparsers = self.parser.add_subparsers(
+                title="supported sub-commands",
+            )
+        return self._subparsers
+
+    @property
+    def subcommands(self) -> typing.Dict[str, argparse.ArgumentParser]:
         """The registered subcommands."""
         if self._subcommands is None:
             self._subcommands = {}
@@ -1363,6 +1341,6 @@ if __name__ == "__main__":
         help="print runtime messages",
         action='store_true',
     )
-    cli.parser.parse_args()
+    cli.run()
 
 
