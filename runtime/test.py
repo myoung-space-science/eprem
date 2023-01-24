@@ -31,6 +31,7 @@ class Context: # Should this inherit from `eprem.Project`?
         self.verbosity = verbosity
         self.project = None
         self.step = None
+        self.print_status("Initialized EPREM test context")
 
     @property
     def silent(self):
