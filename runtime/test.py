@@ -105,7 +105,7 @@ class Context: # Should this inherit from `eprem.Project`?
         self.print_stage("create the project")
         self.project = eprem.Project(self.root / name, branches=self.branches)
         if self.verbose:
-            print(f"Created project {name!r} in {self.root}")
+            print(f"Created project {name!r}\nin {self.root}")
         return self
 
     def show(self, *runs: str):
