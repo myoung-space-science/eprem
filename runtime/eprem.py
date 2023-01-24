@@ -348,6 +348,73 @@ class _ProjectInit(typing.Mapping):
         return '\n'.join(f"{k}: {v}" for k, v in display.items())
 
 
+_Paths = typing.TypeVar(
+    '_Paths',
+    pathlib.Path,
+    typing.Tuple[pathlib.Path, pathlib.Path],
+)
+
+
+class _PathOperation:
+    """Helper for path-based operations."""
+
+    @typing.overload
+    def __init__(
+        self,
+        operator: typing.Callable[
+            [pathlib.Path],
+            typing.Union[pathlib.Path, PathOperationError]
+        ],
+        paths: typing.Iterable[pathlib.Path]=None,
+    ) -> None: ...
+
+    @typing.overload
+    def __init__(
+        self,
+        operator: typing.Callable[
+            [pathlib.Path, pathlib.Path],
+            typing.Union[pathlib.Path, PathOperationError]
+        ],
+        paths: typing.Iterable[typing.Tuple[pathlib.Path, pathlib.Path]]=None,
+    ) -> None: ...
+
+    def __init__(self, operator, paths: _Paths=None) -> None:
+        """Create a new instance."""
+        self.operator = operator
+        self._paths = paths
+
+    def __bool__(self) -> bool:
+        """Called for bool(self)."""
+        return bool(self._paths)
+
+    def iterate(self, force: bool=False, silent: bool=False):
+        """Apply the operation to each path, if possible."""
+        error = None
+        for path in self._paths:
+            result = self.apply(path)
+            if not isinstance(result, PathOperationError):
+                yield result
+                error = False
+            else:
+                error = True
+            if error:
+                if not force:
+                    raise result
+                if not silent:
+                    print(result)
+
+    def apply(self, this) -> typing.Union[pathlib.Path, typing.Tuple[pathlib.Path, pathlib.Path]]:
+        """Apply the operator to a`this`, if possible."""
+        if isinstance(this, pathlib.Path):
+            return self.operator(this)
+        try:
+            allpaths = all(isinstance(i, pathlib.Path) for i in this)
+        except TypeError:
+            allpaths = False
+        if allpaths:
+            return self.operator(*this)
+
+
 RunPathsType = typing.TypeVar('RunPathsType', bound='RunPaths')
 
 
@@ -362,10 +429,12 @@ class RunPaths(collections.abc.Collection):
     ) -> None:
         self._root = fullpath(root)
         self._base = base or 'runs'
-        self._branches = branches
+        self._branch_names = branches
         self._listing = None
         for directory in self.listing:
             directory.mkdir(parents=True, exist_ok=True)
+        self._branches = None
+        self._runs = None
 
     def update(
         self: RunPathsType,
@@ -385,7 +454,7 @@ class RunPaths(collections.abc.Collection):
             self.root.rename(path)
             self._root = path
         if branches:
-            self._branches = branches
+            self._branch_names = branches
         if base:
             self._base = base
         return self
@@ -402,36 +471,92 @@ class RunPaths(collections.abc.Collection):
         """Called for len(self)."""
         return len(self.listing)
 
-    def mkdir(self, target: PathLike):
-        """Create a path to `target` only if safe to do so."""
+    # def mkdir(self, target: PathLike):
+    #     """Create a path to `target` only if safe to do so."""
+    #     this = fullpath(target)
+    #     if this.exists():
+    #         return f"Cannot create {str(this)!r}: already exists"
+    #     this.mkdir(parents=True)
+    #     if this.parent == str(self.root):
+    #         self.runs[this.name] = set()
+    #         return
+    #     if this.name in self.runs:
+    #         self.runs[this.name] |= this.parent.name
+    #         return
+    #     self.runs[this.name] = {this.parent.name}
+    #     return
+
+    def mkdir(
+        self,
+        target: PathLike,
+        branches: typing.Union[str, typing.Iterable[str]]=None,
+    ) -> _PathOperation:
+        """Create target run(s) if possible."""
+        paths = self.define(target, branches=branches)
+        return _PathOperation(self._mkdir, paths=paths)
+
+    def _mkdir(self, target: PathLike):
+        """Create the target run if safe to do so."""
         this = fullpath(target)
         if this.exists():
-            return f"Cannot create {str(this)!r}: already exists"
+            return PathOperationError(
+                f"Cannot create {str(this)!r}: already exists"
+            )
         this.mkdir(parents=True)
+        return this
 
-    def mv(self, source: PathLike, target: PathLike):
+    def mv(
+        self,
+        source: PathLike,
+        target: PathLike,
+        branches: typing.Union[str, typing.Iterable[str]]=None,
+    ) -> _PathOperation:
+        """Rename `source` to `target` where possible."""
+        pairs = self.define(source, target, branches=branches)
+        return _PathOperation(self._mv, paths=pairs)
+
+    def _mv(self, source: PathLike, target: PathLike):
         """Rename `source` to `target` only if safe to do so."""
         this = fullpath(source)
         that = fullpath(target)
         if not this.exists():
-            return f"Cannot rename {this}: does not exist"
+            return PathOperationError(
+                f"Cannot rename {this}: does not exist"
+            )
         if not this.is_dir():
-            return f"Cannot rename {this}: not a directory"
+            return PathOperationError(
+                f"Cannot rename {this}: not a directory"
+            )
         if that.exists():
-            return (
+            return PathOperationError(
                 f"Renaming {this.name!r} to {that.name!r} would "
                 f"overwrite {that}."
             )
         this.rename(that)
+        return (this, that)
 
-    def rm(self, target: PathLike):
+    def rm(
+        self,
+        target: PathLike,
+        branches: typing.Union[str, typing.Iterable[str]]=None,
+    ) -> _PathOperation:
+        """Remove target run(s), if possible."""
+        paths = self.define(pattern=target, branches=branches)
+        return _PathOperation(self._rm, paths=paths)
+
+    def _rm(self, target: PathLike):
         """Remove the target path only if safe to do so."""
         this = fullpath(target)
         if not this.exists():
-            return f"Cannot remove {this}: does not exist"
+            return PathOperationError(
+                f"Cannot remove {this}: does not exist"
+            )
         if not this.is_dir():
-            return f"Cannot remove {this}: not a directory"
+            return PathOperationError(
+                f"Cannot remove {this}: not a directory"
+            )
         shutil.rmtree(this)
+        return this
 
     # TODO: Python >= 3.9
     # - list[typing.Union[pathlib.Path, tuple[pathlib.Path, ...]]]
@@ -470,7 +595,7 @@ class RunPaths(collections.abc.Collection):
         return [tuple(rundir / name for name in names) for rundir in rundirs]
 
     def resolve(self, target: str, branches: typing.Iterable[str]=None):
-        """Compute the full path to the target run."""
+        """Compute the full path(s) to the target run."""
         if not branches:
             return [self.root / self.base / target]
         return [
@@ -481,29 +606,16 @@ class RunPaths(collections.abc.Collection):
     @property
     def runs(self) -> typing.Dict[str, typing.Set[str]]:
         """The available runs, and owning branches, if any."""
-        available = {
-            run
-            for runs in self.branches.values()
-            for run in runs
-        }
-        this = {run: set() for run in available}
-        for branch, runs in self.branches.items():
-            for run in runs:
-                this[run] |= {branch}
-        return this
+        if self._runs is None:
+            self._runs = {}
+        return self._runs
 
     @property
     def branches(self):
         """The project branches, if any, and their available runs."""
-        if not self._branches:
-            return {}
-        return {
-            branch: {
-                path.name for d in self._get_rundirs([branch])
-                for path in d.glob('*')
-            }
-            for branch in self._branches
-        }
+        if self._branches is None:
+            self._branches = {}
+        return self._branches
 
     def _get_rundirs(
         self,
@@ -531,8 +643,8 @@ class RunPaths(collections.abc.Collection):
         if self._listing is None:
             self._listing = [
                 self.root / branch / self.base
-                for branch in self._branches
-            ] if self._branches else [self.root / self.base]
+                for branch in self._branch_names
+            ] if self._branch_names else [self.root / self.base]
         return self._listing
 
     @property
@@ -723,17 +835,26 @@ class Project:
     ) -> ProjectType:
         """Set up and execute a new EPREM run within this project."""
         run = name or datetime.datetime.now().strftime('%Y-%m-%dT%H-%M-%S.%f')
-        paths = self.directories.define(run, branches=branches)
-        for path in paths:
+        # paths = self.directories.define(run, branches=branches)
+        # for path in paths:
+        #     self._create_run(
+        #         config,
+        #         path,
+        #         nproc=nproc,
+        #         environment=environment,
+        #         errors=errors,
+        #         silent=silent,
+        #     )
+        # return self
+        paths = self.directories.mkdir(run, branches=branches)
+        for path in paths.iterate(force=(not errors), silent=silent):
             self._create_run(
-                config,
-                path,
+                config=config,
+                path=path,
                 nproc=nproc,
                 environment=environment,
-                errors=errors,
                 silent=silent,
             )
-        return self
 
     def _create_run(
         self: ProjectType,
@@ -745,12 +866,12 @@ class Project:
         silent: bool=False,
     ) -> None:
         """Create a single run."""
-        if error := self.directories.mkdir(path):
-            if errors:
-                raise PathOperationError(error)
-            if not silent:
-                print(error)
-            return
+        # if error := self.directories.mkdir(path):
+        #     if errors:
+        #         raise PathOperationError(error)
+        #     if not silent:
+        #         print(error)
+        #     return
         shutil.copy(config, path / self._attrs.config)
         branch = path.parent.parent
         mpirun = _locate('mpirun', branch, environment or {})
@@ -801,34 +922,45 @@ class Project:
         silent: bool=False,
     ) -> ProjectType:
         """Rename an existing EPREM run within this project."""
-        pairs = self.directories.define(source, target, branches=branches)
+        # pairs = self.directories.define(source, target, branches=branches)
+        # if not pairs:
+        #     if not silent:
+        #         print(f"Nothing to rename for {source!r}")
+        #     return
+        # for (run, new) in pairs:
+        #     self._rename_run(run, new, errors=errors, silent=silent)
+        # return self
+        pairs = self.directories.mv(source, target, branches=branches)
         if not pairs:
             if not silent:
                 print(f"Nothing to rename for {source!r}")
             return
-        for (run, new) in pairs:
-            self._rename_run(run, new, errors=errors, silent=silent)
-        return self
-
-    def _rename_run(
-        self: ProjectType,
-        run: pathlib.Path,
-        new: pathlib.Path,
-        errors: bool=False,
-        silent: bool=False,
-    ) -> None:
-        """Rename a single run."""
-        if error := self.directories.mv(run, new):
-            if errors:
-                raise PathOperationError(error)
+        for (run, new) in pairs.iterate(force=(not errors), silent=silent):
+            self.log.mv(run, new)
             if not silent:
-                print(error)
-            return
-        self.log.mv(run, new)
-        if not silent:
-            branch = self._get_branch_name(run)
-            base = f"Renamed {run.name!r} to {new.name!r}"
-            print(f"{base} in branch {branch!r}" if branch else base)
+                branch = self._get_branch_name(run)
+                base = f"Renamed {source!r} to {target!r}"
+                print(f"{base} in branch {branch!r}" if branch else base)
+
+    # def _rename_run(
+    #     self: ProjectType,
+    #     run: pathlib.Path,
+    #     new: pathlib.Path,
+    #     errors: bool=False,
+    #     silent: bool=False,
+    # ) -> None:
+    #     """Rename a single run."""
+    #     if error := self.directories.mv(run, new):
+    #         if errors:
+    #             raise PathOperationError(error)
+    #         if not silent:
+    #             print(error)
+    #         return
+    #     self.log.mv(run, new)
+    #     if not silent:
+    #         branch = self._get_branch_name(run)
+    #         base = f"Renamed {run.name!r} to {new.name!r}"
+    #         print(f"{base} in branch {branch!r}" if branch else base)
 
     def rm(
         self: ProjectType,
@@ -838,33 +970,44 @@ class Project:
         silent: bool=False,
     ) -> ProjectType:
         """Remove an existing EPREM run from this project."""
-        paths = self.directories.define(pattern=run, branches=branches)
+        # paths = self.directories.define(pattern=run, branches=branches)
+        # if not paths:
+        #     if not silent:
+        #         print(f"Nothing to remove for {run!r}")
+        #     return
+        # for path in paths:
+        #     self._remove_run(path, errors=errors, silent=silent)
+        # return self
+        paths = self.directories.rm(run, branches=branches)
         if not paths:
             if not silent:
                 print(f"Nothing to remove for {run!r}")
             return
-        for path in paths:
-            self._remove_run(path, errors=errors, silent=silent)
-        return self
-
-    def _remove_run(
-        self: ProjectType,
-        run: pathlib.Path,
-        errors: bool=False,
-        silent: bool=False,
-    ) -> None:
-        """Remove a single run."""
-        if error := self.directories.rm(run):
-            if errors:
-                raise PathOperationError(error)
+        for path in paths.iterate(force=(not errors), silent=silent):
+            self.log.rm(path)
             if not silent:
-                print(error)
-            return
-        self.log.rm(run)
-        if not silent:
-            base = f"Removed {run.name!r}"
-            branch = self._get_branch_name(run)
-            print(f"{base} from branch {branch!r}" if branch else base)
+                base = f"Removed {path.name!r}"
+                branch = self._get_branch_name(path)
+                print(f"{base} from branch {branch!r}" if branch else base)
+
+    # def _remove_run(
+    #     self: ProjectType,
+    #     run: pathlib.Path,
+    #     errors: bool=False,
+    #     silent: bool=False,
+    # ) -> None:
+    #     """Remove a single run."""
+    #     if error := self.directories.rm(run):
+    #         if errors:
+    #             raise PathOperationError(error)
+    #         if not silent:
+    #             print(error)
+    #         return
+    #     self.log.rm(run)
+    #     if not silent:
+    #         base = f"Removed {run.name!r}"
+    #         branch = self._get_branch_name(run)
+    #         print(f"{base} from branch {branch!r}" if branch else base)
 
     def _get_branch_name(self, path: pathlib.Path):
         """Get the project branch name, if any, of `path`."""
