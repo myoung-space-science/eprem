@@ -835,17 +835,6 @@ class Project:
     ) -> ProjectType:
         """Set up and execute a new EPREM run within this project."""
         run = name or datetime.datetime.now().strftime('%Y-%m-%dT%H-%M-%S.%f')
-        # paths = self.directories.define(run, branches=branches)
-        # for path in paths:
-        #     self._create_run(
-        #         config,
-        #         path,
-        #         nproc=nproc,
-        #         environment=environment,
-        #         errors=errors,
-        #         silent=silent,
-        #     )
-        # return self
         paths = self.directories.mkdir(run, branches=branches)
         for path in paths.iterate(force=(not errors), silent=silent):
             self._create_run(
@@ -866,12 +855,6 @@ class Project:
         silent: bool=False,
     ) -> None:
         """Create a single run."""
-        # if error := self.directories.mkdir(path):
-        #     if errors:
-        #         raise PathOperationError(error)
-        #     if not silent:
-        #         print(error)
-        #     return
         shutil.copy(config, path / self._attrs.config)
         branch = path.parent.parent
         mpirun = _locate('mpirun', branch, environment or {})
@@ -922,14 +905,6 @@ class Project:
         silent: bool=False,
     ) -> ProjectType:
         """Rename an existing EPREM run within this project."""
-        # pairs = self.directories.define(source, target, branches=branches)
-        # if not pairs:
-        #     if not silent:
-        #         print(f"Nothing to rename for {source!r}")
-        #     return
-        # for (run, new) in pairs:
-        #     self._rename_run(run, new, errors=errors, silent=silent)
-        # return self
         pairs = self.directories.mv(source, target, branches=branches)
         if not pairs:
             if not silent:
@@ -942,26 +917,6 @@ class Project:
                 base = f"Renamed {source!r} to {target!r}"
                 print(f"{base} in branch {branch!r}" if branch else base)
 
-    # def _rename_run(
-    #     self: ProjectType,
-    #     run: pathlib.Path,
-    #     new: pathlib.Path,
-    #     errors: bool=False,
-    #     silent: bool=False,
-    # ) -> None:
-    #     """Rename a single run."""
-    #     if error := self.directories.mv(run, new):
-    #         if errors:
-    #             raise PathOperationError(error)
-    #         if not silent:
-    #             print(error)
-    #         return
-    #     self.log.mv(run, new)
-    #     if not silent:
-    #         branch = self._get_branch_name(run)
-    #         base = f"Renamed {run.name!r} to {new.name!r}"
-    #         print(f"{base} in branch {branch!r}" if branch else base)
-
     def rm(
         self: ProjectType,
         run: str,
@@ -970,14 +925,6 @@ class Project:
         silent: bool=False,
     ) -> ProjectType:
         """Remove an existing EPREM run from this project."""
-        # paths = self.directories.define(pattern=run, branches=branches)
-        # if not paths:
-        #     if not silent:
-        #         print(f"Nothing to remove for {run!r}")
-        #     return
-        # for path in paths:
-        #     self._remove_run(path, errors=errors, silent=silent)
-        # return self
         paths = self.directories.rm(run, branches=branches)
         if not paths:
             if not silent:
@@ -989,25 +936,6 @@ class Project:
                 base = f"Removed {path.name!r}"
                 branch = self._get_branch_name(path)
                 print(f"{base} from branch {branch!r}" if branch else base)
-
-    # def _remove_run(
-    #     self: ProjectType,
-    #     run: pathlib.Path,
-    #     errors: bool=False,
-    #     silent: bool=False,
-    # ) -> None:
-    #     """Remove a single run."""
-    #     if error := self.directories.rm(run):
-    #         if errors:
-    #             raise PathOperationError(error)
-    #         if not silent:
-    #             print(error)
-    #         return
-    #     self.log.rm(run)
-    #     if not silent:
-    #         base = f"Removed {run.name!r}"
-    #         branch = self._get_branch_name(run)
-    #         print(f"{base} from branch {branch!r}" if branch else base)
 
     def _get_branch_name(self, path: pathlib.Path):
         """Get the project branch name, if any, of `path`."""
