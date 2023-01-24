@@ -270,12 +270,18 @@ if __name__ == "__main__":
     parser.add_argument(
         '-p',
         '--path',
-        help="path at which to create the test project",
+        help=(
+            "path at which to create the test project"
+            "\n(default: current directory)"
+        ),
     )
     parser.add_argument(
         '-n',
         '--name',
-        help="name of the test project to create",
+        help=(
+            "name of the test project to create"
+            "\n(default: project_<date-and-time>)"
+        ),
     )
     parser.add_argument(
         '-i',
