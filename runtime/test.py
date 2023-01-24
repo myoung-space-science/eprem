@@ -193,10 +193,76 @@ class Context: # Should this inherit from `eprem.Project`?
         finally:
             print(end)
 
-    def print_status(self, message: str):
-        """Print a status message, if necessary."""
-        if self.verbose:
-            print(f"\n*** {message} ***")
+    def print_status(
+        self,
+        message: str,
+        pad_char: str='*',
+        pad_count: int=3,
+        left_pad: str=None,
+        right_pad: str=None,
+        no_pad: bool=False,
+    ) -> None:
+        """Print a status message, if necessary.
+
+        The optional parameters control the padding on either side of `message`.
+        If this instance's `verbosity` is 0, this method will immediately
+        return.
+
+        Parameters
+        ----------
+        message : string
+            The message to print.
+
+        pad_char : string, default='*'
+            The padding character to use with `pad_count`; ignored if either
+            `left_pad` or `right_pad` is not ``None``.
+
+        pad_count : int, default=3
+            The number of times to repeat `pad_char` in each padding string;
+            ignored if either `left_pad` or `right_pad` is not ``None``.
+
+        left_pad : string, optional
+            The string with which to pad the message on the left.
+
+        right_pad : string, optional
+            The string with which to pad the message on the right.
+
+        no_pad : boolean, default=False
+            If true, do not pad `message` before printing.
+
+        Notes
+        -----
+        * When using `pad_char` and `pad_count`, this method will insert a
+          single space `' '` between the left and right sets of `pad_char` and
+          `message`.
+        * When using `left_pad` and `right_pad`, this method will use each as
+          given (i.e., without inserting `' '`).
+        * When `no_pad` is true, the effect is equivalent to
+          ``print_status(<message>, left_pad='', right_pad='')`` but *not*
+          equivalent to ``print_status(<message>, pad_char='')`` or
+          ``print_status(<message>, pad_count=0)``, which will both still
+          include a single space on either side of the message.
+        """
+        if not self.verbose:
+            return
+        if no_pad:
+            print(f"\n{message}\n")
+            return
+        if left_pad is None and right_pad is None:
+            pad = pad_char * pad_count
+            print(f"\n{pad} {message} {pad}")
+            return
+        if all(s == 'mirror' for s in (left_pad, right_pad)):
+            raise ValueError(
+                "Only one of left_pad or right_pad may be 'mirror'"
+            ) from None
+        lpad = left_pad or ''
+        rpad = right_pad or ''
+        if left_pad == 'mirror':
+            lpad = right_pad[::-1]
+        if right_pad == 'mirror':
+            rpad = left_pad[::-1]
+        print(f"\n{lpad}{message}{rpad}\n")
 
     def print_stage(self, message: str):
         """Print the current test stage, if necessary."""
