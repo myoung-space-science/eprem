@@ -720,6 +720,9 @@ class Project:
                 f"You can access the existing project via {existing}"
             )
         key = str(path)
+        if not self.database.is_file():
+            with self.database.open('w') as fp:
+                json.dump({}, fp)
         with self.database.open('r') as fp:
             existing = dict(json.load(fp))
         if path.exists():
