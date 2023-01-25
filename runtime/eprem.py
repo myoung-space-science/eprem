@@ -355,7 +355,7 @@ _Paths = typing.TypeVar(
 )
 
 
-class _PathOperation:
+class _PathOperation(collections.abc.Iterable):
     """Helper for path-based operations."""
 
     @typing.overload
@@ -382,13 +382,15 @@ class _PathOperation:
         """Create a new instance."""
         self.operator = operator
         self._paths = paths
+        self._force = None
+        self._silent = None
 
     def __bool__(self) -> bool:
         """Called for bool(self)."""
         return bool(self._paths)
 
-    def iterate(self, force: bool=False, silent: bool=False):
-        """Apply the operation to each path, if possible."""
+    def __iter__(self):
+        """Iteratively apply the operation, if possible."""
         error = None
         for path in self._paths:
             result = self.apply(path)
@@ -398,10 +400,16 @@ class _PathOperation:
             else:
                 error = True
             if error:
-                if not force:
+                if not self._force:
                     raise result
-                if not silent:
+                if not self._silent:
                     print(result)
+
+    def errors(self, force: bool=False, silent: bool=False):
+        """Update how this instance handles errors and warnings."""
+        self._force = force
+        self._silent = silent
+        return self
 
     def apply(self, this) -> typing.Union[pathlib.Path, typing.Tuple[pathlib.Path, pathlib.Path]]:
         """Apply the operator to a`this`, if possible."""
@@ -836,7 +844,7 @@ class Project:
         """Set up and execute a new EPREM run within this project."""
         run = name or datetime.datetime.now().strftime('%Y-%m-%dT%H-%M-%S.%f')
         paths = self.directories.mkdir(run, branches=branches)
-        for path in paths.iterate(force=(not errors), silent=silent):
+        for path in paths.errors(force=(not errors), silent=silent):
             self._create_run(
                 config=config,
                 path=path,
@@ -910,7 +918,7 @@ class Project:
             if not silent:
                 print(f"Nothing to rename for {source!r}")
             return
-        for (run, new) in pairs.iterate(force=(not errors), silent=silent):
+        for (run, new) in pairs.errors(force=(not errors), silent=silent):
             self.log.mv(run, new)
             if not silent:
                 branch = self._get_branch_name(run)
@@ -930,7 +938,7 @@ class Project:
             if not silent:
                 print(f"Nothing to remove for {run!r}")
             return
-        for path in paths.iterate(force=(not errors), silent=silent):
+        for path in paths.errors(force=(not errors), silent=silent):
             self.log.rm(path)
             if not silent:
                 base = f"Removed {path.name!r}"
