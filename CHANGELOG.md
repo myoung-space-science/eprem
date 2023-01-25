@@ -2,6 +2,8 @@
 
 ## NEXT
 
+- Introduced interface for creating and modifying a collection of EPREM runs within a defined project (`runtime/project.py`).
+
 ## v0.2.4 (06Jan2023)
 
 - Allow `idealShockFalloff` to be 0 and change default value to 0.
