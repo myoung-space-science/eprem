@@ -8,7 +8,7 @@ import sys
 _RUNTIME = '~/emmrem/open/source/eprem/runtime'
 sys.path.append(str(pathlib.Path(_RUNTIME).expanduser()))
 
-import eprem
+import project
 
 
 class Context: # Should this inherit from `eprem.Project`?
@@ -23,9 +23,9 @@ class Context: # Should this inherit from `eprem.Project`?
         keep: bool=False,
         verbosity: int=0,
     ) -> None:
-        self.root = eprem.fullpath(root)
+        self.root = project.fullpath(root)
         self.branches = branches
-        self.config = eprem.fullpath(config)
+        self.config = project.fullpath(config)
         self.interactive = interactive
         self.keep = keep
         self.verbosity = verbosity
@@ -103,7 +103,7 @@ class Context: # Should this inherit from `eprem.Project`?
 
     def create(self, name: str):
         self.print_stage("create the project")
-        self.project = eprem.Project(self.root / name, branches=self.branches)
+        self.project = project.Project(self.root / name, branches=self.branches)
         if self.verbose:
             print(f"Created project {name!r}\nin {self.root}")
         return self
@@ -296,7 +296,7 @@ def main(
 ) -> None:
     "Test the EPREM runtime interface."
     time = datetime.datetime.now().strftime('%Y-%m-%dT%H-%M-%S')
-    context = Context(eprem.fullpath(path or '.'), config, **kwargs)
+    context = Context(project.fullpath(path or '.'), config, **kwargs)
     with context.create(name or f'project_{time}') as tests:
         execute(tests)
 
@@ -332,7 +332,7 @@ def execute(context: Context):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description=eprem.doc2help(main),
+        description=project.doc2help(main),
         formatter_class=argparse.RawTextHelpFormatter,
     )
     parser.add_argument(

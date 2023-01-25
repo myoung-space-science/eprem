@@ -1,5 +1,5 @@
 """
-Support for operations on EPREM runs.
+Support for creating and modifying EPREM runs with a defined project.
 """
 
 import argparse
