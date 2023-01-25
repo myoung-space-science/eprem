@@ -1162,7 +1162,7 @@ def create(
 cli.subcommands['create'].add_argument(
     '-b',
     '--branches',
-    help="the affected branches\n(default: all)",
+    help="names of project branches\n(default: none)",
     nargs='*',
     metavar=('A', 'B'),
 )
