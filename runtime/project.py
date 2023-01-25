@@ -1403,6 +1403,7 @@ cli.subcommands['rm'].add_argument(
 def show(
     path: PathLike,
     *runs: str,
+    **extra # HACK: Ignore erroneous keywords.
 ) -> None:
     """Display information about an existing project."""
     project = Project(path)
