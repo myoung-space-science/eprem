@@ -479,21 +479,6 @@ class RunPaths(collections.abc.Collection):
         """Called for len(self)."""
         return len(self.listing)
 
-    # def mkdir(self, target: PathLike):
-    #     """Create a path to `target` only if safe to do so."""
-    #     this = fullpath(target)
-    #     if this.exists():
-    #         return f"Cannot create {str(this)!r}: already exists"
-    #     this.mkdir(parents=True)
-    #     if this.parent == str(self.root):
-    #         self.runs[this.name] = set()
-    #         return
-    #     if this.name in self.runs:
-    #         self.runs[this.name] |= this.parent.name
-    #         return
-    #     self.runs[this.name] = {this.parent.name}
-    #     return
-
     def mkdir(
         self,
         target: PathLike,
@@ -614,16 +599,33 @@ class RunPaths(collections.abc.Collection):
     @property
     def runs(self) -> typing.Dict[str, typing.Set[str]]:
         """The available runs, and owning branches, if any."""
-        if self._runs is None:
-            self._runs = {}
-        return self._runs
+        if not self._branch_names:
+            return {
+                run.name: set()
+                for run in (self.root / self.base).glob('*')
+            }
+        base = {
+            run.name: set()
+            for branch in self._branch_names
+            for run in (self.root / branch / self.base).glob('*')
+        }
+        for run, branches in base.items():
+            branches.update(
+                branch for branch in self._branch_names
+                if (self.root / branch / self.base / run).is_dir()
+            )
+        return base
 
     @property
     def branches(self):
         """The project branches, if any, and their available runs."""
-        if self._branches is None:
-            self._branches = {}
-        return self._branches
+        if not self._branch_names:
+            return {}
+        base = {branch: set() for branch in self._branch_names}
+        for run, branches in self.runs.items():
+            for branch in branches:
+                base[branch].update({run})
+        return base
 
     def _get_rundirs(
         self,
