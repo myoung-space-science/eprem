@@ -307,17 +307,22 @@ def execute(context: Context):
         context.run(target)
     context.show()
     renamed = {
-        ('run00', 'run-0'): None,
-        ('run01', 'runA1'): 'A',
-        ('run01', 'runB1'): 'B',
+        ('run00', 'run0'): None,
+        ('run01', 'run1A'): 'A',
+        ('run01', 'run1B'): 'B',
+    } if context.branches else {
+        ('run00', 'run0'): None,
+        ('run01', 'run1'): None,
     }
     for (old, new), branches in renamed.items():
         context.mv(old, new, branches)
     context.show('*')
     removed = [
-        ('runA1', None),
-        ('runB1', None),
-        ('run-0', 'A'),
+        ('run1A', None),
+        ('run1B', None),
+        ('run0', 'A'),
+    ] if context.branches else [
+        ('run1', None),
     ]
     for (target, branches) in removed:
         context.rm(target, branches)
