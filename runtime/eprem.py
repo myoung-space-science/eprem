@@ -437,12 +437,10 @@ class RunPaths(collections.abc.Collection):
     ) -> None:
         self._root = fullpath(root)
         self._base = base or 'runs'
-        self._branch_names = branches
+        self._branches = branches
         self._listing = None
         for directory in self.listing:
             directory.mkdir(parents=True, exist_ok=True)
-        self._branches = None
-        self._runs = None
 
     def update(
         self: RunPathsType,
@@ -462,7 +460,7 @@ class RunPaths(collections.abc.Collection):
             self.root.rename(path)
             self._root = path
         if branches:
-            self._branch_names = branches
+            self._branches = branches
         if base:
             self._base = base
         return self
@@ -599,19 +597,19 @@ class RunPaths(collections.abc.Collection):
     @property
     def runs(self) -> typing.Dict[str, typing.Set[str]]:
         """The available runs, and owning branches, if any."""
-        if not self._branch_names:
+        if not self._branches:
             return {
                 run.name: set()
                 for run in (self.root / self.base).glob('*')
             }
         base = {
             run.name: set()
-            for branch in self._branch_names
+            for branch in self._branches
             for run in (self.root / branch / self.base).glob('*')
         }
         for run, branches in base.items():
             branches.update(
-                branch for branch in self._branch_names
+                branch for branch in self._branches
                 if (self.root / branch / self.base / run).is_dir()
             )
         return base
@@ -619,9 +617,9 @@ class RunPaths(collections.abc.Collection):
     @property
     def branches(self):
         """The project branches, if any, and their available runs."""
-        if not self._branch_names:
+        if not self._branches:
             return {}
-        base = {branch: set() for branch in self._branch_names}
+        base = {branch: set() for branch in self._branches}
         for run, branches in self.runs.items():
             for branch in branches:
                 base[branch].update({run})
@@ -653,8 +651,8 @@ class RunPaths(collections.abc.Collection):
         if self._listing is None:
             self._listing = [
                 self.root / branch / self.base
-                for branch in self._branch_names
-            ] if self._branch_names else [self.root / self.base]
+                for branch in self._branches
+            ] if self._branches else [self.root / self.base]
         return self._listing
 
     @property
