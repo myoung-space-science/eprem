@@ -55,14 +55,31 @@ class RunLog(collections.abc.Mapping):
         Parameters
         ----------
         path : path-like
-            The path at which to create the log file, including the file name.
-            May be relative to the current directory.
+            The path to the log file, including the file name. If the file does
+            not exist, this class will create a new one; otherwise, this class
+            will use the existing file. The path may be relative to the current
+            directory.
 
         common
-            Key-value pairs of attributes that are common to all runs.
+            Key-value pairs of attributes that are common to all runs. Not
+            allowed when retrieving an existing file.
+
+        Raises
+        ------
+        TypeError
+            Caller attempted to set common attributes on an existing log.
         """
-        self._path = fullpath(path)
-        self.dump(common)
+        full = fullpath(path)
+        if full.exists():
+            self._path = full
+            if common:
+                raise TypeError(
+                    "Cannot change common attributes "
+                    "of an existing log"
+                ) from None
+        else:
+            self._path = full
+            self.dump(common)
 
     def __len__(self) -> int:
         """Called for len(self)."""
