@@ -1,6 +1,10 @@
 #!/bin/bash
 
-# Exit immediately if a pipeline returns non-zero status. See
+echo_args() {
+    echo "${@}"
+}
+
+# Treat attempts to expand an unset variable as errors. See
 # https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html
 set -u
 
@@ -41,6 +45,8 @@ ${textbf}DESCRIPTION${textnm}
                 Do not automatically remove the project.
         ${textbf}-v${textnm}, ${textbf}--verbose${textnm}
                 Print runtime messages; repeat to increase verbosity.
+        ${textbf}--dry-run${textnm}
+                Print the sequence of commands but do not execute them.
 "
 }
 
@@ -59,6 +65,7 @@ TEMP=$(getopt \
     -n 'test.sh' \
     -o 'hd:n:kv' \
     -l 'help,directory:,name:,keep,verbose' \
+    -l 'dry-run' \
     -- "$@")
 
 if [ $? -ne 0 ]; then
@@ -75,6 +82,7 @@ name=
 keep=0
 verbose=0
 verbosity=0
+dry_run=0
 
 # Parse optional command-line arguments.
 while [ $# -gt 0 ]; do
@@ -106,6 +114,11 @@ while [ $# -gt 0 ]; do
         ;;
         '-v'|'--verbosity')
             verbosity=$((verbosity+1))
+            shift
+            continue
+        ;;
+        '--dry-run')
+            dry_run=1
             shift
             continue
         ;;
@@ -146,7 +159,11 @@ call_project() {
     if [ ${verbose} -gt 0 ]; then
         args+="-v "
     fi
-    python project.py ${args} "${@}"
+    if [ ${dry_run} == 1 ]; then
+        echo_args "[DRY RUN]" python project.py ${args} "${@}"
+    else
+        python project.py ${args} "${@}"
+    fi
 }
 
 test_run() {
