@@ -12,6 +12,7 @@ import os
 import pathlib
 import shutil
 import subprocess
+import textwrap
 import types
 import typing
 
@@ -1161,7 +1162,13 @@ def create(
         logname=logname,
     )
     if verbose:
-        print(f"Created project {project.name!r} in {project.root}")
+        parts = [
+            f"Created project {project.name!r} in",
+            f"{project.root}",
+        ]
+        single = ' '.join(parts)
+        message = single if len(single) < 70 else '\n'.join(parts)
+        print(message)
 cli.subcommands['create'].add_argument(
     '-b',
     '--branches',
