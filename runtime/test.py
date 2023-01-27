@@ -291,12 +291,12 @@ class Context: # Should this inherit from `eprem.Project`?
 def main(
     config: str,
     name: str=None,
-    path: str=None,
+    directory: str=None,
     **kwargs
 ) -> None:
     "Test the EPREM runtime interface."
     time = datetime.datetime.now().strftime('%Y-%m-%dT%H-%M-%S')
-    context = Context(project.fullpath(path or '.'), config, **kwargs)
+    context = Context(project.fullpath(directory or '.'), config, **kwargs)
     with context.create(name or f'project_{time}') as tests:
         execute(tests)
 
@@ -340,10 +340,10 @@ if __name__ == "__main__":
         help="path to the config file to use; may be relative",
     )
     parser.add_argument(
-        '-p',
-        '--path',
+        '-d',
+        '--directory',
         help=(
-            "path at which to create the test project"
+            "directory in which to create the test project"
             "\n(default: current directory)"
         ),
     )
