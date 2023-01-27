@@ -288,6 +288,9 @@ class Context: # Should this inherit from `eprem.Project`?
         return f"branches {', '.join(f'{branch!r}' for branch in branches)}"
 
 
+_TESTPRJ = 'testprj'
+
+
 def main(
     config: str,
     name: str=None,
@@ -297,7 +300,7 @@ def main(
     "Test the EPREM runtime interface."
     time = datetime.datetime.now().strftime('%Y-%m-%dT%H-%M-%S')
     context = Context(project.fullpath(directory or '.'), config, **kwargs)
-    with context.create(name or f'project_{time}') as tests:
+    with context.create(name or f'{_TESTPRJ}_{time}') as tests:
         execute(tests)
 
 
@@ -326,7 +329,7 @@ def execute(context: Context):
     ]
     for (target, branches) in removed:
         context.rm(target, branches)
-    context.rename(context.project.name.replace('project', 'renamed'))
+    context.rename(context.project.name.replace(_TESTPRJ, 'renamed'))
     context.reset()
 
 
