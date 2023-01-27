@@ -165,6 +165,7 @@ call_project() {
     else
         ${cmnd[@]}
     fi
+    echo 
 }
 
 test_run() {
@@ -180,7 +181,6 @@ test_run() {
     remove_project() {
         if [ ${keep} == 0 ]; then
             call_project "${1}" remove
-            echo 
         fi
     }
 
@@ -198,17 +198,14 @@ test_run() {
     else
         call_project ${path} create
     fi
-    echo 
 
     # Create two test runs (in each branch, if applicable).
     for target in run00 run01; do
         call_project ${path} run -n 2 -t ${target} ${config}
-        echo 
     done
 
     # Display a project-wide summary.
     call_project ${path} show
-    echo 
 
     # Rename runs.
     if [ -n "${branches}" ]; then
@@ -239,7 +236,6 @@ test_run() {
 
     # Display a run-specific summary.
     call_project ${path} show -a
-    echo 
 
     # Remove the test project, if necessary.
     remove_project ${path}
