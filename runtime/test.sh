@@ -159,10 +159,11 @@ call_project() {
     if [ ${verbose} -gt 0 ]; then
         args+="-v "
     fi
+    cmnd=(python project.py ${args} "${@}")
     if [ ${dry_run} == 1 ]; then
-        echo_args "[DRY RUN]" python project.py ${args} "${@}"
+        echo_args "[DRY RUN]" ${cmnd[@]}
     else
-        python project.py ${args} "${@}"
+        ${cmnd[@]}
     fi
 }
 
