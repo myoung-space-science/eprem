@@ -2,7 +2,7 @@
 
 # Exit immediately if a pipeline returns non-zero status. See
 # https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html
-set -e
+set -u
 
 # Define text formatting commands.
 # - textbf: Use bold-face.
