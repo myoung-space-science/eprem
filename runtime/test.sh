@@ -217,6 +217,9 @@ test_run() {
         call_project ${path} mv run01 run1
     fi
 
+    # Display a run-specific summary.
+    call_project ${path} show -a
+
     # Remove runs.
     if [ -n "${branches}" ]; then
         call_project ${path} rm run1A
@@ -233,9 +236,6 @@ test_run() {
 
     # Reset the project.
     call_project ${path} reset
-
-    # Display a run-specific summary.
-    call_project ${path} show -a
 
     # Remove the test project, if necessary.
     remove_project ${path}
