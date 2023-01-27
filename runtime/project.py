@@ -887,15 +887,16 @@ class Project:
                 stderr=subprocess.STDOUT,
             )
             if not silent:
-                print(f"\n[{process.pid}]")
-                print(f"Started at {now}")
+                print(f"[{process.pid}]")
+                print(f"Started {path.name!r} at {now}")
             process.wait()
             if not silent:
-                base = f"Created {path.name!r}"
-                if self.branches:
-                    print(f"{base} in branch {branch.name!r}")
-                else:
-                    print(base)
+                base = f"Finished {path.name!r}"
+                message = (
+                    f"{base} in branch {branch.name!r}" if self.branches
+                    else base
+                )
+                print(message)
         if process.returncode == 0:
             logentry = {
                 'command': command,
