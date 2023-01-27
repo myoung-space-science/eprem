@@ -716,11 +716,7 @@ class Project:
         self._log = None
         self._name = None
         self._root = None
-        self._log = RunLog(
-            attrs.path / attrs.logname,
-            config=attrs.config,
-            output=attrs.output,
-        )
+        self._log = self._get_log(attrs)
         self._attrs = attrs
         self._directories = RunPaths(attrs.path, attrs.branches, attrs.rundir)
         self._isvalid = True
@@ -751,6 +747,17 @@ class Project:
         with self.database.open('w') as fp:
             json.dump(updated, fp, indent=4, sort_keys=True)
         return init
+
+    def _get_log(self, attrs: _ProjectInit):
+        """Create or retrieve the log of runs."""
+        path = attrs.path / attrs.logname
+        if path.exists():
+            return RunLog(path)
+        return RunLog(
+            path,
+            config=attrs.config,
+            output=attrs.output,
+        )
 
     def show(self: ProjectType, *runs: str):
         """Display information about this project or the named run(s).
