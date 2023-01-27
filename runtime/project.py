@@ -1435,26 +1435,29 @@ cli.subcommands['rm'].add_argument(
 def show(
     path: PathLike,
     *runs: str,
-    all: bool=False,
     **extra # HACK: Ignore erroneous keywords.
 ) -> None:
     """Display information about an existing project."""
     project = Project(path)
-    project.show('*') if all else project.show(*runs)
-cli.subcommands['show'].add_argument(
+    project.show(*runs)
+showruns = cli.subcommands['show'].add_mutually_exclusive_group()
+showruns.add_argument(
     '-r',
     '--run',
+    dest='runs',
     help=(
         "display information about the named run"
         ";\nspecify multiple times to include multiple runs"
     ),
     action='extend',
 )
-cli.subcommands['show'].add_argument(
+showruns.add_argument(
     '-a',
     '--all',
+    dest='runs',
     help="display information for all runs",
-    action='store_true',
+    action='store_const',
+    const='*',
 )
 
 
