@@ -20,7 +20,7 @@ Proceed to **Setup**
 
 ### For development
 
-First, clone the repository
+Clone the repository
 ```
 git clone https://github.com/myoung-space-science/eprem.git
 ```
