@@ -4,10 +4,30 @@ The Energetic Particle Radiation Environment Module (EPREM) simulates accelerati
 
 ## Installation
 
+### For general use
+
+Download the latest version -- for example, via your browser or by running
+```
+wget https://prediccs.sr.unh.edu/sim/eprem/releases/eprem-latest.tar.gz
+```
+
+Unpack the file
+```
+tar -zxvf eprem-latest.tar.gz
+```
+
+Proceed to **Setup**
+
+### For development
+
 First, clone the repository
 ```
 git clone https://github.com/myoung-space-science/eprem.git
 ```
+
+Proceed to **Setup**
+
+### Setup
 
 The simplest way to configure, build, and install EPREM is by running `setup.sh`. Type `./setup.sh --help` to learn about its options.
 
@@ -19,13 +39,16 @@ Note that the `--` before `--prefix` is necessary to tell `setup.sh` that you wi
 
 Although `setup.sh` intends to get you up and running as quickly as possible, you will likely need to specify some configuration options. In particular, you will need to point `configure.sh` to installations of [libconfig](http://hyperrealm.github.io/libconfig/) and [NetCDF4](https://unidata.github.io/netcdf4-python/) if they are not already in your `$PATH`. To do so, provide the `--with-libconfig-dir=...` and `--with-netcdf-dir=...` arguments. In the less likely event that there is no MPI distribution in your `$PATH`, you will need to provide the `--with-mpi-dir=...` argument. 
 
-If your system is 'vanilla' (e.g., a new installation) and doesn't have support for autoconf, MPI, libconfig, or netCDF, you'll need to add them. For Debian-based systems (tested with 22.04 Ubuntu), you can run the following commands:
-
+If your system is 'vanilla' (e.g., a new installation) and doesn't have support for MPI, libconfig, or netCDF, you'll need to add them. For Debian-based systems (tested with 22.04 Ubuntu), you can run the following commands:
 ```
-$ sudo apt-get install autoconf
 $ sudo apt install mpich
 $ sudo apt install libconfig-dev
 $ sudo apt install libnetcdf-dev
+```
+
+If you are working with the development version, you'll also need to install the latest version of `autoconf`:
+```
+$ sudo apt install autoconf
 ```
 
 EPREM currently does not support serial operation (although it is possible in certain circumstances); `configure.sh` will do its best to find suitable MPI compilers without the need for explicitly setting `CC=..` and `CXX=...`, but if set-up fails, you may try doing so.
