@@ -153,13 +153,14 @@ prog=project.py
 # Store interface command for convenience.
 runprog="python ${prog}"
 
-call_project() {
-    args="-p ${1} "
+call_interface() {
+    local subcmnd="${1}"
     shift
-    if [ ${verbose} -gt 0 ]; then
+    args="${@} "
+    if [ "${subcmnd}" != "show" -a ${verbose} -gt 0 ]; then
         args+="-v "
     fi
-    cmnd=(python project.py ${args} "${@}")
+    cmnd=(python project.py $subcmnd $args)
     if [ ${dry_run} == 1 ]; then
         echo_args "[DRY RUN]" ${cmnd[@]}
     else
@@ -177,10 +178,27 @@ test_run() {
     now="$(date +%Y-%m-%d)T$(date +%H-%M-%S)"
     path="${directory}"/testprj_${now}
 
+    # Define a function to execute the current project.
+    call_project() {
+        local project="${1}"
+        shift
+        args="${@} "
+        if [ ${verbose} -gt 0 ]; then
+            args+="-v "
+        fi
+        cmnd=(python $project $args)
+        if [ ${dry_run} == 1 ]; then
+            echo_args "[DRY RUN]" ${cmnd[@]}
+        else
+            ${cmnd[@]}
+        fi
+        echo 
+    }
+
     # Define a function to remove the current project.
     remove_project() {
         if [ ${keep} == 0 ]; then
-            call_project "${1}" remove
+            call_interface remove "${1}"
         fi
     }
 
@@ -194,9 +212,9 @@ test_run() {
 
     # Create the test project.
     if [ -n "${branches}" ]; then
-        call_project ${path} create -b ${branches}
+        call_interface create ${path} -b ${branches}
     else
-        call_project ${path} create
+        call_interface create ${path}
     fi
 
     # Create two test runs (in each branch, if applicable).
@@ -205,7 +223,7 @@ test_run() {
     done
 
     # Display a project-wide summary.
-    call_project ${path} show
+    call_interface show ${path}
 
     # Rename runs.
     if [ -n "${branches}" ]; then
@@ -218,7 +236,7 @@ test_run() {
     fi
 
     # Display a run-specific summary.
-    call_project ${path} show -a
+    call_interface show ${path} -a
 
     # Remove runs.
     if [ -n "${branches}" ]; then
@@ -231,11 +249,11 @@ test_run() {
 
     # Rename the project.
     newname="renamed_${now}"
-    call_project ${path} rename ${newname}
+    call_interface rename ${path} ${newname}
     path="${directory}"/${newname}
 
     # Reset the project.
-    call_project ${path} reset
+    call_interface reset ${path}
 
     # Remove the test project, if necessary.
     remove_project ${path}

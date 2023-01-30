@@ -1,5 +1,5 @@
 """
-Support for creating and modifying EPREM runs with a defined project.
+Create and modify EPREM projects.
 """
 
 import argparse
@@ -706,8 +706,6 @@ class Project:
         logname: str=None,
     ) -> None: ...
 
-    database = pathlib.Path('.eprem-runtime.json')
-
     def __init__(self, root, **kwargs):
         """Initialize a new project."""
         self._isvalid = False
@@ -718,34 +716,36 @@ class Project:
         self._log = self._get_log(attrs)
         self._attrs = attrs
         self._directories = RunPaths(attrs.path, attrs.branches, attrs.rundir)
+        shutil.copy('dunder_main.py', attrs.path / '__main__.py')
         self._isvalid = True
 
     def _init_attrs(self, root: pathlib.Path, kwargs: dict):
         """Initialize arguments from input or the database."""
         path = fullpath(root)
-        if path.exists() and kwargs:
-            existing = (
-                f"{self.__class__.__qualname__}"
-                f"({os.path.relpath(path)!r})"
-            )
-            raise ProjectExistsError(
-                f"The project {path.name!r} already exists in {path.parent}. "
-                f"You can access the existing project via {existing}"
-            )
-        key = str(path)
-        if not self.database.is_file():
-            with self.database.open('w') as fp:
-                json.dump({}, fp)
-        with self.database.open('r') as fp:
-            existing = dict(json.load(fp))
-        if path.exists():
-            return _ProjectInit(**existing[key])
-        path.mkdir(parents=True)
-        init = _ProjectInit(root=path, **kwargs)
-        updated = {**existing, key: dict(init)}
-        with self.database.open('w') as fp:
-            json.dump(updated, fp, indent=4, sort_keys=True)
-        return init
+        metadata = path / '.eprem.conf'
+        # If the project doesn't exist, create it.
+        if not path.exists():
+            path.mkdir(parents=True)
+            new = _ProjectInit(root=path, **kwargs)
+            with metadata.open('w') as fp:
+                json.dump(dict(new), fp, indent=4, sort_keys=True)
+            return new
+        # If the project exists and the user isn't attempting to overwrite it,
+        # reinitialize the interface.
+        if not kwargs:
+            with metadata.open('r') as fp:
+                old = dict(json.load(fp))
+            return _ProjectInit(**old)
+        existing = (
+            f"{self.__class__.__qualname__}"
+            f"({os.path.relpath(path)!r})"
+        )
+        # If the project exists and the user is attempting to overwrite it,
+        # raise an error.
+        raise ProjectExistsError(
+            f"The project {path.name!r} already exists in {path.parent}. "
+            f"You can access the existing project via {existing}"
+        )
 
     def _get_log(self, attrs: _ProjectInit):
         """Create or retrieve the log of runs."""
@@ -822,8 +822,8 @@ class Project:
         self._directories.update(root=new)
         # Update the log of runtime paths.
         self.log.update_directory(new)
-        # Update the project database.
-        self._update_database(str(old), str(new))
+        # Update the project metadata.
+        self._update_metadata(str(old), str(new), new / '.eprem.conf')
         # Echo success, if applicable.
         if not silent:
             if self.root.parent == old.parent == pathlib.Path.cwd():
@@ -832,28 +832,23 @@ class Project:
                 result = str(self.root)
             print(f"Renamed project to {result!r}")
 
-    def _update_database(self, source: str, target: str):
-        """Rename this project's path in the project database."""
-        with self.database.open('r') as fp:
+    def _update_metadata(
+        self,
+        source: str,
+        target: str,
+        metadata: pathlib.Path,
+    ) -> None:
+        """Update this project's path-related metadata."""
+        with metadata.open('r') as fp:
             current = dict(json.load(fp))
         updated = {k: v for k, v in current.items() if k != source}
-        this = current[source].copy()
-        this['root'] = target
-        updated[target] = this
-        with self.database.open('w') as fp:
+        updated['root'] = target
+        with metadata.open('w') as fp:
             json.dump(updated, fp, indent=4, sort_keys=True)
 
     def remove(self, force: bool=False, silent: bool=False):
         """Delete this project."""
         shutil.rmtree(self.root, ignore_errors=force)
-        with self.database.open('r') as fp:
-            current = dict(json.load(fp))
-        updated = {
-            k: v for k, v in current.items()
-            if k != str(self.root)
-        }
-        with self.database.open('w') as fp:
-            json.dump(updated, fp, indent=4, sort_keys=True)
         self._isvalid = False
         if not silent:
             print(f"Removed project at {self.root}")
@@ -1194,6 +1189,10 @@ def create(
         message = single if len(single) < 70 else '\n'.join(parts)
         print(message)
 cli.subcommands['create'].add_argument(
+    'path',
+    help="the path to the target project; may be relative",
+)
+cli.subcommands['create'].add_argument(
     '-b',
     '--branches',
     help="names of project branches\n(default: none)",
@@ -1232,6 +1231,12 @@ cli.subcommands['create'].add_argument(
         "\n(default: 'runs.json')"
     ),
 )
+cli.subcommands['create'].add_argument(
+    '-v',
+    '--verbose',
+    help="print runtime messages",
+    action='store_true',
+)
 
 
 @cli.include
@@ -1244,9 +1249,19 @@ def reset(
     project = Project(path)
     project.reset(force=force, silent=(not verbose))
 cli.subcommands['reset'].add_argument(
+    'path',
+    help="the path to the target project; may be relative",
+)
+cli.subcommands['reset'].add_argument(
     '-f',
     '--force',
     help="do not raise exceptions when resetting a project",
+    action='store_true',
+)
+cli.subcommands['reset'].add_argument(
+    '-v',
+    '--verbose',
+    help="print runtime messages",
     action='store_true',
 )
 
@@ -1262,6 +1277,10 @@ def rename(
     project = Project(path)
     project.rename(target, force=force, silent=(not verbose))
 cli.subcommands['rename'].add_argument(
+    'path',
+    help="the path to the target project; may be relative",
+)
+cli.subcommands['rename'].add_argument(
     'target',
     help="the new name of the project",
 )
@@ -1269,6 +1288,12 @@ cli.subcommands['rename'].add_argument(
     '-f',
     '--force',
     help="do not raise exceptions when renaming a project",
+    action='store_true',
+)
+cli.subcommands['rename'].add_argument(
+    '-v',
+    '--verbose',
+    help="print runtime messages",
     action='store_true',
 )
 
@@ -1283,149 +1308,19 @@ def remove(
     project = Project(path)
     project.remove(force=force, silent=(not verbose))
 cli.subcommands['remove'].add_argument(
+    'path',
+    help="the path to the target project; may be relative",
+)
+cli.subcommands['remove'].add_argument(
     '-f',
     '--force',
     help="do not raise exceptions when a removing project",
     action='store_true',
 )
-
-
-@cli.include
-def run(
-    path: PathLike,
-    config: PathLike,
-    target: str=None,
-    branches: typing.Union[str, typing.Iterable[str]]=None,
-    nproc: int=None,
-    force: bool=False,
-    verbose: bool=False,
-    **environment
-) -> None:
-    """Set up and execute a new EPREM run in all applicable branches."""
-    project = Project(path)
-    project.run(
-        config=config,
-        name=target,
-        branches=branches,
-        nproc=nproc,
-        environment=environment,
-        errors=(not force),
-        silent=(not verbose),
-    )
-cli.subcommands['run'].add_argument(
-    'config',
-    help="path to the EPREM config file to use",
-)
-cli.subcommands['run'].add_argument(
-    '-t',
-    '--target',
-    help="the name to the new run\n(default: created from date and time)",
-)
-cli.subcommands['run'].add_argument(
-    '-b',
-    '--branches',
-    help="the affected branches\n(default: all)",
-    nargs='*',
-    metavar=('A', 'B'),
-)
-cli.subcommands['run'].add_argument(
-    '-n',
-    '--nproc',
-    help="the number of parallel processes to use\n(default: 1)",
-    type=int,
-    default=1,
-    metavar='N',
-)
-cli.subcommands['run'].add_argument(
-    '-f',
-    '--force',
-    help="do not raise exceptions when creating a new run",
-    action='store_true',
-)
-cli.subcommands['run'].add_argument(
-    '-m',
-    '--mpirun',
-    help="path to the MPI binary to use\n(default: $PATH)",
-)
-cli.subcommands['run'].add_argument(
-    '-e',
-    '--eprem',
-    help="path to the EPREM executable to run\n(default: $PATH)",
-)
-
-
-@cli.include
-def mv(
-    path: PathLike,
-    source: str,
-    target: str,
-    branches: typing.Union[str, typing.Iterable[str]]=None,
-    force: bool=False,
-    verbose: bool=False,
-) -> None:
-    """Rename an existing EPREM run in all applicable branches."""
-    project = Project(path)
-    project.mv(
-        source,
-        target,
-        branches=branches,
-        errors=(not force),
-        silent=(not verbose),
-    )
-cli.subcommands['mv'].add_argument(
-    'source',
-    help="the current name of the run(s)",
-)
-cli.subcommands['mv'].add_argument(
-    'target',
-    help="the new name of the run(s)",
-)
-cli.subcommands['mv'].add_argument(
-    '-b',
-    '--branches',
-    help="the affected branches\n(default: all)",
-    nargs='*',
-    metavar=('A', 'B'),
-)
-cli.subcommands['mv'].add_argument(
-    '-f',
-    '--force',
-    help="do not raise exceptions when renaming a file",
-    action='store_true',
-)
-
-
-@cli.include
-def rm(
-    path: PathLike,
-    target: str,
-    branches: typing.Union[str, typing.Iterable[str]]=None,
-    force: bool=False,
-    verbose: bool=False,
-) -> None:
-    """Remove an existing EPREM run in all applicable branches."""
-    project = Project(path)
-    project.rm(
-        target,
-        branches=branches,
-        errors=(not force),
-        silent=(not verbose),
-    )
-cli.subcommands['rm'].add_argument(
-    'target',
-    help="the name of the run(s) to remove",
-)
-cli.subcommands['rm'].add_argument(
-    '-b',
-    '--branches',
-    help="the affected branches\n(default: all)",
-    nargs='*',
-    metavar=('A', 'B'),
-)
-cli.subcommands['rm'].add_argument(
-    '-f',
-    '--force',
-    help="do not raise exceptions when removing a file",
+cli.subcommands['remove'].add_argument(
+    '-v',
+    '--verbose',
+    help="print runtime messages",
     action='store_true',
 )
 
@@ -1433,12 +1328,15 @@ cli.subcommands['rm'].add_argument(
 @cli.include
 def show(
     path: PathLike,
-    *runs: str,
-    **extra # HACK: Ignore erroneous keywords.
+    runs: typing.Union[str, typing.Iterable[str]]=None,
 ) -> None:
     """Display information about an existing project."""
     project = Project(path)
-    project.show(*runs)
+    project.show(*list(runs or []))
+cli.subcommands['show'].add_argument(
+    'path',
+    help="the path to the target project; may be relative",
+)
 showruns = cli.subcommands['show'].add_mutually_exclusive_group()
 showruns.add_argument(
     '-r',
@@ -1461,19 +1359,6 @@ showruns.add_argument(
 
 
 if __name__ == "__main__":
-    cli.parser.add_argument(
-        '-p',
-        '--project',
-        dest='path',
-        required=True,
-        help="the path to the target project; may be relative",
-    )
-    cli.parser.add_argument(
-        '-v',
-        '--verbose',
-        help="print runtime messages",
-        action='store_true',
-    )
     cli.run()
 
 

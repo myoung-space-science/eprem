@@ -6,9 +6,6 @@
 # Python files
 __pycache__
 
-# Runtime interface files
-.eprem-runtime.json
-
 # Auto-generated backup files
 *~
 
