@@ -135,11 +135,11 @@ if [ ${verbosity} -gt 0 ]; then
 fi
 
 # Parse required command-line arguments.
-config="${1}"
-if [ -z "${config}" ]; then
+if [ $# == 0 ]; then
     echo "Missing required EPREM config file"
     exit 1
 fi
+config="${1}"
 
 # Check for invalid arguments.
 shift
