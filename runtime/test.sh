@@ -4,9 +4,9 @@ echo_args() {
     echo "${@}"
 }
 
-# Treat attempts to expand an unset variable as errors. See
-# https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html
-set -u
+# See https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html
+# for explanation of flags.
+set -ue
 
 # Define text formatting commands.
 # - textbf: Use bold-face.
