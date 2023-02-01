@@ -720,7 +720,7 @@ class Project:
         self._log = self._get_log(attrs)
         self._attrs = attrs
         self._directories = RunPaths(attrs.path, attrs.branches, attrs.rundir)
-        shutil.copy('dunder_main.py', attrs.path / '__main__.py')
+        shutil.copy(DIRECTORY / 'dunder_main.py', attrs.path / '__main__.py')
         self._isvalid = True
 
     def _init_attrs(self, root: pathlib.Path, kwargs: dict):
