@@ -15,6 +15,11 @@ import sys
 import typing
 
 try:
+    import isort
+    _HAVE_ISORT = True
+except ModuleNotFoundError:
+    _HAVE_ISORT = False
+try:
     import yaml
     _HAVE_YAML = True
 except ModuleNotFoundError:
@@ -760,16 +765,25 @@ class Interface:
         path = attrs.path / '__main__.py'
         if path.exists():
             return
-        with (DIRECTORY / 'dunder_main.py').open('r') as rp:
+        with (DIRECTORY / 'project_main.py').open('r') as rp:
             lines = rp.readlines()
-        target = '_RUNTIME_PATH'
-        payload = [
-            f'{target} = {str(DIRECTORY)!r}\n'
-            if line.startswith(target) else line
-            for line in lines
-        ]
+        payload = lines.copy()
+        import_line = lines.index(f'import {FILEPATH.stem}\n')
+        path_spec = (
+            "import pathlib\n"
+            "import sys\n"
+            "\n"
+            f"sys.path.append({str(DIRECTORY)!r})\n"
+            "\n"
+        )
+        payload.insert(import_line, path_spec)
         with path.open('w') as wp:
             wp.writelines(payload)
+            wp.write("if __name__ == '__main__':\n")
+            wp.write("    cli.run()\n")
+            wp.write("\n")
+        if _HAVE_ISORT:
+            isort.file(path, quiet=True)
         sys.path.append(attrs.root)
 
     def show(self: InterfaceType, *runs: str):

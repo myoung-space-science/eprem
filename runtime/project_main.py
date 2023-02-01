@@ -3,13 +3,7 @@ Create and modify runs in this EPREM project.
 """
 
 import argparse
-import pathlib
-import sys
 import typing
-
-_RUNTIME_PATH = None
-if _RUNTIME_PATH and pathlib.Path(_RUNTIME_PATH).exists():
-    sys.path.append(_RUNTIME_PATH)
 
 import _runtime
 import etc
@@ -180,5 +174,3 @@ cli.subcommands['rm'].add_argument(
 )
 
 
-if __name__ == "__main__":
-    cli.run()
