@@ -1103,7 +1103,7 @@ def create(
     if verbose:
         parts = [
             f"Created project {project.name!r} in",
-            f"{project.root}",
+            f"{project.root.parent}",
         ]
         single = ' '.join(parts)
         message = single if len(single) < 70 else '\n'.join(parts)
