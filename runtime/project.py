@@ -30,6 +30,10 @@ def fullpath(p: PathLike):
     return pathlib.Path(p).expanduser().resolve()
 
 
+FILEPATH = fullpath(__file__)
+DIRECTORY = FILEPATH.parent
+
+
 class LogKeyError(KeyError):
     """The log has no entry for a given key."""
 
