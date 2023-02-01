@@ -6,6 +6,10 @@ import typing
 import project
 
 
+FILEPATH = project.fullpath(__file__)
+DIRECTORY = FILEPATH.parent
+
+
 class Context: # Should this inherit from `eprem.Project`?
     """Context manager for EPREM runtime API tests."""
 
@@ -287,14 +291,17 @@ _TESTPRJ = 'testprj'
 
 
 def main(
-    config: str,
     name: str=None,
     directory: str=None,
     **kwargs
 ) -> None:
     "Test the EPREM runtime interface."
     time = datetime.datetime.now().strftime('%Y-%m-%dT%H-%M-%S')
-    context = Context(project.fullpath(directory or '.'), config, **kwargs)
+    context = Context(
+        project.fullpath(directory or '.'),
+        DIRECTORY / 'test.cfg',
+        **kwargs
+    )
     with context.create(name or f'{_TESTPRJ}_{time}') as tests:
         execute(tests)
 
@@ -332,10 +339,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description=project.doc2help(main),
         formatter_class=argparse.RawTextHelpFormatter,
-    )
-    parser.add_argument(
-        'config',
-        help="path to the config file to use; may be relative",
     )
     parser.add_argument(
         '-d',
