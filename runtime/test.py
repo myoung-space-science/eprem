@@ -297,11 +297,7 @@ def main(
 ) -> None:
     "Test the EPREM runtime interface."
     time = datetime.datetime.now().strftime('%Y-%m-%dT%H-%M-%S')
-    context = Context(
-        project.fullpath(directory or '.'),
-        DIRECTORY / 'test.cfg',
-        **kwargs
-    )
+    context = Context(directory or '.', DIRECTORY / 'test.cfg', **kwargs)
     with context.create(name or f'{_TESTPRJ}_{time}') as tests:
         execute(tests)
 
