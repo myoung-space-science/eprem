@@ -27,7 +27,7 @@ ${textbf}NAME${textnm}
         $cli_name - Test the EPREM command-line runtime interface.
 
 ${textbf}SYNOPSIS${textnm}
-        ${textbf}$cli_name${textnm} [${startul}OPTION${endul}] ${startul}CONFIG${endul}
+        ${textbf}$cli_name${textnm} [${startul}OPTION${endul}]
 
 ${textbf}DESCRIPTION${textnm}
         This script will test all subcommands of the EPREM runtime/project.py 
@@ -134,24 +134,22 @@ if [ ${verbosity} -gt 0 ]; then
     verbose=1
 fi
 
-# Parse required command-line arguments.
-if [ $# == 0 ]; then
-    echo "Missing required EPREM config file"
-    exit 1
-fi
-config="${1}"
-
 # Check for invalid arguments.
-shift
 if [ $# -gt 0 ]; then
     report_bad_args $@
 fi
 
+# Store name of code directory.
+here=$(dirname ${0})
+
 # Declare path to Python interface.
-prog=project.py
+prog=${here}/project.py
 
 # Store interface command for convenience.
 runprog="python ${prog}"
+
+# Declare path to config file.
+config=${here}/test.cfg
 
 call_interface() {
     local subcmnd="${1}"
@@ -160,7 +158,7 @@ call_interface() {
     if [ "${subcmnd}" != "show" -a ${verbose} -gt 0 ]; then
         args+="-v "
     fi
-    cmnd=(python project.py $subcmnd $args)
+    cmnd=(${runprog} $subcmnd $args)
     if [ ${dry_run} == 1 ]; then
         echo_args "[DRY RUN]" ${cmnd[@]}
     else
