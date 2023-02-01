@@ -1,12 +1,7 @@
 import argparse
 import datetime
-import pathlib
 import traceback
 import typing
-import sys
-
-_RUNTIME = '~/emmrem/open/source/eprem/runtime'
-sys.path.append(str(pathlib.Path(_RUNTIME).expanduser()))
 
 import project
 
