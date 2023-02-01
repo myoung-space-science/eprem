@@ -3,14 +3,15 @@ import datetime
 import traceback
 import typing
 
-import project
+import _runtime
+import etc
 
 
-FILEPATH = project.fullpath(__file__)
+FILEPATH = etc.fullpath(__file__)
 DIRECTORY = FILEPATH.parent
 
 
-class Context: # Should this inherit from `eprem.Project`?
+class Context:
     """Context manager for EPREM runtime API tests."""
 
     def __init__(
@@ -22,9 +23,9 @@ class Context: # Should this inherit from `eprem.Project`?
         keep: bool=False,
         verbosity: int=0,
     ) -> None:
-        self.root = project.fullpath(root)
+        self.root = etc.fullpath(root)
         self.branches = branches
-        self.config = project.fullpath(config)
+        self.config = etc.fullpath(config)
         self.interactive = interactive
         self.keep = keep
         self.verbosity = verbosity
@@ -102,7 +103,10 @@ class Context: # Should this inherit from `eprem.Project`?
 
     def create(self, name: str):
         self.print_stage("create the project")
-        self.project = project.Project(self.root / name, branches=self.branches)
+        self.project = _runtime.Interface(
+            self.root / name,
+            branches=self.branches,
+        )
         if self.verbose:
             print(f"Created project {name!r}\nin {self.root}")
         return self
@@ -332,7 +336,7 @@ def execute(context: Context):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description=project.doc2help(main),
+        description=etc.doc2help(main),
         formatter_class=argparse.RawTextHelpFormatter,
     )
     parser.add_argument(

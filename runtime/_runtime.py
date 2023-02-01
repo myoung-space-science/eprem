@@ -1,18 +1,17 @@
 """
-Create and modify EPREM projects.
+Internal implementation of the EPREM runtime interface.
 """
 
 import argparse
 import collections.abc
 import contextlib
 import datetime
-import functools
 import json
 import os
 import pathlib
 import shutil
 import subprocess
-import types
+import sys
 import typing
 
 try:
@@ -21,17 +20,11 @@ try:
 except ModuleNotFoundError:
     _HAVE_YAML = False
 
-
-PathLike = typing.Union[str, os.PathLike]
-
-
-def fullpath(p: PathLike):
-    """Expand and resolve the given path."""
-    return pathlib.Path(p).expanduser().resolve()
-
-
-FILEPATH = fullpath(__file__)
+FILEPATH = pathlib.Path(__file__)
 DIRECTORY = FILEPATH.parent
+sys.path.append(str(DIRECTORY))
+
+import etc
 
 
 class LogKeyError(KeyError):
@@ -52,7 +45,7 @@ RunLogType = typing.TypeVar('RunLogType', bound='RunLog')
 class RunLog(collections.abc.Mapping):
     """Mapping-based interface to an EPREM project log."""
 
-    def __init__(self, path: PathLike, **common) -> None:
+    def __init__(self, path: etc.PathLike, **common) -> None:
         """Create a new project log.
         
         Parameters
@@ -72,7 +65,7 @@ class RunLog(collections.abc.Mapping):
         TypeError
             Caller attempted to set common attributes on an existing log.
         """
-        full = fullpath(path)
+        full = etc.fullpath(path)
         if full.exists():
             self._path = full
             if common:
@@ -98,7 +91,7 @@ class RunLog(collections.abc.Mapping):
             return self._asdict[__k]
         raise LogKeyError(f"Unknown run {__k!r}")
 
-    def update_directory(self, target: PathLike):
+    def update_directory(self, target: etc.PathLike):
         """Update the directory path to this file.
 
         Parameters
@@ -116,7 +109,7 @@ class RunLog(collections.abc.Mapping):
         * This method assumes that the target path exists.
         * This method does not allow changes to the file name.
         """
-        new = fullpath(target)
+        new = etc.fullpath(target)
         if not new.exists():
             raise PathTypeError("The new path must exist") from None
         if not new.is_dir():
@@ -143,7 +136,7 @@ class RunLog(collections.abc.Mapping):
     ) -> RunLogType:
         """Create a new entry from key-value pairs."""
 
-    def create(self, key: PathLike, *mapping: typing.Mapping, **items):
+    def create(self, key: etc.PathLike, *mapping: typing.Mapping, **items):
         contents = self._asdict.copy()
         if mapping and items:
             raise TypeError(
@@ -156,7 +149,7 @@ class RunLog(collections.abc.Mapping):
         self.dump(contents)
         return self
 
-    def load(self, key: PathLike, source: PathLike, filetype: str=None):
+    def load(self, key: etc.PathLike, source: etc.PathLike, filetype: str=None):
         """Create a new entry in this log file from a file."""
         contents = self._asdict.copy()
         contents[str(key)] = self._read_from_file(source, filetype)
@@ -184,7 +177,7 @@ class RunLog(collections.abc.Mapping):
             f"Unknown file type: {filetype!r}"
         ) from None
 
-    def append(self, target: PathLike, key: str, value):
+    def append(self, target: etc.PathLike, key: str, value):
         """Append metadata to `target`."""
         contents = self._asdict.copy()
         run = str(target)
@@ -198,7 +191,7 @@ class RunLog(collections.abc.Mapping):
         self.dump(contents)
         return self
 
-    def mv(self, source: PathLike, target: PathLike):
+    def mv(self, source: etc.PathLike, target: etc.PathLike):
         """Rename `source` to `target` in this log file."""
         old = str(source)
         new = str(target)
@@ -211,7 +204,7 @@ class RunLog(collections.abc.Mapping):
         self.dump(updated)
         return self
 
-    def rm(self, target: PathLike):
+    def rm(self, target: etc.PathLike):
         """Remove the target run from this log file."""
         updated = {k: v for k, v in self._asdict.items() if k != str(target)}
         self.dump(updated)
@@ -261,8 +254,8 @@ class ProjectExistsError(Exception):
 _P = typing.TypeVar('_P', bound=pathlib.Path)
 
 
-class _ProjectInit(typing.Mapping):
-    """A mapping of `~Project` initialization attributes."""
+class _Attrs(typing.Mapping):
+    """A mapping of `~Interface` initialization attributes."""
 
     _kwargs = {
         'branches': {'type': tuple, 'default': ()},
@@ -292,7 +285,7 @@ class _ProjectInit(typing.Mapping):
     def path(self):
         """A fully qualified path to the project root directory."""
         if self._path is None:
-            self._path = fullpath(self.root)
+            self._path = etc.fullpath(self.root)
         return self._path
 
     @property
@@ -452,11 +445,11 @@ class RunPaths(collections.abc.Collection):
 
     def __init__(
         self,
-        root: PathLike,
+        root: etc.PathLike,
         branches: typing.Iterable[str]=None,
         base: str=None,
     ) -> None:
-        self._root = fullpath(root)
+        self._root = etc.fullpath(root)
         self._base = base or 'runs'
         self._branches = branches
         self._listing = None
@@ -465,14 +458,14 @@ class RunPaths(collections.abc.Collection):
 
     def update(
         self: RunPathsType,
-        root: PathLike=None,
+        root: etc.PathLike=None,
         branches: typing.Iterable[str]=None,
         base: str=None,
     ) -> RunPathsType:
         """Update path components."""
         self._listing = None
         if root:
-            path = fullpath(root)
+            path = etc.fullpath(root)
             if path.exists():
                 raise PathTypeError(
                     f"Renaming {self.root.name!r} to {path.name!r} would "
@@ -486,7 +479,7 @@ class RunPaths(collections.abc.Collection):
             self._base = base
         return self
 
-    def __contains__(self, __x: PathLike) -> bool:
+    def __contains__(self, __x: etc.PathLike) -> bool:
         """Called for __x in self."""
         return __x in self.listing
 
@@ -500,16 +493,16 @@ class RunPaths(collections.abc.Collection):
 
     def mkdir(
         self,
-        target: PathLike,
+        target: etc.PathLike,
         branches: typing.Union[str, typing.Iterable[str]]=None,
     ) -> _PathOperation:
         """Create target run(s) if possible."""
         paths = self.define(target, branches=branches)
         return _PathOperation(self._mkdir, paths=paths)
 
-    def _mkdir(self, target: PathLike):
+    def _mkdir(self, target: etc.PathLike):
         """Create the target run if safe to do so."""
-        this = fullpath(target)
+        this = etc.fullpath(target)
         if this.exists():
             return PathOperationError(
                 f"Cannot create {str(this)!r}: already exists"
@@ -519,18 +512,18 @@ class RunPaths(collections.abc.Collection):
 
     def mv(
         self,
-        source: PathLike,
-        target: PathLike,
+        source: etc.PathLike,
+        target: etc.PathLike,
         branches: typing.Union[str, typing.Iterable[str]]=None,
     ) -> _PathOperation:
         """Rename `source` to `target` where possible."""
         pairs = self.define(source, target, branches=branches)
         return _PathOperation(self._mv, paths=pairs)
 
-    def _mv(self, source: PathLike, target: PathLike):
+    def _mv(self, source: etc.PathLike, target: etc.PathLike):
         """Rename `source` to `target` only if safe to do so."""
-        this = fullpath(source)
-        that = fullpath(target)
+        this = etc.fullpath(source)
+        that = etc.fullpath(target)
         if not this.exists():
             return PathOperationError(
                 f"Cannot rename {this}: does not exist"
@@ -549,16 +542,16 @@ class RunPaths(collections.abc.Collection):
 
     def rm(
         self,
-        target: PathLike,
+        target: etc.PathLike,
         branches: typing.Union[str, typing.Iterable[str]]=None,
     ) -> _PathOperation:
         """Remove target run(s), if possible."""
         paths = self.define(pattern=target, branches=branches)
         return _PathOperation(self._rm, paths=paths)
 
-    def _rm(self, target: PathLike):
+    def _rm(self, target: etc.PathLike):
         """Remove the target path only if safe to do so."""
-        this = fullpath(target)
+        this = etc.fullpath(target)
         if not this.exists():
             return PathOperationError(
                 f"Cannot remove {this}: does not exist"
@@ -687,11 +680,11 @@ class RunPaths(collections.abc.Collection):
         return self._base
 
 
-ProjectType = typing.TypeVar('ProjectType', bound='Project')
+InterfaceType = typing.TypeVar('InterfaceType', bound='Interface')
 
 
-class Project:
-    """Interface to an EPREM runtime project."""
+class Interface:
+    """Interface to a group of EPREM runs."""
 
     @typing.overload
     def __init__(
@@ -720,17 +713,17 @@ class Project:
         self._log = self._get_log(attrs)
         self._attrs = attrs
         self._directories = RunPaths(attrs.path, attrs.branches, attrs.rundir)
-        shutil.copy(DIRECTORY / 'dunder_main.py', attrs.path / '__main__.py')
+        self._setup_cli(attrs)
         self._isvalid = True
 
     def _init_attrs(self, root: pathlib.Path, kwargs: dict):
         """Initialize arguments from input or the database."""
-        path = fullpath(root)
+        path = etc.fullpath(root)
         metadata = path / '.eprem.conf'
         # If the project doesn't exist, create it.
         if not path.exists():
             path.mkdir(parents=True)
-            new = _ProjectInit(root=path, **kwargs)
+            new = _Attrs(root=path, **kwargs)
             with metadata.open('w') as fp:
                 json.dump(dict(new), fp, indent=4, sort_keys=True)
             return new
@@ -739,7 +732,7 @@ class Project:
         if not kwargs:
             with metadata.open('r') as fp:
                 old = dict(json.load(fp))
-            return _ProjectInit(**old)
+            return _Attrs(**old)
         existing = (
             f"{self.__class__.__qualname__}"
             f"({os.path.relpath(path)!r})"
@@ -751,7 +744,7 @@ class Project:
             f"You can access the existing project via {existing}"
         )
 
-    def _get_log(self, attrs: _ProjectInit):
+    def _get_log(self, attrs: _Attrs):
         """Create or retrieve the log of runs."""
         path = attrs.path / attrs.logname
         if path.exists():
@@ -762,7 +755,24 @@ class Project:
             output=attrs.output,
         )
 
-    def show(self: ProjectType, *runs: str):
+    def _setup_cli(self, attrs: _Attrs):
+        """Make sure this project can run as a script."""
+        path = attrs.path / '__main__.py'
+        if path.exists():
+            return
+        with (DIRECTORY / 'dunder_main.py').open('r') as rp:
+            lines = rp.readlines()
+        target = '_RUNTIME_PATH'
+        payload = [
+            f'{target} = {str(DIRECTORY)!r}\n'
+            if line.startswith(target) else line
+            for line in lines
+        ]
+        with path.open('w') as wp:
+            wp.writelines(payload)
+        sys.path.append(attrs.root)
+
+    def show(self: InterfaceType, *runs: str):
         """Display information about this project or the named run(s).
         
         Parameters
@@ -778,19 +788,19 @@ class Project:
             else runs
         )
         for run in requested:
-            underline(run)
+            etc.underline(run)
             self._show_run(run)
 
     def _show_project(self):
         """Display information about this project."""
-        underline("Project")
+        etc.underline("Project")
         print(self._attrs)
         if not self.branches:
-            underline("runs")
+            etc.underline("Runs")
             print('\n'.join(self.runs))
             return
         for branch, runs in self.branches.items():
-            underline(f"Branch {branch}")
+            etc.underline(f"Branch {branch}")
             print('\n'.join(runs))
 
     def _show_run(self, run: str):
@@ -812,7 +822,7 @@ class Project:
         # Save the current root directory since it will change.
         old = self.root
         # Convert the target to a full path.
-        new = fullpath(target)
+        new = etc.fullpath(target)
         # Handle an existing target path.
         if new.exists():
             if not force:
@@ -849,24 +859,29 @@ class Project:
         updated['root'] = target
         with metadata.open('w') as fp:
             json.dump(updated, fp, indent=4, sort_keys=True)
+        with contextlib.suppress(ValueError):
+            sys.path.remove(source)
+        sys.path.append(target)
 
     def remove(self, force: bool=False, silent: bool=False):
         """Delete this project."""
         shutil.rmtree(self.root, ignore_errors=force)
+        with contextlib.suppress(ValueError):
+            sys.path.remove(str(self.root))
         self._isvalid = False
         if not silent:
             print(f"Removed project at {self.root}")
 
     def run(
-        self: ProjectType,
-        config: PathLike,
+        self: InterfaceType,
+        config: etc.PathLike,
         name: str=None,
         branches: typing.Union[str, typing.Iterable[str]]=None,
         nproc: int=None,
         environment: typing.Dict[str, str]=None,
         errors: bool=False,
         silent: bool=False,
-    ) -> ProjectType:
+    ) -> InterfaceType:
         """Set up and execute a new EPREM run within this project."""
         run = name or datetime.datetime.now().strftime('%Y-%m-%dT%H-%M-%S.%f')
         paths = self.directories.mkdir(run, branches=branches)
@@ -880,8 +895,8 @@ class Project:
             )
 
     def _create_run(
-        self: ProjectType,
-        config: PathLike,
+        self: InterfaceType,
+        config: etc.PathLike,
         path: pathlib.Path,
         nproc: int=None,
         environment: typing.Dict[str, str]=None,
@@ -891,8 +906,8 @@ class Project:
         """Create a single run."""
         shutil.copy(config, path / self._attrs.config)
         branch = path.parent.parent
-        mpirun = _locate('mpirun', branch, environment or {})
-        eprem = _locate('eprem', branch, environment or {})
+        mpirun = etc.locate('mpirun', branch, environment or {})
+        eprem = etc.locate('eprem', branch, environment or {})
         command = (
             "nice -n 10 ionice -c 2 -n 3 "
             f"{mpirun} --mca btl_base_warn_component_unused 0 "
@@ -932,13 +947,13 @@ class Project:
             )
 
     def mv(
-        self: ProjectType,
+        self: InterfaceType,
         source: str,
         target: str,
         branches: typing.Union[str, typing.Iterable[str]]=None,
         errors: bool=False,
         silent: bool=False,
-    ) -> ProjectType:
+    ) -> InterfaceType:
         """Rename an existing EPREM run within this project."""
         pairs = self.directories.mv(source, target, branches=branches)
         if not pairs:
@@ -953,12 +968,12 @@ class Project:
                 print(f"{base} in branch {branch!r}" if branch else base)
 
     def rm(
-        self: ProjectType,
+        self: InterfaceType,
         run: str,
         branches: typing.Union[str, typing.Iterable[str]]=None,
         errors: bool=False,
         silent: bool=False,
-    ) -> ProjectType:
+    ) -> InterfaceType:
         """Remove an existing EPREM run from this project."""
         paths = self.directories.rm(run, branches=branches)
         if not paths:
@@ -1001,7 +1016,7 @@ class Project:
     def name(self):
         """The name of this project.
         
-        This property is an alias for `~Project.root.name`.
+        This property is an alias for `~Interface.root.name`.
         """
         if self._name is None:
             self._name = self.root.name
@@ -1033,7 +1048,7 @@ class Project:
 
     def __eq__(self, other) -> bool:
         """True if two projects have the same initializing attributes."""
-        if isinstance(other, Project):
+        if isinstance(other, Interface):
             return self._attrs == other._attrs
         return NotImplemented
 
@@ -1046,128 +1061,15 @@ class Project:
         return f"{self.__class__.__qualname__}({self.root})"
 
 
-def _locate(
-    name: str,
-    path: pathlib.Path,
-    environment: typing.Dict[str, str]
-) -> pathlib.Path:
-    """Compute an appropriate path to the named element.
-
-    Notes
-    -----
-    * Intended for use by `~eprem.Project`.
-    * This function will attempt to create a full path (resolving links as
-      necessary) based on `environment` or from `path / name`. If neither exist,
-      it will return `name` as-is, thereby allowing calling code to default to
-      the searching the system path.
-    """
-    location = environment.get(name) or path / name
-    it = fullpath(os.path.realpath(location))
-    return it if it.exists() else pathlib.Path(shutil.which(name))
-
-
-def underline(text: str):
-    """Print underlined text."""
-    dashes = '-' * len(text)
-    print(f"\n{text}")
-    print(dashes)
-
-
-def doc2help(__x) -> None:
-    """Convert a function docstring to CLI help text."""
-    try:
-        target = __x if isinstance(__x, str) else str(__x.__doc__)
-    except AttributeError:
-        raise TypeError(f"Cannot create help text from {__x!r}") from None
-    doclines = target.lstrip('\n').split('\n')
-    summary = doclines[0].rstrip('.')
-    return summary[0].lower() + summary[1:]
-
-
-class CLI(typing.Mapping):
-    """A custom command-line parser for EPREM simulations."""
-
-    def __init__(self, *args, **kwargs):
-        """Create a new instance."""
-        self._args = args
-        self._kwargs = kwargs
-        self._parser = argparse.ArgumentParser(*self._args, **self._kwargs)
-        self._subparsers = None
-        self._subcommands = None
-
-    def __len__(self) -> int:
-        """Called for len(self)."""
-        return len(self.subcommands)
-
-    def __iter__(self) -> typing.Iterator[str]:
-        """Called for iter(self)."""
-        return iter(self.subcommands)
-
-    def __getitem__(self, __k: str) -> argparse.ArgumentParser:
-        """Access subcommands by key."""
-        if __k in self.subcommands:
-            return self.subcommands[__k]
-        raise KeyError(f"No subcommand for {__k!r}")
-
-    def include(self, _func=None, **meta):
-        """Register a subcommand."""
-        def cli_action(func: types.FunctionType):
-            """Decorate `func` as a command-line action."""
-            key = func.__name__
-            subparser = self.subparsers.add_parser(
-                key,
-                help=doc2help(func),
-                description=doc2help(func),
-                formatter_class=argparse.RawTextHelpFormatter,
-                **meta
-            )
-            subparser.set_defaults(func=func)
-            self.subcommands[key] = subparser
-            @functools.wraps(func)
-            def wrapper(*args, **kwargs):
-                return func(*args, **kwargs)
-            return wrapper
-        if _func is None:
-            return cli_action
-        return cli_action(_func)
-
-    def run(self):
-        """Execute operations based on command-like arguments."""
-        parsed = vars(self.parser.parse_args())
-        func = parsed.pop('func')
-        func(**parsed)
-
-    @property
-    def parser(self):
-        """The main argument parser."""
-        return self._parser
-
-    @property
-    def subparsers(self):
-        """The parser for each subcommand."""
-        if self._subparsers is None:
-            self._subparsers = self.parser.add_subparsers(
-                title="supported sub-commands",
-            )
-        return self._subparsers
-
-    @property
-    def subcommands(self) -> typing.Dict[str, argparse.ArgumentParser]:
-        """The registered subcommands."""
-        if self._subcommands is None:
-            self._subcommands = {}
-        return self._subcommands
-
-
-cli = CLI(
+cli = etc.CLI(
     formatter_class=argparse.RawTextHelpFormatter,
-    description=doc2help(__doc__),
+    description=etc.doc2help(__doc__),
 )
 
 
 @cli.include
 def create(
-    path: PathLike,
+    path: etc.PathLike,
     branches: typing.Union[str, typing.Iterable[str]]=None,
     config: str=None,
     output: str=None,
@@ -1176,7 +1078,7 @@ def create(
     verbose: bool=False,
 ) -> None:
     """Create a new project."""
-    project = Project(
+    project = Interface(
         path,
         branches=branches,
         config=config,
@@ -1245,12 +1147,12 @@ cli.subcommands['create'].add_argument(
 
 @cli.include
 def reset(
-    path: PathLike,
+    path: etc.PathLike,
     force: bool=False,
     verbose: bool=False,
 ) -> None:
     """Reset an existing project."""
-    project = Project(path)
+    project = Interface(path)
     project.reset(force=force, silent=(not verbose))
 cli.subcommands['reset'].add_argument(
     'path',
@@ -1272,13 +1174,13 @@ cli.subcommands['reset'].add_argument(
 
 @cli.include
 def rename(
-    path: PathLike,
-    target: PathLike,
+    path: etc.PathLike,
+    target: etc.PathLike,
     force: bool=False,
     verbose: bool=False,
 ) -> None:
     """Rename an existing EPREM project."""
-    project = Project(path)
+    project = Interface(path)
     project.rename(target, force=force, silent=(not verbose))
 cli.subcommands['rename'].add_argument(
     'path',
@@ -1304,12 +1206,12 @@ cli.subcommands['rename'].add_argument(
 
 @cli.include
 def remove(
-    path: PathLike,
+    path: etc.PathLike,
     force: bool=False,
     verbose: bool=False,
 ) -> None:
     """Remove an existing EPREM project."""
-    project = Project(path)
+    project = Interface(path)
     project.remove(force=force, silent=(not verbose))
 cli.subcommands['remove'].add_argument(
     'path',
@@ -1331,11 +1233,11 @@ cli.subcommands['remove'].add_argument(
 
 @cli.include
 def show(
-    path: PathLike,
+    path: etc.PathLike,
     runs: typing.Union[str, typing.Iterable[str]]=None,
 ) -> None:
     """Display information about an existing project."""
-    project = Project(path)
+    project = Interface(path)
     project.show(*list(runs or []))
 cli.subcommands['show'].add_argument(
     'path',
@@ -1360,9 +1262,4 @@ showruns.add_argument(
     action='store_const',
     const='*',
 )
-
-
-if __name__ == "__main__":
-    cli.run()
-
 

@@ -3,17 +3,25 @@ Create and modify runs in this EPREM project.
 """
 
 import argparse
+import pathlib
+import sys
 import typing
 
-import project
+_RUNTIME_PATH = None
+if _RUNTIME_PATH and pathlib.Path(_RUNTIME_PATH).exists():
+    sys.path.append(_RUNTIME_PATH)
+
+import _runtime
+import etc
 
 
-HOME = project.fullpath(__file__).parent
+FILEPATH = etc.fullpath(__file__)
+DIRECTORY = FILEPATH.parent
 
 
-cli = project.CLI(
+cli = etc.CLI(
     formatter_class=argparse.RawTextHelpFormatter,
-    description=project.doc2help(__doc__),
+    description=etc.doc2help(__doc__),
 )
 
 
@@ -28,7 +36,7 @@ def run(
     **environment
 ) -> None:
     """Set up and execute a new EPREM run in all applicable branches."""
-    prj = project.Project(HOME)
+    prj = _runtime.Interface(DIRECTORY)
     prj.run(
         config=config,
         name=target,
@@ -95,7 +103,7 @@ def mv(
     verbose: bool=False,
 ) -> None:
     """Rename an existing EPREM run in all applicable branches."""
-    prj = project.Project(HOME)
+    prj = _runtime.Interface(DIRECTORY)
     prj.mv(
         source,
         target,
@@ -140,7 +148,7 @@ def rm(
     verbose: bool=False,
 ) -> None:
     """Remove an existing EPREM run in all applicable branches."""
-    prj = project.Project(HOME)
+    prj = _runtime.Interface(DIRECTORY)
     prj.rm(
         target,
         branches=branches,

@@ -30,7 +30,7 @@ ${textbf}SYNOPSIS${textnm}
         ${textbf}$cli_name${textnm} [${startul}OPTION${endul}]
 
 ${textbf}DESCRIPTION${textnm}
-        This script will test all subcommands of the EPREM runtime/project.py 
+        This script will test all subcommands of the EPREM runtime 
         command-line utility.
 
         ${textbf}-h${textnm}, ${textbf}--help${textnm}
@@ -134,7 +134,7 @@ fi
 here=$(dirname ${0})
 
 # Declare path to Python interface.
-prog=${here}/project.py
+prog=${here}
 
 # Store interface command for convenience.
 runprog="python ${prog}"
