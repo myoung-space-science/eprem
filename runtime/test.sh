@@ -38,9 +38,6 @@ ${textbf}DESCRIPTION${textnm}
         ${textbf}-d=DIR${textnm}, ${textbf}--directory=DIR${textnm}
                 The directory in which to create the test project
                 (default: current directory).
-        ${textbf}-n=NAME${textnm}, ${textbf}--name=NAME${textnm}
-                The name of the test project to create
-                (default: project_<date-and-time>).
         ${textbf}-k${textnm}, ${textbf}--keep${textnm}
                 Do not automatically remove the project.
         ${textbf}-v${textnm}, ${textbf}--verbose${textnm}
@@ -63,8 +60,8 @@ report_bad_args() {
 # manual page for more information.
 TEMP=$(getopt \
     -n 'test.sh' \
-    -o 'hd:n:kv' \
-    -l 'help,directory:,name:,keep,verbose' \
+    -o 'hd:kv' \
+    -l 'help,directory:,keep,verbose' \
     -l 'dry-run' \
     -- "$@")
 
@@ -78,7 +75,6 @@ unset TEMP
 
 # Set option defaults.
 directory=$(pwd)
-name=
 keep=0
 verbose=0
 verbosity=0
@@ -93,11 +89,6 @@ while [ $# -gt 0 ]; do
         ;;
         '-d'|'--directory')
             directory="${2}"
-            shift 2
-            continue
-        ;;
-        '-n'|'--name')
-            name="${2}"
             shift 2
             continue
         ;;

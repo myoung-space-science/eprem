@@ -291,14 +291,13 @@ _TESTPRJ = 'testprj'
 
 
 def main(
-    name: str=None,
     directory: str=None,
     **kwargs
 ) -> None:
     "Test the EPREM runtime interface."
     time = datetime.datetime.now().strftime('%Y-%m-%dT%H-%M-%S')
     context = Context(directory or '.', DIRECTORY / 'test.cfg', **kwargs)
-    with context.create(name or f'{_TESTPRJ}_{time}') as tests:
+    with context.create(f'{_TESTPRJ}_{time}') as tests:
         execute(tests)
 
 
@@ -342,14 +341,6 @@ if __name__ == "__main__":
         help=(
             "directory in which to create the test project"
             "\n(default: current directory)"
-        ),
-    )
-    parser.add_argument(
-        '-n',
-        '--name',
-        help=(
-            "name of the test project to create"
-            "\n(default: project_<date-and-time>)"
         ),
     )
     parser.add_argument(
