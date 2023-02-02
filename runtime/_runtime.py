@@ -221,10 +221,14 @@ class RunLog(collections.abc.Mapping):
         with self.path.open('r') as fp:
             return dict(json.load(fp))
 
-    def dump(self, contents):
+    def dump(self, contents: typing.Mapping):
         """Write `contents` to this log file."""
+        payload = {
+            k: str(v) if isinstance(v, pathlib.Path) else v
+            for k, v in contents.items()
+        }
         with self.path.open('w') as fp:
-            json.dump(contents, fp, indent=4, sort_keys=True)
+            json.dump(payload, fp, indent=4, sort_keys=True)
 
     @property
     def name(self):
@@ -254,117 +258,6 @@ class PathOperationError(Exception):
 
 class ProjectExistsError(Exception):
     """A project with this name already exists."""
-
-
-_P = typing.TypeVar('_P', bound=pathlib.Path)
-
-
-class _Attrs(typing.Mapping):
-    """A mapping of `~Interface` initialization attributes."""
-
-    _kwargs = {
-        'branches': {'type': tuple, 'default': ()},
-        'config': {'type': str, 'default': 'eprem.cfg'},
-        'output': {'type': str, 'default': 'eprem.log'},
-        'rundir': {'type': str, 'default': 'runs'},
-        'logstem': {'type': str, 'default': 'runs'},
-    }
-
-    def __init__(self, root, **kwargs) -> None:
-        """Create a new instance."""
-        self._attrs = {
-            key: this['type'](kwargs.get(key) or this['default'])
-            for key, this in self._kwargs.items()
-        }
-        self._attrs['root'] = str(root)
-        self._path = None
-        self._root = None
-        self._branches = None
-        self._config = None
-        self._output = None
-        self._rundir = None
-        self._logname = None
-        self._logstem = None
-
-    @property
-    def path(self):
-        """A fully qualified path to the project root directory."""
-        if self._path is None:
-            self._path = etc.fullpath(self.root)
-        return self._path
-
-    @property
-    def root(self):
-        """The project root directory."""
-        if self._root is None:
-            self._root = str(self._attrs['root'])
-        return self._root
-
-    @property
-    def branches(self) -> typing.Tuple[str]:
-        """The distinct project branches, if any."""
-        if self._branches is None:
-            self._branches = tuple(self._attrs['branches'])
-        return self._branches
-
-    @property
-    def config(self):
-        """The name of the standard project configuration file."""
-        if self._config is None:
-            self._config = str(self._attrs['config'])
-        return self._config
-
-    @property
-    def output(self):
-        """The name of the standard project output log."""
-        if self._output is None:
-            # Ensure a string file name, even if the initialization argument was
-            # a path. We don't want to write to an arbitrary location on disk!
-            self._output = pathlib.Path(self._attrs['output']).name
-        return self._output
-
-    @property
-    def rundir(self):
-        """The name of the standard project run directory."""
-        if self._rundir is None:
-            self._rundir = str(self._attrs['rundir'])
-        return self._rundir
-
-    @property
-    def logname(self):
-        """The name of the project-wide log file."""
-        if self._logname is None:
-            self._logname = pathlib.Path(
-                self.logstem
-            ).with_suffix('.json').name
-        return self._logname
-
-    @property
-    def logstem(self):
-        """The name (without suffix) of the project-wide log file."""
-        if self._logstem is None:
-            self._logstem = str(self._attrs['logstem'])
-        return self._logstem
-
-    def __len__(self) -> int:
-        """Called for len(self)."""
-        return len(self._attrs)
-
-    def __iter__(self) -> typing.Iterable[str]:
-        """Called for iter(self)."""
-        return iter(self._attrs)
-
-    def __getitem__(self, __k: str):
-        """Key-based access to attribute values."""
-        if __k in self._attrs:
-            return self._attrs[__k]
-        raise KeyError(f"Unknown attribute {__k!r}")
-
-    def __repr__(self) -> str:
-        """An unambiguous representation of this object."""
-        display = {k: v for k, v in self.items() if k != 'branches'}
-        display['branches'] = self['branches'] or None
-        return '\n'.join(f"{k}: {v}" for k, v in display.items())
 
 
 _Paths = typing.TypeVar(
@@ -685,59 +578,133 @@ class RunPaths(collections.abc.Collection):
         return self._base
 
 
+class Attrs:
+    """A container for `Interface` attributes."""
+
+    def __init__(self, path: etc.PathLike, **kwargs) -> None:
+        root = etc.fullpath(path)
+        branches = tuple(kwargs.get('branches') or ())
+        config = str(kwargs.get('config') or 'eprem.cfg')
+        output = etc.localpath(kwargs.get('output') or 'eprem.log')
+        rundir = etc.localpath(kwargs.get('rundir') or 'runs')
+        logname = etc.localpath(
+            kwargs.get('logname') or 'runs'
+        ).with_suffix('.json')
+        self._public = {
+            'root': root,
+            'branches': branches,
+            'config': config,
+            'output': output,
+            'rundir': rundir,
+            'logname': logname,
+        }
+        self._serial = None
+
+    @property
+    def serial(self):
+        """A serializable representation of this object."""
+        if self._serial is None:
+            self._serial = {
+                k: self._serialize(v)
+                for k, v in self._public.items()
+            }
+        return self._serial
+
+    def _serialize(self, this):
+        """Convert `this` to a serializable type."""
+        if isinstance(this, pathlib.Path):
+            return str(this)
+        return this
+
+    @property
+    def root(self) -> pathlib.Path:
+        """The project root directory."""
+        return self._public['root']
+
+    @property
+    def branches(self) -> typing.Tuple[str]:
+        """The distinct project branches, if any."""
+        return self._public['branches']
+
+    @property
+    def config(self) -> str:
+        """The name of the standard project configuration file."""
+        return self._public['config']
+
+    @property
+    def output(self) -> pathlib.Path:
+        """The local path component of the project output log."""
+        return self._public['output']
+
+    @property
+    def rundir(self) -> pathlib.Path:
+        """The local path component of the project run directory."""
+        return self._public['rundir']
+
+    @property
+    def logname(self) -> pathlib.Path:
+        """The local path component of the project log file."""
+        return self._public['logname']
+
+    def __repr__(self) -> str:
+        """An unambiguous representation of this object."""
+        display = {k: v for k, v in self._public.items() if k != 'branches'}
+        display['branches'] = self._public['branches'] or None
+        return '\n'.join(f"{k}: {v}" for k, v in display.items())
+
+
 InterfaceType = typing.TypeVar('InterfaceType', bound='Interface')
 
 
 class Interface:
     """Interface to a group of EPREM runs."""
 
-    @typing.overload
     def __init__(
         self,
-        root: typing.Union[str, pathlib.Path],
-    ) -> None: ...
-
-    @typing.overload
-    def __init__(
-        self,
-        root: typing.Union[str, pathlib.Path],
+        root: etc.PathLike,
         branches: typing.Iterable[str]=None,
         config: str=None,
         output: str=None,
         rundir: str=None,
         logname: str=None,
-    ) -> None: ...
-
-    def __init__(self, root, **kwargs):
+    ) -> None:
         """Initialize a new project."""
         self._isvalid = False
-        attrs = self._init_attrs(root, kwargs)
+        attrs = self._init_attrs(
+            root,
+            branches=branches,
+            config=config,
+            output=output,
+            rundir=rundir,
+            logname=logname,
+        )
         self._log = None
         self._name = None
         self._root = None
         self._log = self._get_log(attrs)
-        self._attrs = attrs
-        self._directories = RunPaths(attrs.path, attrs.branches, attrs.rundir)
+        self._directories = RunPaths(attrs.root, attrs.branches, attrs.rundir)
         self._setup_cli(attrs)
+        self._attrs = attrs
         self._isvalid = True
 
-    def _init_attrs(self, root: pathlib.Path, kwargs: dict):
+    def _init_attrs(self, root: etc.PathLike, **options):
         """Initialize arguments from input or the database."""
         path = etc.fullpath(root)
         metadata = path / '.eprem.conf'
         # If the project doesn't exist, create it.
         if not path.exists():
-            path.mkdir(parents=True)
-            new = _Attrs(root=path, **kwargs)
+            attrs = Attrs(root, **options)
+            attrs.root.mkdir(parents=True)
             with metadata.open('w') as fp:
-                json.dump(dict(new), fp, indent=4, sort_keys=True)
-            return new
+                json.dump(attrs.serial, fp, indent=4, sort_keys=True)
+            return attrs
         # If the project exists and the user isn't attempting to overwrite it,
         # reinitialize the interface.
-        if not kwargs:
+        if not options or all(v is None for v in options.values()):
             with metadata.open('r') as fp:
                 old = dict(json.load(fp))
-            return _Attrs(**old)
+            here = old.pop('root')
+            return Attrs(here, **old)
         existing = (
             f"{self.__class__.__qualname__}"
             f"({os.path.relpath(path)!r})"
@@ -749,9 +716,9 @@ class Interface:
             f"You can access the existing project via {existing}"
         )
 
-    def _get_log(self, attrs: _Attrs):
+    def _get_log(self, attrs: Attrs):
         """Create or retrieve the log of runs."""
-        path = attrs.path / attrs.logname
+        path = attrs.root / attrs.logname
         if path.exists():
             return RunLog(path)
         return RunLog(
@@ -760,9 +727,9 @@ class Interface:
             output=attrs.output,
         )
 
-    def _setup_cli(self, attrs: _Attrs):
+    def _setup_cli(self, attrs: Attrs):
         """Make sure this project can run as a script."""
-        path = attrs.path / '__main__.py'
+        path = attrs.root / '__main__.py'
         if path.exists():
             return
         with (DIRECTORY / 'project_main.py').open('r') as rp:
