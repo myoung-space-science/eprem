@@ -1,4 +1,5 @@
-"""Support for the EPREM runtime interface.
+"""
+Support for the EPREM runtime interface.
 """
 
 import argparse
@@ -16,6 +17,27 @@ PathLike = typing.Union[str, os.PathLike]
 def fullpath(p: PathLike):
     """Expand and resolve the given path."""
     return pathlib.Path(p).expanduser().resolve()
+
+
+def localpath(p: PathLike, normalize: bool=False):
+    """Convert `p` to local path.
+    
+    This function simply ensures that the return value is an instance of
+    ``pathlib.Path`` without parents. It may be useful for ensuring that future
+    operations don't write to an arbitrary location on disk.
+
+    Parameters
+    ----------
+    p : path-like
+        A representation of the path to convert.
+
+    normalize : bool, default=False
+        If true, expand `~` and fully resolve `p` before extracting its final
+        component. By default, this function will create and intermediate path
+        from `p` as-is.
+    """
+    path = fullpath(p) if normalize else pathlib.Path(p)
+    return pathlib.Path(path.name)
 
 
 def locate(
