@@ -686,11 +686,13 @@ class Interface:
         output: str=None,
         rundir: str=None,
         logname: str=None,
+        copy: etc.PathLike=None,
     ) -> None:
         """Initialize a new project."""
         self._isvalid = False
-        attrs = self._init_attrs(
+        attrs = self._init_project(
             root,
+            copy=copy,
             branches=branches,
             config=config,
             inputs=inputs,
@@ -705,27 +707,36 @@ class Interface:
         self._directories = RunPaths(attrs.root, attrs.branches, attrs.rundir)
         self._setup_cli(attrs)
         attrs.inputs.mkdir(parents=True, exist_ok=True)
+        if copy:
+            copied = self._restore_project(etc.fullpath(copy))
+            shutil.copytree(copied.inputs, attrs.inputs, dirs_exist_ok=True)
         self._attrs = attrs
         self._isvalid = True
 
-    def _init_attrs(self, root: etc.PathLike, **options):
+    def _init_project(
+        self,
+        root: etc.PathLike,
+        copy: etc.PathLike=None,
+        **options,
+    ) -> Attrs:
         """Initialize arguments from input or the database."""
+        if not copy:
+            return self._get_attrs(root, **options)
+        restored = self._restore_project(etc.fullpath(copy))
+        copied = restored.options
+        copied.update(options)
+        return self._get_attrs(root, **copied)
+
+    def _get_attrs(self, root: etc.PathLike, **options):
+        """Create or restore project attributes."""
         path = etc.fullpath(root)
-        metadata = path / '.eprem.conf'
         # If the project doesn't exist, create it.
         if not path.exists():
-            attrs = Attrs(root, **options)
-            attrs.root.mkdir(parents=True)
-            with metadata.open('w') as fp:
-                json.dump(attrs.serial, fp, indent=4, sort_keys=True)
-            return attrs
+            return self._create_project(path, **options)
         # If the project exists and the user isn't attempting to overwrite it,
         # reinitialize the interface.
         if not options or all(v is None for v in options.values()):
-            with metadata.open('r') as fp:
-                old = dict(json.load(fp))
-            here = old.pop('root')
-            return Attrs(here, **old)
+            return self._restore_project(path)
         existing = (
             f"{self.__class__.__qualname__}"
             f"({os.path.relpath(path)!r})"
@@ -736,6 +747,21 @@ class Interface:
             f"The project {path.name!r} already exists in {path.parent}. "
             f"You can access the existing project via {existing}"
         )
+
+    def _create_project(self, path: pathlib.Path, **options):
+        """Set attributes on a new project."""
+        attrs = Attrs(path, **options)
+        attrs.root.mkdir(parents=True)
+        with (path / '.eprem.conf').open('w') as fp:
+            json.dump(attrs.serial, fp, indent=4, sort_keys=True)
+        return attrs
+
+    def _restore_project(self, path: pathlib.Path):
+        """Load attributes of an existing project."""
+        with (path / '.eprem.conf').open('r') as fp:
+            old = dict(json.load(fp))
+        here = old.pop('root')
+        return Attrs(here, **old)
 
     def _get_log(self, attrs: Attrs):
         """Create or retrieve the log of runs."""
@@ -1079,6 +1105,7 @@ def create(
     output: str=None,
     rundir: str=None,
     logname: str=None,
+    copy: etc.PathLike=None,
     verbose: bool=False,
 ) -> None:
     """Create a new project."""
@@ -1090,6 +1117,7 @@ def create(
         output=output,
         rundir=rundir,
         logname=logname,
+        copy=copy,
     )
     if verbose:
         parts = [
@@ -1150,6 +1178,11 @@ cli.subcommands['create'].add_argument(
         "the name of the file to which to log run metadata"
         "\n(default: 'runs.json')"
     ),
+)
+cli.subcommands['create'].add_argument(
+    '--copy',
+    help="create a copy of PROJECT",
+    metavar='PROJECT',
 )
 cli.subcommands['create'].add_argument(
     '-v',
