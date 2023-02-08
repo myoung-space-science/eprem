@@ -884,7 +884,9 @@ class Interface:
         silent: bool=False,
     ) -> None:
         """Create a single run."""
-        shutil.copy(config, path / self._attrs.config)
+        prjcfg = self.root / 'inputs' / config
+        inputs = prjcfg if prjcfg.is_file() else etc.fullpath(config)
+        shutil.copy(inputs, path / self._attrs.config)
         branch = path.parent.parent
         mpirun = etc.locate('mpirun', branch, environment or {})
         eprem = etc.locate('eprem', branch, environment or {})

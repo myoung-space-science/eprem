@@ -42,7 +42,12 @@ def run(
     )
 cli.subcommands['run'].add_argument(
     'config',
-    help="path to the EPREM config file to use",
+    help=(
+        "the EPREM config file to use"
+        ";\nmay be a (possibly relative) path"
+        "\nor the name of a file in"
+        f"\n{DIRECTORY}/inputs"
+    ),
 )
 cli.subcommands['run'].add_argument(
     '-t',
