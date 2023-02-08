@@ -881,7 +881,6 @@ class Interface:
         path: pathlib.Path,
         nproc: int=None,
         environment: typing.Dict[str, str]=None,
-        errors: bool=False,
         silent: bool=False,
     ) -> None:
         """Create a single run."""
