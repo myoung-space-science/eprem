@@ -585,6 +585,7 @@ class Attrs:
         root = etc.fullpath(path)
         branches = tuple(kwargs.get('branches') or ())
         config = str(kwargs.get('config') or 'eprem.cfg')
+        inputs = etc.localpath(kwargs.get('inputs') or 'inputs')
         output = etc.localpath(kwargs.get('output') or 'eprem.log')
         rundir = etc.localpath(kwargs.get('rundir') or 'runs')
         logname = etc.localpath(
@@ -594,6 +595,7 @@ class Attrs:
             'root': root,
             'branches': branches,
             'config': config,
+            'inputs': root / inputs,
             'output': output,
             'rundir': rundir,
             'logname': logname,
@@ -632,6 +634,11 @@ class Attrs:
         return self._public['config']
 
     @property
+    def inputs(self) -> pathlib.Path:
+        """The project subdirectory containing configuration files."""
+        return self._public['inputs']
+
+    @property
     def output(self) -> pathlib.Path:
         """The local path component of the project output log."""
         return self._public['output']
@@ -664,6 +671,7 @@ class Interface:
         root: etc.PathLike,
         branches: typing.Iterable[str]=None,
         config: str=None,
+        inputs: etc.PathLike=None,
         output: str=None,
         rundir: str=None,
         logname: str=None,
@@ -674,6 +682,7 @@ class Interface:
             root,
             branches=branches,
             config=config,
+            inputs=inputs,
             output=output,
             rundir=rundir,
             logname=logname,
@@ -684,6 +693,7 @@ class Interface:
         self._log = self._get_log(attrs)
         self._directories = RunPaths(attrs.root, attrs.branches, attrs.rundir)
         self._setup_cli(attrs)
+        attrs.inputs.mkdir(parents=True, exist_ok=True)
         self._attrs = attrs
         self._isvalid = True
 
@@ -1054,6 +1064,7 @@ def create(
     path: etc.PathLike,
     branches: typing.Union[str, typing.Iterable[str]]=None,
     config: str=None,
+    inputs: str=None,
     output: str=None,
     rundir: str=None,
     logname: str=None,
@@ -1064,6 +1075,7 @@ def create(
         path,
         branches=branches,
         config=config,
+        inputs=inputs,
         output=output,
         rundir=rundir,
         logname=logname,
@@ -1094,6 +1106,15 @@ cli.subcommands['create'].add_argument(
         "the name to give runtime config files"
         "\n(default: 'eprem.cfg')"
     ),
+)
+cli.subcommands['create'].add_argument(
+    '-i',
+    '--inputs',
+    help=(
+        "the name of the project subdirectory that will contain"
+        "\nruntime configuration files"
+        "\n(default 'inputs')"
+    )
 )
 cli.subcommands['create'].add_argument(
     '-o',
