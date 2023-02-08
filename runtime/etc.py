@@ -33,7 +33,7 @@ def localpath(p: PathLike, normalize: bool=False):
 
     normalize : bool, default=False
         If true, expand `~` and fully resolve `p` before extracting its final
-        component. By default, this function will create and intermediate path
+        component. By default, this function will create an intermediate path
         from `p` as-is.
     """
     path = fullpath(p) if normalize else pathlib.Path(p)
