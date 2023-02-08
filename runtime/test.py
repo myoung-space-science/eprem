@@ -358,7 +358,7 @@ if __name__ == "__main__":
         '--keep',
         help=(
             "do not remove the project"
-            ", or prompt for removal in interactive mode"
+            " (prompt for removal in interactive mode)"
         ),
         action='store_true',
     )
