@@ -78,12 +78,12 @@ cli.subcommands['run'].add_argument(
 cli.subcommands['run'].add_argument(
     '-m',
     '--mpirun',
-    help="path to the MPI binary to use\n(default: $PATH)",
+    help="path to the MPI binary to use\n(default: search $PATH)",
 )
 cli.subcommands['run'].add_argument(
     '-e',
     '--eprem',
-    help="path to the EPREM executable to run\n(default: $PATH)",
+    help="path to the EPREM executable to run\n(default: search $PATH)",
 )
 cli.subcommands['run'].add_argument(
     '-v',
