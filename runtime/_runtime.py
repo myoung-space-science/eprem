@@ -601,6 +601,17 @@ class Attrs:
             'logname': logname,
         }
         self._serial = None
+        self._options = None
+
+    @property
+    def options(self):
+        """The values of optional attributes."""
+        if self._options is None:
+            self._options = {
+                k: v for k, v in self._public.items()
+                if k != 'root'
+            }
+        return self._options
 
     @property
     def serial(self):
