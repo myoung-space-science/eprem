@@ -12,6 +12,8 @@ trim() {
     printf '%s' "$var"
 }
 
+# Set up the function that prints a section header.
+DRY_RUN=
 print_banner() {
     if [ $verbose == 1 ]; then
         printf "
@@ -31,9 +33,11 @@ run_stage() {
     fi
 }
 
-# Exit immediately if a pipeline returns non-zero status. See
-# https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html
-set -e
+# See https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html
+# - e => Exit immediately if a pipeline returns non-zero status.
+# - u => Treat unset variables and parameters (with certain exceptions) as
+#   errors when performing parameter expansion.
+set -eu
 
 # Define text formatting commands.
 # - textbf: Use bold-face.
@@ -54,7 +58,7 @@ ${textbf}NAME${textnm}
         $cli_name - Run the full build process
 
 ${textbf}SYNOPSIS${textnm}
-        ${textbf}$cli_name${textnm} [${startul}OPTION${endul}] -- ${startul}ARGS${endul}
+        ${textbf}$cli_name${textnm} [${startul}OPTION${endul}]
 
 ${textbf}DESCRIPTION${textnm}
         This script is designed to provide a single command for quickly (albeit 
@@ -63,13 +67,11 @@ ${textbf}DESCRIPTION${textnm}
         following steps to configure, build, and (optionally) install EPREM:
 
         $ autoreconf --install --symlink [--verbose]
-        $ ./configure ${startul}ARGS${endul} [--silent]
+        $ ./configure [...] [--silent]
         $ make
         $ [make install]
 
-        Note that any arguments following '--' will pass to ./configure and 
-        will override internally set arguments (e.g., compiler or pre-processor 
-        flags set as a result of passing ${textbf}--debug${textnm} or ${textbf}--optimize${textnm}).
+        where the arguments to ./configure depend on the selected options.
 
         ${textbf}-h${textnm}, ${textbf}--help${textnm}
                 Display help and exit.
@@ -92,9 +94,18 @@ ${textbf}DESCRIPTION${textnm}
         ${textbf}--install[=DIR]${textnm}
                 Install the executable. If DIR is included, this will directly 
                 install the executable in DIR; if not, it will install it to 
-                the default location for the host system. The default action is 
-                to not install the executable. Including DIR is the equivalent 
-                of passing --bindir=DIR to ./configure.
+                the default location for the host system or PREFIX, if set (see 
+                --prefix). The default action is to not install the executable. 
+                Including DIR is the equivalent of passing --bindir=DIR to 
+                ./configure. Using this in combination with --prefix=PREFIX 
+                will install the executable in PREFIX/DIR.
+        ${textbf}--prefix=PREFIX${textnm}
+                Set the top-level installation directory (default: /usr/local). 
+                This is equivalent to passing --prefix=PREFIX to ./configure. 
+                Using this in combination with --install=DIR will install the 
+                executable in PREFIX/DIR; using this in combination with 
+                --install will install the executable in PREFIX/bin. Note that 
+                using this option alone will not trigger installation.
         ${textbf}--debug${textnm}
                 Build EPREM for debugging. Specifically, this will pass the 
                 '-g' compiler flag (by modifying the environment variable 
@@ -123,9 +134,10 @@ report_bad_arg()
 # Set option defaults.
 verbose=0
 install_opt=0
-dry_run=0
+prefix=
 debug=0
 optimize=0
+dry_run=0
 mpi_dir=
 libconfig_dir=
 netcdf_dir=
@@ -136,8 +148,10 @@ deps_dir=
 # manual page for more information.
 TEMP=$(getopt \
     -n 'setup.sh' \
-    -o '+hv' \
-    -l 'help,verbose,install::,debug,optimize,dry-run' \
+    -o 'hv' \
+    -l 'help,verbose,' \
+    -l 'install::,prefix:' \
+    -l 'debug,optimize,dry-run' \
     -l 'with-mpi-dir:,with-libconfig-dir:,with-netcdf-dir:' \
     -l 'with-ext-deps:' \
     -- "$@")
@@ -161,11 +175,6 @@ while [ $# -gt 0 ]; do
             shift
             continue
         ;;
-        '--dry-run')
-            dry_run=1
-            shift
-            continue
-        ;;
         '--install')
             install_opt=1
             case "$2" in
@@ -178,6 +187,11 @@ while [ $# -gt 0 ]; do
             shift 2
             continue
         ;;
+        '--prefix')
+            prefix="${2}"
+            shift 2
+            continue
+        ;;
         '--debug')
             debug=1
             shift
@@ -185,6 +199,11 @@ while [ $# -gt 0 ]; do
         ;;
         '--optimize')
             optimize=1
+            shift
+            continue
+        ;;
+        '--dry-run')
+            dry_run=1
             shift
             continue
         ;;
@@ -215,12 +234,26 @@ while [ $# -gt 0 ]; do
     esac
 done
 
-# Store all un-parsed arguments to pass to ./configure. Note that the default
-# behavior when checking command-line options will be to not include environment
-# variables in `CF_FLAGS`, rather than to include environment variables with
-# existing values (e.g., CFLAGS=${CFLAGS}). This is intended to leave as much
-# control as possible with the user.
-CF_ARGS="$@"
+# Collect extra arguments. These may indicate that the user incorrectly entered
+# an argument.
+extra_args="$@"
+if [ -n "${extra_args}" ]; then
+    echo
+    echo "Found the following unrecognized argument(s):"
+    echo
+    for arg in ${extra_args[@]}; do
+        echo ">   $arg"
+    done
+    echo
+    echo "Did you misspell something?"
+    echo
+    echo "Note that this program does not support passing arbitrary arguments"
+    echo "to configure or make. If you want (and know how to) build the code"
+    echo "in a way that this program does not provide, you may directly call"
+    echo "./configure [...] && make && make install"
+    echo
+    exit 1
+fi
 
 # Update flags based on --with-ext-deps option.
 if [ -n "$deps_dir" ]; then
@@ -231,6 +264,12 @@ if [ -n "$deps_dir" ]; then
         netcdf_dir=${deps_dir}/netcdf
     fi
 fi
+
+# Initialize temporary variables for --with-<package>-dir options.
+SH_CFLAGS=
+SH_CXXFLAGS=
+SH_CPPFLAGS=
+SH_LDFLAGS=
 
 # Update flags based on --with-<package>-dir options.
 if [ -n "$mpi_dir" ]; then
@@ -264,6 +303,15 @@ else
         SH_CPPFLAGS="-DNDEBUG ${SH_CPPFLAGS}"
     fi
 fi
+
+# Set any unset environment variables to null.
+${CFLAGS:=}
+${CXXFLAGS:=}
+${CPPFLAGS:=}
+${LDFLAGS:=}
+
+# Initialize a temporary variable for ./configure options.
+CF_FLAGS=
 
 # Collect all non-empty flags.
 SH_CFLAGS=$(trim "${SH_CFLAGS} ${CFLAGS}")
@@ -304,14 +352,13 @@ else
     run_stage "autoreconf ${AR_FLAGS}"
 fi
 
-# Update configure flags based on --install option.
+# Update configure flags based on installation options.
 if [ $install_opt == 1 ] && [ "x${install_dir}" != x ]; then
     CF_FLAGS="${CF_FLAGS} --bindir=${install_dir}"
 fi
-
-# Augment local configure arguments with user-given arguments at the last
-# moment, to ensure that the user's values take precedence.
-CF_FLAGS=$(trim "${CF_FLAGS} ${CF_ARGS}")
+if [ -n "$prefix" ]; then
+    CF_FLAGS="${CF_FLAGS} --prefix=${prefix}"
+fi
 
 # Run configure stage.
 run_stage "./configure ${CF_FLAGS}"
