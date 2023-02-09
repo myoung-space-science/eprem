@@ -3,6 +3,7 @@
 ## NEXT
 
 - Introduced interface for creating and modifying a collection of EPREM runs within a defined project (`runtime/project.py`).
+- Redefined options for `setup.sh`.
 
 ## v0.2.4 (06Jan2023)
 
