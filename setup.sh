@@ -107,19 +107,17 @@ ${textbf}DESCRIPTION${textnm}
                 --install will install the executable in PREFIX/bin. Note that 
                 using this option alone will not trigger installation.
         ${textbf}--debug${textnm}
-                Build EPREM for debugging. Specifically, this will pass the 
-                '-g' compiler flag (by modifying the environment variable 
-                ${startul}CFLAGS${endul}) and the '-DDEBUG' pre-processor 
-                directive (by modifying the environment variable 
-                ${startul}CPPFLAGS${endul}) to ./configure. The default 
-                behavior is to not modify the environment variables.
+                Build a debugging version of EPREM. Specifically, this will 
+                pass the '-g' compiler flag and the '-DDEBUG' pre-processor 
+                directive to ./configure. You should consider using the 
+                --prefix option with this option in order to keep track of 
+                different builds.
         ${textbf}--optimize${textnm}
-                Build EPREM for production. Specifically, this will pass the 
-                '-O3' compiler flag (by modifying the environment variable 
-                ${startul}CFLAGS${endul}) and the '-DNDEBUG' pre-processor 
-                directive (by modifying the environment variable 
-                ${startul}CPPFLAGS${endul}) to ./configure. The default 
-                behavior is to not modify the environment variables.
+                Build an optimized version of EPREM. Specifically, this will 
+                pass the '-O3' compiler flag and the '-DNDEBUG' pre-processor 
+                directive to ./configure. You should consider using the 
+                --prefix option with this option in order to keep track of 
+                different builds.
         ${textbf}--dry-run${textnm}
                 Display the sequence of commands but don't run anything.
 "
