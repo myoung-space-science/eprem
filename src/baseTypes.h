@@ -51,60 +51,65 @@ typedef int               MPI_Flag_t;
 #define BADVALUE 1.0e33
 #define BADINT 2147483647
 
+/*-- proton mass [grams] --*/
 #define MP  1.6726e-24
-      /*-- grams                                 --*/
+
+/*-- 1 eV in ergs --*/
 #define EV  1.6022e-12
-      /*-- ergs                                  --*/
+
+/*-- 1 MeV in ergs --*/
 #define MEV 1.6022e-6
-      /*-- ergs                                  --*/
+
+/*-- 1 GeV in ergs --*/
 #define GEV 1.6022e-3
+
+/*-- fundamental charge [statcoul] --*/
 #define Q   4.80320425e-10
-      /*-- electron charge [statcoul]            --*/
+
+/*-- speed of light [cm/s] --*/
 #define C   2.99792458e10
-      /*-- speed of light  [cm/s    ]            --*/
+
+/*-- mp*c^2 in [GeV] --*/
 #define MZERO (MP*C*C/GEV)
-/*-- mp*c^2 in GeV                         --*/
-#define AU 1.495978707e13
-      /*-- 1 Astronomical Unit [cm  ]            --*/
 
+/*-- 1 Astronomical Unit [cm] --*/
+#define AU  1.495978707e13
+
+/*-- Solar radius [cm] --*/
 #define RSUN 6.96e10
-     /*-- Solar radius [cm  ]            --*/
 
+/*-- Solar radius [AU] (0.00464913034353770 [AU]) --*/
 #define RSAU (RSUN/AU)
-    /*-- Solar radius [in AU]            
-      -- 0.00464913034353770 [AU] */
-    
-#define TAU ( AU / C )
-      /*-- Simulation Timescale in s             --
-        -- 1 timestep = 1 TAU                    --
-        -- TAU = AU/c =   8.31674639726927 minutes --
-        --            = 499.00478383615643 seconds --
+
+/*-- Simulation timescale [s] --
+ - TAU = AU/c = 8.31674639726927 minutes
+ -            = 499.00478383615643 seconds
 */
-        
+#define TAU ( AU / C )
+
+/*-- Simulation timescale in Julian days (0.005775518331436995 [days] */
 #define DAY ( TAU / (24.0 * 60.0 * 60.0)  )
-      /* -- 1 timestep*DAY = Julian Days --
-         -- DAY = 0.005775518331436995 -- */
 
+/*-- Density norm [cm-3] --*/
 #define MHD_DENSITY_NORM 1.0
-      /*-- Density norm in cm-3                  --*/
-#define MHD_B_NORM ( sqrt(MP*MHD_DENSITY_NORM) * C )
-      /*-- Field strength at 1 AU                --*/ 
-      /*-- Bnorm^2 = rho0 c^2                    --*/
-      /*-- (vA/c)^2= (B/Bnorm)^2/(4 pi)          --*/
-      /*-- rho0 = 1.0 /cm^3                      --*/
-      /*-- 1.29228e-12 = sqrt(mp)                --*/
 
-/* normalization for ion gyrofrequency */
+/*-- Field strength at 1 AU --
+ - Bnorm^2 = rho0 * c^2
+ - rho0 = mp [g] * n0 [cm-3]
+**/
+#define MHD_B_NORM ( sqrt(MP*MHD_DENSITY_NORM) * C )
+
+/*-- Normalization for ion gyrofrequency --*/
 #define OM ( MHD_B_NORM * Q * AU / (MP * C * C) )
 
+/*-- Conversion from flux to distribution in s^3/km^6 --*/
 #define FCONVERT ( 1.0e30 / (C * C * C * C) )
-/* used to convert to f from j into s^3/km^6 --*/
 
+/*-- Conversion from volt to statvolt --*/
 #define  VOLT 0.33333e-2
-/* 1 VOLT = 0.333e-2 statvolt , pc/q in statvolt */
 
+/*-- Threshold for perp diff & drift shell */
 #define THRESH 0.025
-/* threshold for perp diff & drift shell */
 
 #define MAX_STRING_SIZE 240
 
