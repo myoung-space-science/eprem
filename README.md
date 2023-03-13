@@ -63,3 +63,11 @@ Finally, to verify that the installation was successful, run one of the examples
 ```
 mpirun -n 2 eprem-latest cone.ini 
 ```
+
+## Contributions
+
+The maintainers of this repository welcome contributions of any kind, from users with any level of experience. We especially encourage initial contributions from new users in the form of documentation fixes (e.g., spelling errors or formatting edits).
+
+Do you think you found a bug in EPREM? You may be on the way to making a very helpful contribution!
+
+Worried about accidentally changing the code in a way that makes us mad at you forever? No need! The pull-request system is designed to prevent that. See [GitHub's documentation on pull requests](https://docs.github.com/en/pull-requests) for help.
