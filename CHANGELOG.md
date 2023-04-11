@@ -1,6 +1,6 @@
 # Changelog
 
-## NEXT
+## v0.2.5
 
 - Redefined options for `setup.sh`.
 
