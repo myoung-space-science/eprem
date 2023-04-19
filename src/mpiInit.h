@@ -32,14 +32,6 @@
 #define INNER_PROC 0
 #define OUTER_PROC (N_PROCS - 1)
 
-/*--------- MPI tags --------------*/
-#define SYNCH_TAG  1
-#define RIPPLE_TAG 2
-#define SEARCH_TAG 3
-#define RIPPLEF_TAG 4
-#define RIPPLES_TAG 5
-#define RIPPLEG_TAG 6
-
 #define PREV_PROC( mpi_rank )   ( mpi_rank - 1 )
 #define NEXT_PROC( mpi_rank )   ( mpi_rank + 1 )
 

@@ -78,6 +78,7 @@
 #include "unifiedOutput.h"
 #include "observerOutput.h"
 #include "flow.h"
+#include "float.h"
 #include "simCore.h"
 #include "timers.h"
 
@@ -100,20 +101,19 @@ double timer_MPIsendrecv=0;
 /*====================== MAIN =======================================*/
 int main(int argc, char *argv[]) {
 
-  int epInit;
+  int epInit, rciter;
   double timer_tmp;
-  int rciter;
-  
+
   // Initialize MPI
   initMPI(argc, argv);
 
-  epInit=0;
+  epInit = 0;
   timer_tmp = 0;
-  rciter=0;
-  simStarted=0;
+  rciter = 0;
+  simStarted = 0;
 
   // Record the starting MPI time and real time.
-  if (mpi_rank == 0) time (&start_time);
+  if (mpi_rank == 0) time ( &start_time );
   timer_start = MPI_Wtime();
 
   // Read and set runtime parameters
@@ -126,6 +126,7 @@ int main(int argc, char *argv[]) {
   allocateGlobalVariables();
 
   // Initialize MPI Types
+  // This also allocates the 1D scale grids (mu, energy, etc).
   initMPITypes();
 
   // Initialize flags
@@ -144,7 +145,7 @@ int main(int argc, char *argv[]) {
   initEnergeticParticlesGrids();
 
  // Initialize MHD.
-  updateMhd(config.tDel);
+  updateMhd();
 
   // Initialize the cube / shell structure
   // and set node positions through backward integration.
@@ -186,13 +187,13 @@ int main(int argc, char *argv[]) {
   do
   {
     timer_step = MPI_Wtime();
-    
+
     rciter+=1;
 
     // The seeding of nodes takes TOTAL_NUM_SHELLS iterations.
-    // Since the t_global might not be exactly simStartTimeDay, we use 
+    // Since the t_global might not be exactly simStartTimeDay, we use
     // iteration count here and sync the t_global.
-    
+
     if (rciter == TOTAL_NUM_SHELLS+1)
     {
       if (simStarted == 0){
@@ -207,13 +208,13 @@ int main(int argc, char *argv[]) {
           printf("****STARTING SIMULATION**************************\n");
           printf("*************************************************\n");
           printf("NOTE:  Initializing seed population.\n");
-          printf("NOTE:  Syncing t_global [%14.8e] to config.simStartTimeDay [%14.8e]\n", 
+          printf("NOTE:  Syncing t_global [%14.8e] to config.simStartTimeDay [%14.8e]\n",
                  t_global, config.simStartTimeDay);
         }
         t_global = config.simStartTimeDay;
       }
     }
-    
+
     if (t_global*DAY >= config.epCalcStartTime)
     {
       if (simStarted == 1){
@@ -232,9 +233,9 @@ int main(int argc, char *argv[]) {
     // ------ DISPLAY CURRENT TIME INFO TO SCREEN. -----------------------------
     // -------------------------------------------------------------------------
     // -------------------------------------------------------------------------
-    
+
     if (mpi_rank == 0){
-      printf("Step: %06d  TIME: %14.8e  [JD %9.5f]  DTIME: %14.8e  [JD %7.5f]\n", 
+      printf("Step: %06d  TIME: %14.8e  [JD %9.5f]  DTIME: %14.8e  [JD %7.5f]\n",
              rciter, t_global, t_global*DAY, config.tDel, config.tDel*DAY);
     }
 
@@ -244,7 +245,7 @@ int main(int argc, char *argv[]) {
     // -------------------------------------------------------------------------
     // -------------------------------------------------------------------------
 
-    if ((num_loops % config.dumpFreq) == 0)
+    if ( (num_loops % config.dumpFreq) == 0 )
     {
        dataDumpIO();
     }
@@ -256,8 +257,8 @@ int main(int argc, char *argv[]) {
     // -------------------------------------------------------------------------
 
     // Rotate the node seed positions and ripple the shells out
-    rotSunAndSpawnShell(config.tDel);
-    moveNodes(config.tDel);
+    rotSunAndSpawnShell( config.tDel );
+    moveNodes( config.tDel );
 
     // -------------------------------------------------------------------------
     // -------------------------------------------------------------------------
@@ -265,8 +266,7 @@ int main(int argc, char *argv[]) {
     // -------------------------------------------------------------------------
     // -------------------------------------------------------------------------
 
-    // NOTE:  updateMhd only uses tDel for computing div-V and it is never used.
-    updateMhd(config.tDel);
+    updateMhd();
 
     // -------------------------------------------------------------------------
     // -------------------------------------------------------------------------
@@ -274,7 +274,7 @@ int main(int argc, char *argv[]) {
     // -------------------------------------------------------------------------
     // -------------------------------------------------------------------------
 
-    if ((config.useDrift > 0) || (config.useShellDiffusion > 0))
+    if ( (config.useDrift > 0) || (config.useShellDiffusion > 0) )
     {
       ShellData();
     }
@@ -294,15 +294,16 @@ int main(int argc, char *argv[]) {
       // here.
       if (epInit == 0){
         epInit = 1;
-        if (mpi_rank == 0) printf("NOTE:  Reinitializing seed population.\n");
+        if (mpi_rank == 0) printf("  --> NOTE:  Reinitializing seed population.\n");
         initEnergeticParticles();
       }
 
       updateEnergeticParticles();
+
       // For the seed test, re-init seed population.
       if (config.seedFunctionTest > 0){
         initEnergeticParticles();
-        if (mpi_rank == 0) printf("NOTE:  Reinitializing seed population.\n");
+        if (mpi_rank == 0) printf("  --> NOTE:  Reinitializing seed population.\n");
       }
 
       timer_eptotal = timer_eptotal + (MPI_Wtime() - timer_tmp);
@@ -319,9 +320,36 @@ int main(int argc, char *argv[]) {
     // IO LOOP counter.
     num_loops++;
 
+
+    if (epInit == 1){
+
+    MPI_Reduce(&maxsubcycles_energychange,
+               &maxsubcycles_energychangeGlobal,
+               1, MPI_INT, MPI_MAX, 0, MPI_COMM_WORLD);
+    MPI_Reduce(&maxsubcycles_focusing,
+               &maxsubcycles_focusingGlobal,
+               1, MPI_INT, MPI_MAX, 0, MPI_COMM_WORLD);
+    MPI_Reduce(&min_tau,
+               &min_tau_global,
+               1, MPI_DOUBLE, MPI_MIN, 0, MPI_COMM_WORLD);
+
+    if (mpi_rank == 0){
+      printf("  --> Maximum subcycles for Adiabatic Change:   %d \n", maxsubcycles_energychangeGlobal);
+      printf("  --> Maximum subcycles for Adiabatic Focusing: %d \n", maxsubcycles_focusingGlobal);
+      printf("  --> Minimum MFP timescale (tau): %14.8e    DTIME/TAU: %14.2f\n", min_tau_global, config.tDel/min_tau_global);
+    }
+    // Reset these values:
+    maxsubcycles_energychangeGlobal = 0;
+    maxsubcycles_focusingGlobal = 0;
+    maxsubcycles_energychange = 0;
+    maxsubcycles_focusing = 0;
+    min_tau = DBL_MAX;
+    min_tau_global = DBL_MAX;
+
+    }
+
     timer_tmp = MPI_Wtime();
     if (mpi_rank == 0) printf("  --> Compute time for step: %18.4f seconds.\n",timer_tmp-timer_step);
-
 
   } while(t_global <= config.simStopTimeDay);
 

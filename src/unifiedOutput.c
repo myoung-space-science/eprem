@@ -170,7 +170,7 @@ Index_t strideSize = sizeof(Node_t) / sizeof(double);
         isoDist /= NUM_MUSTEPS;
 
         // Result: flux = 2 * energy * distribution (all normalized)
-        streamFlux[idx_sspe(shell, species, energy)] = two * egrid[idx_se(species, energy)] * isoDist;
+        streamFlux[idx_sspe(shell, species, energy)] = two * egrid[energy] * isoDist;
 
       }
     }
@@ -315,9 +315,9 @@ int * distObs_varid;
         distDims[3] =  energyObs_dimid;
         distDims[4] =  muObs_dimid;
 
-        // static 2D variables
-        err = nc_def_var(ncid, "egrid", nc_precision, 2, gridDims, &egridObs_varid[observerIndex]);
-        err = nc_def_var(ncid, "vgrid", nc_precision, 2, gridDims, &vgridObs_varid[observerIndex]);
+        // static 1D variables
+        err = nc_def_var(ncid, "egrid", nc_precision, 1, &gridDims[1], &egridObs_varid[observerIndex]);
+        err = nc_def_var(ncid, "vgrid", nc_precision, 1, &gridDims[1], &vgridObs_varid[observerIndex]);
 
         // units and scale for static 2D variables
         tempScale = MP*C*C / MEV; // This needs atomic number!
@@ -456,7 +456,7 @@ int * distObs_varid;
   size_t countMu[1]            = {NUM_MUSTEPS};
   size_t countShell[1]         = {TOTAL_NUM_SHELLS};
   size_t countSpecies[1]       = {NUM_SPECIES};
-  size_t countSpeciesEnergy[2] = {NUM_SPECIES, NUM_ESTEPS};
+  size_t countEnergy[1]        = {NUM_ESTEPS};
 
   size_t countTimeShell[2]     = {1, TOTAL_NUM_SHELLS};
   ptrdiff_t strideTimeShell[2] = {1, 1};
@@ -491,12 +491,12 @@ int * distObs_varid;
       {
 
         err = nc_put_var_double(ncid, preEruptionObs_varid[observerIndex], &config.preEruptionDuration);
-        err = nc_put_vara_double(ncid, muObs_varid[observerIndex],     start1D, countMu,             &mugrid[0]);
-        err = nc_put_vara_int(ncid,    shellObs_varid[observerIndex],  start1D, countShell,          &shellStream[0]);
-        err = nc_put_vara_double(ncid, massObs_varid[observerIndex],   start1D, countSpecies,        &config.mass[0]);
-        err = nc_put_vara_double(ncid, chargeObs_varid[observerIndex], start1D, countSpecies,        &config.charge[0]);
-        err = nc_put_vara_double(ncid, egridObs_varid[observerIndex],  start2D, countSpeciesEnergy,  &egrid[0]);
-        err = nc_put_vara_double(ncid, vgridObs_varid[observerIndex],  start2D, countSpeciesEnergy,  &vgrid[0]);
+        err = nc_put_vara_double(ncid, muObs_varid[observerIndex],     start1D, countMu,      &mugrid[0]);
+        err = nc_put_vara_int(ncid,    shellObs_varid[observerIndex],  start1D, countShell,   &shellStream[0]);
+        err = nc_put_vara_double(ncid, massObs_varid[observerIndex],   start1D, countSpecies, &config.mass[0]);
+        err = nc_put_vara_double(ncid, chargeObs_varid[observerIndex], start1D, countSpecies, &config.charge[0]);
+        err = nc_put_vara_double(ncid, egridObs_varid[observerIndex],  start1D, countEnergy,  &egrid[0]);
+        err = nc_put_vara_double(ncid, vgridObs_varid[observerIndex],  start1D, countEnergy,  &vgrid[0]);
 
       }
 
@@ -657,9 +657,9 @@ int * po_distObs_varid;
         po_distDims[3] =  po_energyObs_dimid;
         po_distDims[4] =  po_muObs_dimid;
 
-        // static 2D variables
-        err = nc_def_var(ncid, "egrid", nc_precision, 2, po_gridDims, &po_egridObs_varid[pointObserverIndex]);
-        err = nc_def_var(ncid, "vgrid", nc_precision, 2, po_gridDims, &po_vgridObs_varid[pointObserverIndex]);
+        // static 1D variables
+        err = nc_def_var(ncid, "egrid", nc_precision, 1, &po_gridDims[1], &po_egridObs_varid[pointObserverIndex]);
+        err = nc_def_var(ncid, "vgrid", nc_precision, 1, &po_gridDims[1], &po_vgridObs_varid[pointObserverIndex]);
 
         // units and scale for static 2D variables
         tempScale = MP*C*C / MEV;
@@ -791,7 +791,7 @@ int * po_distObs_varid;
   size_t countMu[1]            = {NUM_MUSTEPS};
   size_t countShell[1]         = {1};
   size_t countSpecies[1]       = {NUM_SPECIES};
-  size_t countSpeciesEnergy[2] = {NUM_SPECIES, NUM_ESTEPS};
+  size_t countEnergy[1]        = {NUM_ESTEPS};
 
   size_t countTimeShell[2]     = {1, 1};
   ptrdiff_t strideTimeShell[2] = {1, 1};
@@ -830,8 +830,8 @@ int * po_distObs_varid;
         err = nc_put_vara_int(ncid,    po_shellObs_varid[pointObserverIndex],  start1D, countShell,          &shellStream[0]);
         err = nc_put_vara_double(ncid, po_massObs_varid[pointObserverIndex],   start1D, countSpecies,        &config.mass[0]);
         err = nc_put_vara_double(ncid, po_chargeObs_varid[pointObserverIndex], start1D, countSpecies,        &config.charge[0]);
-        err = nc_put_vara_double(ncid, po_egridObs_varid[pointObserverIndex],  start2D, countSpeciesEnergy,  &egrid[0]);
-        err = nc_put_vara_double(ncid, po_vgridObs_varid[pointObserverIndex],  start2D, countSpeciesEnergy,  &vgrid[0]);
+        err = nc_put_vara_double(ncid, po_egridObs_varid[pointObserverIndex],  start1D, countEnergy,  &egrid[0]);
+        err = nc_put_vara_double(ncid, po_vgridObs_varid[pointObserverIndex],  start1D, countEnergy,  &vgrid[0]);
 
       }
 
@@ -848,7 +848,12 @@ int * po_distObs_varid;
       rSph.phi   = config.obsPhi[pointObserverIndex];
 
       if (rSph.phi < 0.0) rSph.phi += 2.0 * PI;
-      if ( rSph.phi > (2.0 * PI) ) rSph.phi -= 2.0 * PI;;
+      if ( rSph.phi > (2.0 * PI) ) rSph.phi -= 2.0 * PI;
+      /* 
+        NOTE: This is where the MAS-coupled code copies MHD data to the point
+        observer. After removing MAS-related logic, I'm not sure that this
+        function outputs any point-observer MHD variables.
+      */
 
       // zero out distribution
       for (species = 0; species < NUM_SPECIES; species++)
@@ -1104,7 +1109,7 @@ int domainDims[5];
       {
 
         timer_tmp = MPI_Wtime();
-      
+
         // gather up the stream
         MPI_Gatherv(&grid[idx_frcs(face,row,col,INNER_ACTIVE_SHELL)],
                     ACTIVE_STREAM_SIZE,
@@ -1115,8 +1120,9 @@ int domainDims[5];
                     Node_T,
                     0,
                     MPI_COMM_WORLD);
-                    
-        timer_MPIgatherscatter = timer_MPIgatherscatter + (MPI_Wtime() - timer_tmp);     
+
+        timer_MPIgatherscatter = timer_MPIgatherscatter
+                                 + (MPI_Wtime() - timer_tmp);
 
         // only process one does any I/O
         if (mpi_rank == 0)
@@ -1187,10 +1193,9 @@ int unstructuredDims2D[2];
 
   Scalar_t tempScale;
 
-	Index_t energy;
+  Index_t energy;
 
-	char eName[3];
-
+  char eName[12];
 
   // set the output precision
   if (config.outputFloat > 0)
@@ -1223,9 +1228,9 @@ int unstructuredDims2D[2];
       err = nc_put_att_text(ncid, tuDom_varid, "units", strlen("julian date"), "julian date");
       err = nc_put_att_double(ncid, tuDom_varid, "scale_factor", nc_precision, 1, &tempScale);
 
-			//tempScale = MP*C*C / MEV;
-			err = nc_put_att_text(ncid, euDom_varid, "units", strlen("MeV"), "MeV");
-			//err = nc_put_att_double(ncid, euDom_varid, "scale_factor", nc_precision, 1, &tempScale);
+      //tempScale = MP*C*C / MEV;
+      err = nc_put_att_text(ncid, euDom_varid, "units", strlen("MeV"), "MeV");
+      //err = nc_put_att_double(ncid, euDom_varid, "scale_factor", nc_precision, 1, &tempScale);
 
       // dimension arrays for 2D+ variables
       unstructuredDims2D[0] = tuDom_dimid;
@@ -1236,24 +1241,24 @@ int unstructuredDims2D[2];
       err = nc_def_var(ncid, "Y", nc_precision, 2, unstructuredDims2D, &YuDom_varid);
       err = nc_def_var(ncid, "Z", nc_precision, 2, unstructuredDims2D, &ZuDom_varid);
 
-			for (energy = 0; energy < NUM_ESTEPS; energy++)
-			{
+      for (energy = 0; energy < NUM_ESTEPS; energy++)
+      {
 
-				sprintf(eName,"J%02i", energy);
-				err = nc_def_var(ncid, eName, nc_precision, 2, unstructuredDims2D, &JuDom_varid[energy]);
+        sprintf(eName,"J%06i", energy);
+        err = nc_def_var(ncid, eName, nc_precision, 2, unstructuredDims2D, &JuDom_varid[energy]);
 
-				err = nc_put_att_text(ncid, JuDom_varid[energy], "units", strlen("# / (MeV s sr cm^2)"), "# / (MeV s sr cm^2)");
+        err = nc_put_att_text(ncid, JuDom_varid[energy], "units", strlen("# / (MeV s sr cm^2)"), "# / (MeV s sr cm^2)");
 
-			}
+      }
 
       // units and scale for dynamic 2D+ variables
       //tempScale = config.rScale;
       //err = nc_put_att_double(ncid, XuDom_varid, "scale_factor", nc_precision, 1, &tempScale);
       //err = nc_put_att_double(ncid, YuDom_varid, "scale_factor", nc_precision, 1, &tempScale);
       //err = nc_put_att_double(ncid, ZuDom_varid, "scale_factor", nc_precision, 1, &tempScale);
-			err = nc_put_att_text(ncid, XuDom_varid, "units", strlen("AU"), "AU");
-			err = nc_put_att_text(ncid, YuDom_varid, "units", strlen("AU"), "AU");
-			err = nc_put_att_text(ncid, ZuDom_varid, "units", strlen("AU"), "AU");
+      err = nc_put_att_text(ncid, XuDom_varid, "units", strlen("AU"), "AU");
+      err = nc_put_att_text(ncid, YuDom_varid, "units", strlen("AU"), "AU");
+      err = nc_put_att_text(ncid, ZuDom_varid, "units", strlen("AU"), "AU");
 
       // definitions are finished
       err = nc_enddef(ncid);
@@ -1272,13 +1277,13 @@ int unstructuredDims2D[2];
       err = nc_inq_varid(ncid, "Y",      &YuDom_varid);
       err = nc_inq_varid(ncid, "Z",      &ZuDom_varid);
 
-			for (energy = 0; energy < NUM_ESTEPS; energy++)
-			{
+      for (energy = 0; energy < NUM_ESTEPS; energy++)
+      {
 
-				sprintf(eName, "J%02i", energy);
-				err = nc_inq_varid(ncid, eName, &JuDom_varid[energy]);
+        sprintf(eName, "J%06i", energy);
+        err = nc_inq_varid(ncid, eName, &JuDom_varid[energy]);
 
-			}
+      }
 
     }
 
@@ -1303,35 +1308,35 @@ int unstructuredDims2D[2];
 
   Index_t face, row, col, shell, energy, mu, nCount;
 
-	Index_t totalNodes;
+  Index_t totalNodes;
 
-	Scalar_t* X;
-	Scalar_t* Y;
-	Scalar_t* Z;
-	Scalar_t* J;
+  Scalar_t* X;
+  Scalar_t* Y;
+  Scalar_t* Z;
+  Scalar_t* J;
 
-	Scalar_t dist;
+  Scalar_t dist;
 
   size_t startTime[1]  = {0};
-	size_t start1D[1]    = {0};
+  size_t start1D[1]    = {0};
   size_t start2D[2]    = {0,0};
   size_t countEnergy[1]   = {0};
-	size_t countTimeNode[2] = {0,0};
+  size_t countTimeNode[2] = {0,0};
 
-	totalNodes=NUM_FACES*FACE_ROWS*FACE_COLS*TOTAL_NUM_SHELLS;
+  totalNodes=NUM_FACES*FACE_ROWS*FACE_COLS*TOTAL_NUM_SHELLS;
 
-	countTimeNode[0]=1;
-	countTimeNode[1]=totalNodes;
+  countTimeNode[0]=1;
+  countTimeNode[1]=totalNodes;
 
-	countEnergy[0]=NUM_ESTEPS;
+  countEnergy[0]=NUM_ESTEPS;
 
-	X=(Scalar_t*)malloc(totalNodes*sizeof(Scalar_t));
-	Y=(Scalar_t*)malloc(totalNodes*sizeof(Scalar_t));
-	Z=(Scalar_t*)malloc(totalNodes*sizeof(Scalar_t));
-	J=(Scalar_t*)malloc(totalNodes*NUM_ESTEPS*sizeof(Scalar_t));
+  X=(Scalar_t*)malloc(totalNodes*sizeof(Scalar_t));
+  Y=(Scalar_t*)malloc(totalNodes*sizeof(Scalar_t));
+  Z=(Scalar_t*)malloc(totalNodes*sizeof(Scalar_t));
+  J=(Scalar_t*)malloc(totalNodes*NUM_ESTEPS*sizeof(Scalar_t));
 
-	double timer_tmp = 0;
-	
+  double timer_tmp = 0;
+
   if (mpi_rank == 0)
   {
 
@@ -1340,25 +1345,25 @@ int unstructuredDims2D[2];
     startTime[0] = unstructuredDomainTimeSlice;
     err = nc_put_var1_double(ncid, tuDom_varid, startTime, &t_global);
 
-		// store the energy grid
-		if (unstructuredDomainTimeSlice == 0)
-		{
+    // store the energy grid
+    if (unstructuredDomainTimeSlice == 0)
+    {
 
-			Scalar_t* energyArray;
-			energyArray=(Scalar_t*)malloc(NUM_ESTEPS*sizeof(Scalar_t));
+      Scalar_t* energyArray;
+      energyArray=(Scalar_t*)malloc(NUM_ESTEPS*sizeof(Scalar_t));
 
-			for (energy = 0; energy < NUM_ESTEPS; energy++)
-				energyArray[energy] = egrid[idx_se(0,energy)] * MP * C * C / MEV;
+      for (energy = 0; energy < NUM_ESTEPS; energy++)
+        energyArray[energy] = egrid[energy] * MP * C * C / MEV;
 
-			err = nc_put_vara_double(ncid, euDom_varid, start1D, countEnergy, &energyArray[0]);
+      err = nc_put_vara_double(ncid, euDom_varid, start1D, countEnergy, &energyArray[0]);
 
-			free(energyArray);
+      free(energyArray);
 
-		}
+    }
 
-	}
+  }
 
-	nCount = 0.0;
+  nCount = 0.0;
 
   // loop over each observer and write the header for the file
   for (face = 0; face < NUM_FACES; face++)
@@ -1369,7 +1374,17 @@ int unstructuredDims2D[2];
       {
 
         timer_tmp = MPI_Wtime();
-        
+
+        MPI_Gatherv(&eParts[idx_frcsspem(face,row,col,INNER_ACTIVE_SHELL,0,0,0)],
+                    ACTIVE_STREAM_SIZE*NUM_SPECIES*NUM_ESTEPS*NUM_MUSTEPS,
+                    Scalar_T,
+                    ePartsStream,
+                    recvCountEparts,
+                    displEparts,
+                    Scalar_T,
+                    0,
+                    MPI_COMM_WORLD);
+
         MPI_Gatherv(&grid[idx_frcs(face,row,col,INNER_ACTIVE_SHELL)],
                     ACTIVE_STREAM_SIZE,
                     Node_T,
@@ -1380,17 +1395,8 @@ int unstructuredDims2D[2];
                     0,
                     MPI_COMM_WORLD);
 
-        MPI_Gatherv(&eParts[idx_frcsspem(face,row,col,INNER_ACTIVE_SHELL,0,0,0)],
-                    ACTIVE_STREAM_SIZE*NUM_SPECIES*NUM_ESTEPS*NUM_MUSTEPS,
-                    Scalar_T,
-                    ePartsStream,
-                    recvCountGrid,
-                    displGrid,
-                    Scalar_T,
-                    0,
-                    MPI_COMM_WORLD);
-                    
-        timer_MPIgatherscatter = timer_MPIgatherscatter + (MPI_Wtime() - timer_tmp);     
+        timer_MPIgatherscatter = timer_MPIgatherscatter
+                                 + (MPI_Wtime() - timer_tmp);
 
         // only process one does any I/O
         if (mpi_rank == 0)
@@ -1399,32 +1405,32 @@ int unstructuredDims2D[2];
           for (shell = 0; shell < TOTAL_NUM_SHELLS; shell++)
           {
 
-						// store the x, y, z coordinates
-						X[nCount + shell] = streamGrid[shell].r.x * config.rScale;
-						Y[nCount + shell] = streamGrid[shell].r.y * config.rScale;
-						Z[nCount + shell] = streamGrid[shell].r.z * config.rScale;
+            // store the x, y, z coordinates
+            X[nCount + shell] = streamGrid[shell].r.x * config.rScale;
+            Y[nCount + shell] = streamGrid[shell].r.y * config.rScale;
+            Z[nCount + shell] = streamGrid[shell].r.z * config.rScale;
 
-						for (energy = 0; energy < NUM_ESTEPS; energy++)
-						{
+            for (energy = 0; energy < NUM_ESTEPS; energy++)
+            {
 
-							dist = 0.0;
+              dist = 0.0;
 
-							// average the distribution over all pitch angles
-							for (mu = 0; mu < NUM_MUSTEPS; mu++)
-								dist += ePartsStream[idx_sspem(shell,0,energy,mu)];
+              // average the distribution over all pitch angles
+              for (mu = 0; mu < NUM_MUSTEPS; mu++)
+                dist += ePartsStream[idx_sspem(shell,0,energy,mu)];
 
-							dist /= NUM_MUSTEPS;
+              dist /= NUM_MUSTEPS;
 
-							// convert from code units and then into cgs
-							dist *= ( (1.0 / 27.0) * 1.0e-30 );
+              // convert from code units and then into cgs
+              dist *= ( (1.0 / 27.0) * 1.0e-30 );
 
-							J[idx_en(energy,nCount + shell)] = 2.0 * egrid[idx_se(0,energy)] * MP * C * C * MEV * dist / (MP * MP);
+              J[idx_en(energy,nCount + shell)] = 2.0 * egrid[energy] * MP * C * C * MEV * dist / (MP * MP);
 
-						}
+            }
 
           }
 
-					nCount += TOTAL_NUM_SHELLS;
+          nCount += TOTAL_NUM_SHELLS;
 
         }
 
@@ -1437,23 +1443,23 @@ int unstructuredDims2D[2];
   if (mpi_rank == 0)
   {
 
-		start2D[0] = unstructuredDomainTimeSlice;
+    start2D[0] = unstructuredDomainTimeSlice;
 
-		err = nc_put_vara_double(ncid, XuDom_varid, start2D, countTimeNode,       &X[0]);
-		err = nc_put_vara_double(ncid, YuDom_varid, start2D, countTimeNode,       &Y[0]);
-		err = nc_put_vara_double(ncid, ZuDom_varid, start2D, countTimeNode,       &Z[0]);
+    err = nc_put_vara_double(ncid, XuDom_varid, start2D, countTimeNode,       &X[0]);
+    err = nc_put_vara_double(ncid, YuDom_varid, start2D, countTimeNode,       &Y[0]);
+    err = nc_put_vara_double(ncid, ZuDom_varid, start2D, countTimeNode,       &Z[0]);
 
-		for (energy = 0; energy < NUM_ESTEPS; energy++)
-			err = nc_put_vara_double(ncid, JuDom_varid[energy], start2D, countTimeNode, &J[idx_en(energy,0)]);
+    for (energy = 0; energy < NUM_ESTEPS; energy++)
+      err = nc_put_vara_double(ncid, JuDom_varid[energy], start2D, countTimeNode, &J[idx_en(energy,0)]);
 
     err = nc_close(ncid);
 
   }
 
   free(X);
-	free(Y);
-	free(Z);
-	free(J);
+  free(Y);
+  free(Z);
+  free(J);
 
 }/*--------- END unstructureDomainDumpNetCDF( ) ---------------------*/
 /*-------------------------------------------------------------------*/
@@ -1468,7 +1474,7 @@ int unstructuredDims2D[2];
 {/*-----------------------------------------------------------------*/
 
     double timer_tmp;
-    
+
     // -----------------------------------------------------------------------
     // -------------------  I/O ----------------------------------------------
     // -----------------------------------------------------------------------
@@ -1516,5 +1522,5 @@ int unstructuredDims2D[2];
 
 }/*--------- END dataDumpIO( ) ---------------------*/
 /*-------------------------------------------------------------------*/
-  
-  
+
+

@@ -173,6 +173,9 @@ getParams( char* configFilename)
 
   config.warningsFile = (char*)readString("warningsFile", "warningsXXX.txt");
 
+  config.adiabaticChangeAlg = readInt("adiabaticChangeAlg", 1, 1, 3);
+  config.adiabaticFocusAlg = readInt("adiabaticFocusAlg", 1, 1, 3);
+
 }
 
 
@@ -251,26 +254,25 @@ Scalar_t *readDoubleArray(char *key, int size, Scalar_t *defaultVal) {
     Arr = config_lookup(&cfg, key);
 
     for (i = 0; i < size; i++) {
-
       val[i] = config_setting_get_float_elem(Arr, i);
-      if (mpi_rank == 0)
-        printf("%.4e ", val[i]);
-
+      if (mpi_rank == 0) printf("%.4e ", val[i]);
     }
 
-    if (mpi_rank == 0)
-      printf("\n");
+    if (mpi_rank == 0) printf("\n");
 
     return val;
 
   } else {
 
-    if (mpi_rank == 0)
-      for (i = 0; i < (Index_t)(sizeof(defaultVal) / sizeof(Scalar_t)); i++)
-        printf("%.4e ", defaultVal[i]);
+    if (mpi_rank == 0){
+//   RMC: THIS IS WRONG AND DOES NOT FIND THE LENGTH OF THE ARRAY!!!
+//   NEED TO PASS THE DEFAULT SIZE IN AS WELL!!!
+//      for (i = 0; i < (Index_t)(sizeof(defaultVal) / sizeof(*defaultVal)); i++)
+//        printf("%.4e ", defaultVal[i]);
+      printf("Using default values.  First element: %.4e ", defaultVal[0]);
+    }
 
-    if (mpi_rank == 0)
-      printf("\n");
+    if (mpi_rank == 0) printf("\n");
 
     return defaultVal;
 
@@ -289,6 +291,8 @@ setRuntimeConstants( void )
   NUM_ESTEPS = config.numEnergySteps;
   NUM_MUSTEPS = config.numMuSteps;
   NUM_OBS = config.numObservers;
+  AdiabaticChangeAlg = config.adiabaticChangeAlg;
+  AdiabaticFocusAlg = config.adiabaticFocusAlg;
 
   TOTAL_NUM_SHELLS = config.numNodesPerStream;
 

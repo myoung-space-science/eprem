@@ -32,20 +32,21 @@
 
 
 /*----- Per proc data, replicated on each proc. --------------------*/
-extern Scalar_t* lnpmin;
-extern Scalar_t* lnpmax;
-extern Scalar_t* dlnp;
+extern Scalar_t lnpmin;
+extern Scalar_t lnpmax;
+extern Scalar_t dlnp;
 
 /*-- mu steps [central mu]  --*/
-extern Scalar_t* mugrid;
+extern Scalar_t *restrict mugrid;
+extern Scalar_t dmu;
 
 /*-- minimum perp length .. sets the min time step */
-extern Scalar_t* dlPerMin;
+extern Scalar_t *restrict dlPerMin;
 
-extern Scalar_t* vgrid;                            /*-- Corresponing Speed -- Grid v = speed/c --*/
-extern Scalar_t* pgrid;    /*-- Momentum Grid     --*/
-extern Scalar_t* egrid;    /*-- Central Energy -- Kin. Energy Grid - E/(mc^2) --*/
-extern Scalar_t* rigidity; /*-- rigidity pc/q in GV    --*/
+extern Scalar_t *restrict vgrid;                            /*-- Corresponing Speed -- Grid v = speed/c --*/
+extern Scalar_t *restrict pgrid;    /*-- Momentum Grid     --*/
+extern Scalar_t *restrict egrid;    /*-- Central Energy -- Kin. Energy Grid - E/(mc^2) --*/
+extern Scalar_t *restrict rigidity; /*-- rigidity pc/q in GV    --*/
 
 /*---*/         void                                   /*---*/
 /*---*/   initMPI_energeticParticlesTypes(void )       /*---*/;

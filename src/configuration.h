@@ -17,12 +17,14 @@
 #include "cubeShellStruct.h"
 
 typedef struct {
-  
+
   Index_t  numNodesPerStream;
   Index_t  numRowsPerFace;
   Index_t  numColumnsPerFace;
   Index_t  numEnergySteps;
   Index_t  numMuSteps;
+  Index_t  adiabaticChangeAlg;
+  Index_t  adiabaticFocusAlg;
 
   Scalar_t  rScale;
   Scalar_t  flowMag;
@@ -39,7 +41,7 @@ typedef struct {
   Scalar_t  dsh_hel_min;
   Scalar_t  mfpRadialPower;
   Scalar_t  rigidityPower;
-  
+
   Scalar_t  kperxkpar;
 
   Scalar_t  eMin;
@@ -51,13 +53,13 @@ typedef struct {
 
   Scalar_t  gammaEhigh;
   Scalar_t  gammaElow;
-  
+
   Index_t   FailModeDump;
 
   Index_t   seedFunctionTest;
-  
+
   Index_t   outputFloat;
-  
+
   Index_t   unifiedOutput;
   Scalar_t  unifiedOutputTime;
 
@@ -68,7 +70,7 @@ typedef struct {
   Scalar_t  streamFluxOutputTime;
 
   Index_t   subTimeCouple;
-  
+
   Index_t    epremDomain;
   Scalar_t   epremDomainOutputTime;
 
@@ -82,18 +84,18 @@ typedef struct {
   Index_t    useDrift;
 
   Index_t fluxLimiter;
-  
+
   int numSpecies;
   Scalar_t*  mass;
   Scalar_t*  charge;
-  
+
   int numObservers;
   Scalar_t*  obsR;
   Scalar_t*  obsTheta;
   Scalar_t*  obsPhi;
 
   Scalar_t idw_p;
-  
+
   Scalar_t epEquilibriumCalcDuration;
   Scalar_t preEruptionDuration;
 
@@ -104,7 +106,7 @@ typedef struct {
 
   Index_t useBoundaryFunction;
   Index_t boundaryFunctionInitDomain;
-  
+
   Scalar_t boundaryFunctAmplitude;
   Scalar_t boundaryFunctXi;
   Scalar_t boundaryFunctGamma;
@@ -115,7 +117,7 @@ typedef struct {
   Scalar_t  shockDetectPercent;
   Scalar_t  minInjectionEnergy;
   Scalar_t  shockInjectionFactor;
-  
+
   Index_t   idealShock;
   Scalar_t  idealShockSharpness;
   Scalar_t  idealShockScaleLength;
@@ -131,7 +133,7 @@ typedef struct {
   int outputRestart;
   int dumpOnAbort;
   int saveRestartFile;
-  
+
   char * warningsFile;
 
   // these params are initialized from the above inputs
