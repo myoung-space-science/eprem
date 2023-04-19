@@ -21,6 +21,8 @@
 
 #include <stdio.h>
 #include <math.h>
+#include <string.h>
+#include <stdlib.h>
 
 #include "global.h"
 #include "configuration.h"
@@ -48,7 +50,7 @@ Scalar_t      phiOffset;
 Index_t weInitializedEPs;
 Index_t mhdGridStatus;
 Index_t sync_hel=0;
-
+Index_t hdf5_input=0;              // Set=1 if hdf5 input files (RMC move this)
 /*-----------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------*/
 /*--*/          void                                                /*---*/
@@ -84,14 +86,14 @@ Index_t sync_hel=0;
 
   phiOffset = 0.0;
 
-	weInitializedEPs = 0;
+  weInitializedEPs = 0;
 
   mhdGridStatus = MHD_DEFAULT;
 
   unifiedOutputInit = 0;
   pointObserverOutputInit = 0;
   domainDumpInit = 0;
-	unstructuredDomainInit = 0;
+  unstructuredDomainInit = 0;
 
   observerTimeSlice = 0;
   pointObserverTimeSlice = 0;
@@ -134,11 +136,16 @@ Index_t sync_hel=0;
 /*-----------------------------------------------------------------------*/
 {
 
-  Index_t proc, workIndex;
-  double timer_tmp=0;
-  MPI_Request request_grid,request_eparts;
+  Index_t proc, workIndex, num_calls;
+
+  double timer_tmp = 0;
+
+  MPI_Request request_grid[N_PROCS];
+  MPI_Request request_eparts[N_PROCS];
 
   timer_tmp = MPI_Wtime();
+
+  num_calls = 0;
 
   for (proc = 0; proc < N_PROCS; proc++)
   {
@@ -147,42 +154,45 @@ Index_t sync_hel=0;
 
     if (workIndex < NUM_STREAMS)
     {
+      num_calls++;
 
       MPI_Igatherv(&eParts[idx_frcsspem(computeLines[workIndex][0],
-                                       computeLines[workIndex][1],
-                                       computeLines[workIndex][2],
-                                       INNER_ACTIVE_SHELL,0,0,0)],
-                  ACTIVE_STREAM_SIZE*NUM_SPECIES*NUM_ESTEPS*NUM_MUSTEPS,
-                  Scalar_T,
-                  ePartsStream,
-                  recvCountEparts,
-                  displEparts,
-                  Scalar_T,
-                  proc,
-                  MPI_COMM_WORLD, &request_eparts);
+                                        computeLines[workIndex][1],
+                                        computeLines[workIndex][2],
+                                        INNER_ACTIVE_SHELL,0,0,0)],
+                   ACTIVE_STREAM_SIZE*NUM_SPECIES*NUM_ESTEPS*NUM_MUSTEPS,
+                   Scalar_T,
+                   ePartsStream,
+                   recvCountEparts,
+                   displEparts,
+                   Scalar_T,
+                   proc,
+                   MPI_COMM_WORLD,
+                   &request_eparts[proc]);
 
       MPI_Igatherv(&grid[idx_frcs(computeLines[workIndex][0],
-                                 computeLines[workIndex][1],
-                                 computeLines[workIndex][2],
-                                 INNER_ACTIVE_SHELL)],
-                  ACTIVE_STREAM_SIZE,
-                  Node_T,
-                  streamGrid,
-                  recvCountGrid,
-                  displGrid,
-                  Node_T,
-                  proc,
-                  MPI_COMM_WORLD,&request_grid);
-
-      MPI_Wait(&request_grid, MPI_STATUS_IGNORE);
-
-      MPI_Wait(&request_eparts, MPI_STATUS_IGNORE);
+                                  computeLines[workIndex][1],
+                                  computeLines[workIndex][2],
+                                  INNER_ACTIVE_SHELL)],
+                   ACTIVE_STREAM_SIZE,
+                   Node_T,
+                   streamGrid,
+                   recvCountGrid,
+                   displGrid,
+                   Node_T,
+                   proc,
+                   MPI_COMM_WORLD,
+                   &request_grid[proc]);
 
     }
 
   }
 
-  timer_MPIgatherscatter = timer_MPIgatherscatter + (MPI_Wtime() - timer_tmp);
+  MPI_Waitall(num_calls, request_eparts, MPI_STATUSES_IGNORE);
+  MPI_Waitall(num_calls, request_grid,   MPI_STATUSES_IGNORE);
+
+  timer_MPIgatherscatter = timer_MPIgatherscatter
+                           + (MPI_Wtime() - timer_tmp);
 
 }
 /*-----------------------------------------------------------------------*/
@@ -201,11 +211,16 @@ Index_t sync_hel=0;
 /*-----------------------------------------------------------------------*/
 {
 
-  Index_t proc, workIndex;
-  double timer_tmp=0;
-  MPI_Request request_grid,request_eparts;
+  Index_t proc, workIndex, num_calls;
+
+  double timer_tmp = 0;
+
+  MPI_Request request_grid[N_PROCS];
+  MPI_Request request_eparts[N_PROCS];
 
   timer_tmp = MPI_Wtime();
+
+  num_calls = 0;
 
   for (proc = 0; proc < N_PROCS; proc++)
   {
@@ -214,6 +229,7 @@ Index_t sync_hel=0;
 
     if (workIndex < NUM_STREAMS)
     {
+      num_calls++;
 
       MPI_Iscatterv(ePartsStream,
                     recvCountEparts,
@@ -226,7 +242,8 @@ Index_t sync_hel=0;
                     ACTIVE_STREAM_SIZE*NUM_SPECIES*NUM_ESTEPS*NUM_MUSTEPS,
                     Scalar_T,
                     proc,
-                    MPI_COMM_WORLD, &request_eparts);
+                    MPI_COMM_WORLD,
+                    &request_eparts[proc]);
 
       MPI_Iscatterv(streamGrid,
                     recvCountGrid,
@@ -239,17 +256,18 @@ Index_t sync_hel=0;
                     ACTIVE_STREAM_SIZE,
                     Node_T,
                     proc,
-                    MPI_COMM_WORLD,&request_grid);
-
-      MPI_Wait(&request_grid, MPI_STATUS_IGNORE);
-
-      MPI_Wait(&request_eparts, MPI_STATUS_IGNORE);
+                    MPI_COMM_WORLD,
+                    &request_grid[proc]);
 
     }
 
   }
 
-  timer_MPIgatherscatter = timer_MPIgatherscatter + (MPI_Wtime() - timer_tmp);
+  MPI_Waitall(num_calls, request_eparts, MPI_STATUSES_IGNORE);
+  MPI_Waitall(num_calls, request_grid,   MPI_STATUSES_IGNORE);
+
+  timer_MPIgatherscatter = timer_MPIgatherscatter
+                           + (MPI_Wtime() - timer_tmp);
 
 }
 /*-----------------------------------------------------------------------*/
@@ -263,15 +281,11 @@ Index_t sync_hel=0;
 /*-----------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------*/
 {
-//
-// RMC: Work index not use in this routine except to check it is < num_streams....?
-//
-
 // This routine seems to set ds and mhdB+/- on streamGrid that then updates
 // eGrid in the gatherv after diffusion - then they are used in adiabatic focusing.
 // CAREFUL!!!   This MUST be called/updated before focusing!
 //  This whole thing seems to be done since only here do we have access across
-//  proc boundaries along the stream..
+//  proc boundaries along the stream...
 // This routine basically acts as a "seam" for the streams across shell bounderies
 // But only for those values needed in the shell-stage (focusing).
 //
@@ -408,7 +422,8 @@ Index_t sync_hel=0;
 /*-----------------------------------------------------------------------*/
 {
   int proc_left, proc_right;
-
+  int RIPPLEF_TAG=1;
+  int RIPPLEG_TAG=2;
   MPI_Request req[4];
 
   Index_t face, row, col, species, energy, mu;
@@ -449,14 +464,15 @@ Index_t sync_hel=0;
       for (row = 0; row < FACE_ROWS; row++) {
         for (col = 0; col < FACE_COLS; col++) {
 
-          sendBuffG[idx_frc(face,row,col)] = grid[idx_frcs(face,row,col,OUTER_SHELL)];
+          sendBuffG[idx_frc(face,row,col)]
+          = grid[idx_frcs(face,row,col,OUTER_SHELL)];
 
           for (species = 0; species < NUM_SPECIES; species++) {
             for (energy = 0; energy < NUM_ESTEPS; energy++) {
               for (mu = 0; mu < NUM_MUSTEPS; mu++){
 
                 sendBuffF[idx_frcspem(face,row,col,species,energy,mu)]
-                 = eParts[idx_frcsspem(face,row,col,OUTER_SHELL,species,energy,mu)];
+                = eParts[idx_frcsspem(face,row,col,OUTER_SHELL,species,energy,mu)];
 
               }
             }
@@ -467,7 +483,7 @@ Index_t sync_hel=0;
 
   }
 
-  MPI_Irecv(recvBuffG,
+  MPI_Irecv(&recvBuffG[0],
            NUM_FACES*RC,
            Node_T,
            proc_left,
@@ -475,7 +491,7 @@ Index_t sync_hel=0;
            MPI_COMM_WORLD,
            &req[0]);
 
-  MPI_Irecv(recvBuffF,
+  MPI_Irecv(&recvBuffF[0],
            NUM_FACES*RCSPEM,
            Scalar_T,
            proc_left,
@@ -483,7 +499,7 @@ Index_t sync_hel=0;
            MPI_COMM_WORLD,
            &req[1]);
 
-  MPI_Isend(sendBuffG,
+  MPI_Isend(&sendBuffG[0],
            NUM_FACES*RC,
            Node_T,
            proc_right,
@@ -491,7 +507,7 @@ Index_t sync_hel=0;
            MPI_COMM_WORLD,
            &req[2]);
 
-  MPI_Isend(sendBuffF,
+  MPI_Isend(&sendBuffF[0],
            NUM_FACES*RCSPEM,
            Scalar_T,
            proc_right,
@@ -511,14 +527,15 @@ Index_t sync_hel=0;
       for (row = 0; row < FACE_ROWS; row++) {
         for (col = 0; col < FACE_COLS; col++) {
 
-          grid[idx_frcs(face,row,col,INNER_SHELL)] = recvBuffG[idx_frc(face,row,col)];
+          grid[idx_frcs(face,row,col,INNER_SHELL)]
+          = recvBuffG[idx_frc(face,row,col)];
 
           for (species = 0; species < NUM_SPECIES; species++) {
             for (energy = 0; energy < NUM_ESTEPS; energy++) {
               for (mu = 0; mu < NUM_MUSTEPS; mu++){
 
                 eParts[idx_frcsspem(face,row,col,INNER_SHELL,species,energy,mu)]
-                  = recvBuffF[idx_frcspem(face,row,col,species,energy,mu)];
+                = recvBuffF[idx_frcspem(face,row,col,species,energy,mu)];
 
               }
             }
@@ -527,6 +544,12 @@ Index_t sync_hel=0;
       }
     }
   }
+
+  /* Free temporary buffers */
+  free(sendBuffF);
+  free(recvBuffF);
+  free(sendBuffG);
+  free(recvBuffG);
 
   timer_MPIsendrecv = timer_MPIsendrecv + (MPI_Wtime() - timer_tmp);
 
@@ -545,13 +568,6 @@ Index_t sync_hel=0;
   if (mpi_rank == INNER_PROC){
     spawnNewShell();
   }
-
-  /* Free temporary buffers */
-
-  free(sendBuffF);
-  free(recvBuffF);
-  free(sendBuffG);
-  free(recvBuffG);
 
 } /*------ END  rotSunAndSpawnShell ( ) ---------------------------------*/
 /*-----------------------------------------------------------------------*/
@@ -614,7 +630,9 @@ Index_t sync_hel=0;
         grid[idx_frcs(face,row,col,INNER_ACTIVE_SHELL)].r.y   = y;
         grid[idx_frcs(face,row,col,INNER_ACTIVE_SHELL)].r.z   = z;
 
-      }}}
+      }
+    }
+  }
 
 } /*------ END  spawnNewShell( ) ------------------------------------*/
 /*-------------------------------------------------------------------*/

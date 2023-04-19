@@ -132,10 +132,6 @@ typedef struct {
 }
 /*.....................END..*/ SphVec_t; 
 
-/*-- Number of MPI psuedo-fields for use in creating MPI typedefs: --*/
-/*-- extra fields for MPI UP and LB boundary defs.                 --*/
-#define NUM_MPI_BOUNDARY_FLDS 2
-
 /*---*/         void                                   /*---*/
 /*---*/   initMPI_baseTypes(void );                    /*---*/
 

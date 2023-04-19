@@ -30,11 +30,10 @@
 /*-----------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------*/
 /*--*/    void                                                      /*---*/
-/*--*/    updateMhd(Scalar_t dt)                                    /*---*/
+/*--*/    updateMhd()                                               /*---*/
 /*--*                                                                *---*/
 /*--* Calculate the Mhd quantities and put them in the data          *---*/
-/*--* structure.  NOTE:  dt only used for setting Div v which 
- *                       is never used.                              *---*/
+/*--* structure.                                                     *---*/
 /*--*                                                                *---*/
 /*-----------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------*/
@@ -84,9 +83,9 @@
 
           // Update Div v.
           if (grid[idx].mhdDensity <= 0.0){
-            grid[idx].mhdDivV=0.0;            
+            grid[idx].mhdDivV = 0.0;
           } else {
-            grid[idx].mhdDivV=-1.0 * log(grid[idx].mhdDensity/grid[idx].mhdDensityOld)/dt;
+            grid[idx].mhdDivV = -1.0 * log(grid[idx].mhdDensity/grid[idx].mhdDensityOld)/config.tDel;
           }
 
           //update V
@@ -113,26 +112,26 @@
           // update del x B/B^2 (NOT implemented for helio yet!)
           if (config.useDrift > 0)
             mhdCurlBoverB2(grid[idx].r, &grid[idx].curlBoverB2,	grid[idx].mhdVr, idealShockNode);
-          
+
           // calculate the time derivative terms
           if ((mpi_rank == 0) && (shell == INNER_ACTIVE_SHELL)) {
-              
+
             grid[idx].mhdDuPar = 0.0;
             grid[idx].mhdDlnB = 0.0;
             grid[idx].mhdDlnN = 0.0;
-              
+
           } else {
-              
-            grid[idx].mhdDuPar = (grid[idx].mhdVr - grid[idx].mhdVsphOld.r) * grid[idx].mhdBr
+
+            grid[idx].mhdDuPar = (grid[idx].mhdVr     - grid[idx].mhdVsphOld.r)     * grid[idx].mhdBr
                                 +(grid[idx].mhdVtheta - grid[idx].mhdVsphOld.theta) * grid[idx].mhdBtheta
                                 +(grid[idx].mhdVphi   - grid[idx].mhdVsphOld.phi)   * grid[idx].mhdBphi;
 
             grid[idx].mhdDuPar /= grid[idx].mhdBmag;
-              
+
             grid[idx].mhdDlnB  = log(grid[idx].mhdBmag/grid[idx].mhdBmagOld);
-              
+
             grid[idx].mhdDlnN  = log(grid[idx].mhdDensity/grid[idx].mhdDensityOld);
-              
+
           }
         }
       }
@@ -580,7 +579,7 @@
     ratio = (exponent - 1.0) / (exponent + 1.0);
 
   factor = (1.0 + ((1.0 - ratio) * 0.5 * (config.idealShockJump - 1.0)));
-  falloff = exp(config.idealShockFalloff * 
+  falloff = exp(config.idealShockFalloff *
     (r - ((config.idealShockSpeed / C) * (t_global - config.idealShockInitTime / DAY) + config.rScale))
   );
 

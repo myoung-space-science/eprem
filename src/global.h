@@ -66,6 +66,12 @@ extern Index_t FRC;
 
 #define idx_spem(sp,e,m) ((m)+(e)*NUM_MUSTEPS+(sp)*EM)
 
+#define idx_spem1m(sp,e,m) ((m)+(e)*NUM_MUSTEPS+(sp)*NUM_MUSTEPS*(NUM_ESTEPS-1))
+
+#define idx_spep1m(sp,e,m) ((m)+(e)*NUM_MUSTEPS+(sp)*NUM_MUSTEPS*(NUM_ESTEPS+1))
+
+#define idx_spemp1(sp,e,m) ((m)+(e)*(NUM_MUSTEPS+1)+(sp)*(NUM_MUSTEPS+1)*NUM_ESTEPS)
+
 #define idx_frco(f,r,c,o) ((o)+(c)*NUM_OBS+(r)*CO+(f)*RCO)
 
 #define idx_frcspemo(f,r,c,sp,e,m,o) ((o)+(m)*NUM_OBS+(e)*MO+(sp)*EMO+(c)*SPEMO+(r)*CSPEMO+(f)*RCSPEMO)
@@ -108,6 +114,9 @@ extern Index_t TOTAL_NUM_SHELLS;
 extern Index_t NUM_OBS;
 extern Index_t N_PROCS;
 extern Index_t TOTAL_ACTIVE_STREAM_SIZE;
+
+extern Index_t AdiabaticFocusAlg;
+extern Index_t AdiabaticChangeAlg;
 
 #define OUTER_SHELL ((LOCAL_NUM_SHELLS - 1))
 

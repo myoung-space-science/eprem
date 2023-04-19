@@ -130,11 +130,11 @@
   Index_t species, energy, mu;
 
   Node_t proj;
-  
+
   double timer_tmp=0;
-  
+
   timer_tmp = MPI_Wtime();
-  
+
   MPI_Gatherv(&grid[idx_frcs(face,row,col,INNER_ACTIVE_SHELL)],
                   ACTIVE_STREAM_SIZE,
                   Node_T,
@@ -154,8 +154,8 @@
                   Scalar_T,
                   0,
                   MPI_COMM_WORLD );
-   
-  timer_MPIgatherscatter = timer_MPIgatherscatter + (MPI_Wtime() - timer_tmp);                                          
+
+  timer_MPIgatherscatter = timer_MPIgatherscatter + (MPI_Wtime() - timer_tmp);
 
   if (mpi_rank == 0)
   {

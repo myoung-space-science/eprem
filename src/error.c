@@ -139,13 +139,12 @@ void warn(Index_t face, Index_t row, Index_t col, Index_t shell,
         }
         else
         {
-            strncpy(warningsFilename, config.warningsFile,
-                    strlen(config.warningsFile));
+            strcpy(warningsFilename, config.warningsFile);
         }
 
         /* Appends the current proc rank. */
         sprintf(replacementStr, "%d", mpi_rank);
-        strncat(warningsFilename, replacementStr, strlen(replacementStr));
+        strcat(warningsFilename, replacementStr);
 
         /* If "XXX" is found, appends the rest of the original string starting
          * from the character after it */

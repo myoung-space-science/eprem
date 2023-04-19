@@ -2,10 +2,10 @@
 -- EMMREM: cubeShellStruct.c
 --
 -- MPI type definition initialization based on the types defined in
--- cubeShellStruct.h. Modifications to MPI type routines here require 
+-- cubeShellStruct.h. Modifications to MPI type routines here require
 -- corresponding changes to types defined in cubeShellStruct.h.
 -- These initialization routines are called by initMPI().
--- 
+--
 -- ______________CHANGE HISTORY______________
 -- ______________ END CHANGE HISTORY______________
 -----------------------------------------------------------*/
@@ -99,112 +99,87 @@ MPI_Datatype ShellLinks_T;
 
   /*-- Numbers of components of MPI data type definitions for nodes: --*/
   /*-- largest number of types we might ever need to bundle together. --*/
-  #define MAX_FLDS (NUM_DATA_FLDS + NUM_NGBR_FLDS + NUM_MPI_BOUNDARY_FLDS)
+  #define MAX_FLDS (NUM_DATA_FLDS + NUM_NGBR_FLDS)
 
   MPI_Datatype types[MAX_FLDS]; /*-- Types in MPI struct.        --*/
-  MPI_Datatype oldType;         /*-- Temporary type for resizing --*/
   int          spans[MAX_FLDS]; /*-- num items of each type.     --*/
   MPI_Aint     disps[MAX_FLDS]; /*-- memory offset to each type. --*/
   MPI_Aint     base;            /*-- memory address of Node_t.   --*/
-  MPI_Aint     extent;          /*-- memory extent of MPI struct.      --*/
-  MPI_Aint     lb;              /*-- lower memory bound of MPI struct. --*/
-  MPI_Aint     stride; 
+  MPI_Aint     stride;
   int          span;
   int          i;
   int          cnt;
 
   /*--------------- Neighbor_T ----------*/
   /*-- All spans set to 1: treat each field individually.         --*/
-  for( i = 0; i < NUM_NGBR_FLDS+NUM_MPI_BOUNDARY_FLDS; i++ ){ spans[i] = 1; }
+  for( i = 0; i < NUM_NGBR_FLDS; i++ ){ spans[i] = 1; }
   /*-- Get base memory address of a Node_t.                       --*/
   MPI_Get_address( & grid[0].n        ,  & base );
   /*-- Set types and relative offsets of struct elements.         --*/
-  /*-- Replaces MPI_LB and MPI_UB pseudo elements with MPI_INT.   --*/
   i = 0;
-  types[i] = MPI_INT;
-  MPI_Get_address( & grid[0].n      , & disps[i]); disps[i++] -= base;
   types[i] = Index_T;
-  MPI_Get_address( & grid[0].n.face , & disps[i]); disps[i++] -= base; 
+  MPI_Get_address( & grid[0].n.face , & disps[i]); disps[i++] -= base;
   types[i] = Index_T;
-  MPI_Get_address( & grid[0].n.row  , & disps[i]); disps[i++] -= base; 
+  MPI_Get_address( & grid[0].n.row  , & disps[i]); disps[i++] -= base;
   types[i] = Index_T;
-  MPI_Get_address( & grid[0].n.col  , & disps[i]); disps[i++] -= base; 
+  MPI_Get_address( & grid[0].n.col  , & disps[i]); disps[i++] -= base;
   types[i] = Index_T;
-  MPI_Get_address( & grid[0].n.shell, & disps[i]); disps[i++] -= base; 
+  MPI_Get_address( & grid[0].n.shell, & disps[i]); disps[i++] -= base;
   types[i] = MPI_Rank_T;
   MPI_Get_address( & grid[0].n.rank , & disps[i]); disps[i++] -= base;
   types[i] = Scalar_T;
   MPI_Get_address( & grid[0].n.dl   , & disps[i]); disps[i++] -= base;
   types[i] = Scalar_T;
   MPI_Get_address( & grid[0].n.dlPer, & disps[i]); disps[i++] -= base;
-  types[i] = MPI_INT; 
-  MPI_Get_address( & grid[0].e      , & disps[i]); disps[i++] -= base; 
-  /*-- Build datatype describing structure. --*/ 
-  MPI_Type_create_struct( NUM_NGBR_FLDS+NUM_MPI_BOUNDARY_FLDS, spans,
-                          disps, types, & Neighbor_T ); 
-  /*-- Resize datatype to account for MPI_INT temporary boundary type --*/
-  MPI_Type_get_extent( Neighbor_T, &lb, &extent );
-  oldType = Neighbor_T;
-  MPI_Type_create_resized( oldType, 0, extent-sizeof(MPI_INT), &Neighbor_T );
+  /*-- Build datatype describing structure. --*/
+  MPI_Type_create_struct( NUM_NGBR_FLDS, spans,
+                          disps, types, &Neighbor_T );
   MPI_Type_commit( & Neighbor_T );
   /*--------------- END Neighbor_T ----------*/
 
   /*--------------- NodeLinks_T ----------*/
   /*-- All spans set to 1: treat each field individually.         --*/
-  for( i = 0; i < NUM_LINK_FLDS+2; i++ ){ spans[i] = 1; }
+  for( i = 0; i < NUM_LINK_FLDS; i++ ){ spans[i] = 1; }
   /*-- Get base memory address of a Node_t.                       --*/
   MPI_Get_address( & grid[0]        ,  & base );
   /*-- Set types and relative offsets of struct elements.         --*/
-  /*-- Replaces MPI_LB and MPI_UB pseudo elements with MPI_INT.   --*/
   i = 0;
-  types[i] = MPI_INT;
-  MPI_Get_address( & grid[0]         , & disps[i]); disps[i++] -= base;
   types[i] = Neighbor_T;
-  MPI_Get_address( & grid[0].n       , & disps[i]); disps[i++] -= base; 
+  MPI_Get_address( & grid[0].n       , & disps[i]); disps[i++] -= base;
   types[i] = Neighbor_T;
-  MPI_Get_address( & grid[0].e       , & disps[i]); disps[i++] -= base; 
+  MPI_Get_address( & grid[0].e       , & disps[i]); disps[i++] -= base;
   types[i] = Neighbor_T;
-  MPI_Get_address( & grid[0].w       , & disps[i]); disps[i++] -= base; 
+  MPI_Get_address( & grid[0].w       , & disps[i]); disps[i++] -= base;
   types[i] = Neighbor_T;
-  MPI_Get_address( & grid[0].s       , & disps[i]); disps[i++] -= base; 
-  types[i] = Neighbor_T; 
-  MPI_Get_address( & grid[0].streamIn , & disps[i]); disps[i++] -= base; 
-  types[i] = Neighbor_T; 
-  MPI_Get_address( & grid[0].streamOut, & disps[i]); disps[i++] -= base; 
-  types[i] = MPI_INT; 
-  MPI_Get_address( & grid[idx_frcs(0,0,0,1)]        , & disps[i]); disps[i++] -= base;
-  /*-- Build datatype describing structure. --*/ 
-  MPI_Type_create_struct( NUM_LINK_FLDS+NUM_MPI_BOUNDARY_FLDS, spans,
-                          disps, types, & NodeLinks_T ); 
-  /*-- Resize datatype to account for MPI_INT temporary boundary type --*/
-  MPI_Type_get_extent( NodeLinks_T, &lb, &extent );
-  oldType = NodeLinks_T;
-  MPI_Type_create_resized( oldType, 0, extent-sizeof(MPI_INT), &NodeLinks_T );
+  MPI_Get_address( & grid[0].s       , & disps[i]); disps[i++] -= base;
+  types[i] = Neighbor_T;
+  MPI_Get_address( & grid[0].streamIn , & disps[i]); disps[i++] -= base;
+  types[i] = Neighbor_T;
+  MPI_Get_address( & grid[0].streamOut, & disps[i]); disps[i++] -= base;
+  /*-- Build datatype describing structure. --*/
+  MPI_Type_create_struct( NUM_LINK_FLDS, spans,disps, types, &NodeLinks_T );
   MPI_Type_commit( & NodeLinks_T );
   /*----------- END NodeLinks_T ----------*/
 
   /*--------------- NodeData_T ----------*/
   /*-- All spans set to 1: treat each field individually.         --*/
-  for( i = 0; i < NUM_DATA_FLDS+NUM_MPI_BOUNDARY_FLDS; i++ ){ spans[i] = 1; }
+  for( i = 0; i < NUM_DATA_FLDS; i++ ){ spans[i] = 1; }
   /*-- Get base memory address of a Node_t.                       --*/
   MPI_Get_address( & grid[0]        ,  & base );
   /*-- Set types and relative offsets of struct elements.         --*/
-  /*-- Replaces MPI_LB and MPI_UB pseudo elements with MPI_INT.   --*/
   i = 0;
-  types[i] = MPI_INT;
-  MPI_Get_address( & grid[0]        , & disps[i]); disps[i++] -= base;
   types[i] = Vec_T;
-  MPI_Get_address( & grid[0].r      , & disps[i]); disps[i++] -= base; 
+  MPI_Get_address( & grid[0].r      , & disps[i]); disps[i++] -= base;
   types[i] = Vec_T;
   MPI_Get_address( & grid[0].rOld   , & disps[i]); disps[i++] -= base;
   types[i] = Vec_T;
   MPI_Get_address( & grid[0].rOlder , & disps[i]); disps[i++] -= base;
   types[i] = Scalar_T;
-  MPI_Get_address( & grid[0].rmag   , & disps[i]); disps[i++] -= base; 
+  MPI_Get_address( & grid[0].rmag   , & disps[i]); disps[i++] -= base;
   types[i] = Radian_T;
-  MPI_Get_address( & grid[0].zen    , & disps[i]); disps[i++] -= base; 
+  MPI_Get_address( & grid[0].zen    , & disps[i]); disps[i++] -= base;
   types[i] = Radian_T;
-  MPI_Get_address( & grid[0].azi    , & disps[i]); disps[i++] -= base; 
+  MPI_Get_address( & grid[0].azi    , & disps[i]); disps[i++] -= base;
   types[i] = Scalar_T;
   MPI_Get_address( & grid[0].ds     , & disps[i]); disps[i++] -= base;
   types[i] = Scalar_T;
@@ -251,15 +226,9 @@ MPI_Datatype ShellLinks_T;
   MPI_Get_address( & grid[0].mhdDuPar , & disps[i]); disps[i++] -= base;
   types[i] = SphVec_T;
   MPI_Get_address( & grid[0].curlBoverB2 , & disps[i]); disps[i++] -= base;
-  types[i] = MPI_INT;
-  MPI_Get_address( & grid[idx_frcs(0,0,0,1)]        , & disps[i]); disps[i++] -= base;
-  /*-- Build datatype describing structure. --*/ 
-  MPI_Type_create_struct( NUM_DATA_FLDS+NUM_MPI_BOUNDARY_FLDS, spans,
-                          disps, types, & NodeData_T ); 
-  /*-- Resize datatype to account for MPI_INT temporary boundary type --*/
-  MPI_Type_get_extent( NodeData_T, &lb, &extent );
-  oldType = NodeData_T;
-  MPI_Type_create_resized( oldType, 0, extent-sizeof(MPI_INT), &NodeData_T );
+  /*-- Build datatype describing structure. --*/
+  MPI_Type_create_struct( NUM_DATA_FLDS, spans,
+                          disps, types, &NodeData_T );
   MPI_Type_commit( & NodeData_T );
   /*--------------- END NodeData_T ----------*/
 
@@ -267,22 +236,21 @@ MPI_Datatype ShellLinks_T;
   /*-- combination of NodeData_T and NodeLinks_T (includes all of Node_t) --*/
   spans[0] = 1;
   spans[1] = 1;
-  
+
   MPI_Get_address( & grid[0],  & base);
   MPI_Get_address( & grid[0],  & disps[0]);
   MPI_Get_address( & grid[0],  & disps[1]);
-  
+
   disps[0] -= base;
   disps[1] -= base;
-  
+
   types[0] = NodeData_T;
   types[1] = NodeLinks_T;
-  
+
   /*-- Build datatype describing structure. --*/
   MPI_Type_create_struct( 2, spans, disps, types, & Node_T );
   MPI_Type_commit( & Node_T );
   /*--------------- END Node_T ----------*/
-
 
 
   /*---------------  StreamData_T -----------------------*/
@@ -303,14 +271,14 @@ MPI_Datatype ShellLinks_T;
   cnt = NUM_FACES * FACE_ROWS * FACE_COLS;
   /*-- Set num nodes at each stride.                                --*/
   span = 1;
-  /*-- Build datatype describing structure for data.                --*/ 
-  MPI_Type_create_hvector( cnt, span, stride, NodeData_T, & ShellData_T ); 
-  MPI_Type_commit( & ShellData_T ); 
-  /*-- Build datatype describing structure for links.               --*/ 
-  MPI_Type_create_hvector( cnt, span, stride, NodeLinks_T, & ShellLinks_T ); 
-  MPI_Type_commit( & ShellLinks_T ); 
+  /*-- Build datatype describing structure for data.                --*/
+  MPI_Type_create_hvector( cnt, span, stride, NodeData_T, & ShellData_T );
+  MPI_Type_commit( & ShellData_T );
+  /*-- Build datatype describing structure for links.               --*/
+  MPI_Type_create_hvector( cnt, span, stride, NodeLinks_T, & ShellLinks_T );
+  MPI_Type_commit( & ShellLinks_T );
   /*------------ END ShellData_T and ShellLinks_t --------------------*/
-  
+
 }
 /*--------END initMPI_cubeShellStruct(void)-----------------------*/
 /*----------------------------------------------------------------*/

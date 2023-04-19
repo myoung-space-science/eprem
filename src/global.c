@@ -70,6 +70,9 @@ Index_t CSPEMO;
 Index_t RCSPEMO;
 Index_t FRC;
 
+Index_t AdiabaticFocusAlg;
+Index_t AdiabaticChangeAlg;
+
 
 /*----------------------------------------------------------*/
 /*----------------------------------------------------------*/

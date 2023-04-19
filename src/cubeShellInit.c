@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <time.h>
+#include <float.h>
 
 #include "global.h"
 #include "cubeShellInit.h"
@@ -750,7 +751,7 @@
   Scalar_t  rmag;
   Radian_t  zen;
   Radian_t  azi;
-  
+
   /*---- Loop over cube surface, rescale each node's r  --*/
   /*---- to unit by scaling (x,y,z) by ||r|| ( -> 1!).  --*/
   /*---- Assign azi = atan2( r.y, r.x ). We take        --*/
@@ -763,35 +764,35 @@
     {
       for (col  = 0; col  < FACE_COLS; col++ )
       {
-        
+
         r = grid[idx_frcs(face,row,col,shell)].r;
         rmag  = sqrt( (r.x * r.x) + (r.y * r.y) + (r.z * r.z) );
         r.x   = r.x / rmag;
         r.y   = r.y / rmag;
         r.z   = r.z / rmag;
         rmag  = 1.0;
-        
+
         azi = atan2(r.y, r.x);
         zen = acos(r.z/rmag);
-        
+
         grid[idx_frcs(face,row,col,shell)].rmag = 1.0;
-        
+
         grid[idx_frcs(face,row,col,shell)].azi  = azi;
         grid[idx_frcs(face,row,col,shell)].zen  = zen;
-        
+
         grid[idx_frcs(face,row,col,shell)].r.z =
         grid[idx_frcs(face,row,col,shell)].rmag * cos(zen) ;
-        
+
         grid[idx_frcs(face,row,col,shell)].r.x =
         grid[idx_frcs(face,row,col,shell)].rmag * sin(zen)*cos(azi) ;
-        
+
         grid[idx_frcs(face,row,col,shell)].r.y =
         grid[idx_frcs(face,row,col,shell)].rmag * sin(zen)*sin(azi) ;
-        
+
       }
     }
   }
-  
+
 } /*------ END  initSphereCoords ( ) --------------------*/
 /*-----------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------*/
@@ -1006,7 +1007,7 @@
           for (energy = 0; energy < NUM_ESTEPS; energy++) {
             for (mu = 0; mu < NUM_MUSTEPS; mu++) {
 
-              eParts[idx_frcsspem(face,row,col,shell,species,energy,mu)] = 0.0;
+              eParts[idx_frcsspem(face,row,col,shell,species,energy,mu)] = DBL_MIN;
 
             }
           }
