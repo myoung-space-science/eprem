@@ -85,6 +85,12 @@ ${textbf}DESCRIPTION${textnm}
                 libraries in DIR/lib.
         ${textbf}--with-ext-deps=DIR${textnm}
                 Look for external dependencies in DIR/include and DIR/lib.
+        ${textbf}--download-ext-deps${textnm}
+                Download external dependencies. By default, this will download
+                and build packages inside ./external. However, setting 
+                --with-ext-deps=DIR will cause it to download and build packages 
+                inside DIR. This script will create the necessary path in either
+                case.
         ${textbf}--with-libconfig-dir=DIR${textnm}
                 Look for libconfig header files in DIR/include and look for 
                 libraries in DIR/lib. Supersedes the --with-ext-deps option.
@@ -140,6 +146,7 @@ mpi_dir=
 libconfig_dir=
 netcdf_dir=
 deps_dir=
+download_deps=0
 
 # Parse command-line options. See
 # `/usr/share/doc/util-linux/examples/getopt-example.bash` and the `getopt`
@@ -152,6 +159,7 @@ TEMP=$(getopt \
     -l 'debug,optimize,dry-run' \
     -l 'with-mpi-dir:,with-libconfig-dir:,with-netcdf-dir:' \
     -l 'with-ext-deps:' \
+    -l 'download-ext-deps' \
     -- "$@")
 
 if [ $? -ne 0 ]; then
@@ -225,6 +233,11 @@ while [ $# -gt 0 ]; do
             shift 2
             continue
         ;;
+        '--download-ext-deps')
+            download_deps=1
+            shift
+            continue
+        ;;
         '--')
             shift
             break
@@ -251,6 +264,60 @@ if [ -n "${extra_args}" ]; then
     echo "./configure [...] && make && make install"
     echo
     exit 1
+fi
+
+# The function that will download and build external dependencies.
+install_ext_deps() {
+    if [ -z "${1}" ]; then
+        echo "ERROR: Missing path to external-dependencies directory."
+        exit 1
+    fi
+    local deps_dir="${1}"
+
+    # Create and enter the build directory for external dependencies.
+    mkdir ${deps_dir}
+    pushd ${deps_dir} &> /dev/null
+
+    # TODO: Refactor into a loop.
+
+    # --> libconfig
+    wget https://src.fedoraproject.org/repo/pkgs/libconfig/libconfig-1.5.tar.gz/a939c4990d74e6fc1ee62be05716f633/libconfig-1.5.tar.gz
+    tar -xvzf libconfig-1.5.tar.gz
+    pushd libconfig-1.5 &> /dev/null
+    ./configure --prefix=$(pwd)/../software && make && make install && make check
+    popd &> /dev/null
+
+    # --> zlib
+    wget https://zlib.net/fossils/zlib-1.2.11.tar.gz
+    tar -xvzf zlib-1.2.11.tar.gz
+    pushd zlib-1.2.11 &> /dev/null
+    ./configure --prefix=$(pwd)/../software && make && make install && make check
+    popd &> /dev/null
+
+    # --> HDF5
+    wget https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8/hdf5-1.8.17/src/hdf5-1.8.17.tar.gz
+    tar -xvzf hdf5-1.8.17.tar.gz
+    pushd hdf5-1.8.17 &> /dev/null
+    ./configure --prefix=$(pwd)/../software && make && make install && make check
+    popd &> /dev/null
+
+    # --> NetCDF4
+    wget https://github.com/Unidata/netcdf-c/archive/refs/tags/v4.4.1.1.tar.gz
+    tar -xvzf v4.4.1.1.tar.gz
+    pushd netcdf-c-4.4.1.1 &> /dev/null
+    ./configure --prefix=$(pwd)/../software --disable-dap-remote-tests && make && make install && make check
+    popd &> /dev/null
+
+    # Leave the external-dependencies directory.
+    popd &> /dev/null
+}
+
+# Process the --download-ext-deps option.
+if [ "$download_deps" == 1 ]; then
+    if [ -z "$deps_dir" ]; then
+        deps_dir="$(pwd)/external"
+    fi
+    install_ext_deps "${deps_dir}"
 fi
 
 # Update flags based on --with-ext-deps option.
