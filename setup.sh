@@ -284,28 +284,28 @@ install_ext_deps() {
     wget https://src.fedoraproject.org/repo/pkgs/libconfig/libconfig-1.5.tar.gz/a939c4990d74e6fc1ee62be05716f633/libconfig-1.5.tar.gz
     tar -xvzf libconfig-1.5.tar.gz
     pushd libconfig-1.5 &> /dev/null
-    ./configure --prefix=$(pwd)/../software && make && make install && make check
+    ./configure --prefix="${deps_dir}" && make && make install && make check
     popd &> /dev/null
 
     # --> zlib
     wget https://zlib.net/fossils/zlib-1.2.11.tar.gz
     tar -xvzf zlib-1.2.11.tar.gz
     pushd zlib-1.2.11 &> /dev/null
-    ./configure --prefix=$(pwd)/../software && make && make install && make check
+    ./configure --prefix="${deps_dir}" && make && make install && make check
     popd &> /dev/null
 
     # --> HDF5
     wget https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8/hdf5-1.8.17/src/hdf5-1.8.17.tar.gz
     tar -xvzf hdf5-1.8.17.tar.gz
     pushd hdf5-1.8.17 &> /dev/null
-    ./configure --prefix=$(pwd)/../software && make && make install && make check
+    ./configure --prefix="${deps_dir}" && make && make install && make check
     popd &> /dev/null
 
     # --> NetCDF4
     wget https://github.com/Unidata/netcdf-c/archive/refs/tags/v4.4.1.1.tar.gz
     tar -xvzf v4.4.1.1.tar.gz
     pushd netcdf-c-4.4.1.1 &> /dev/null
-    ./configure --prefix=$(pwd)/../software --disable-dap-remote-tests && make && make install && make check
+    ./configure --prefix="${deps_dir}" --disable-dap-remote-tests && make && make install && make check
     popd &> /dev/null
 
     # Leave the external-dependencies directory.
