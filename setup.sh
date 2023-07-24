@@ -273,10 +273,17 @@ install_ext_deps() {
         exit 1
     fi
     local deps_dir="${1}"
+    local tmp_name=tmp
 
-    # Create and enter the build directory for external dependencies.
-    mkdir ${deps_dir}
+    # Create and enter the top-level directory for external dependencies.
+    mkdir -p ${deps_dir}
     pushd ${deps_dir} &> /dev/null
+
+    # Create and enter the local subdirectory where this script will download
+    # and build each package. Isolating the source code allows us to remove it
+    # while leaving the build dependencies.
+    mkdir ${tmp_name}
+    pushd ${tmp_name} &> /dev/null
 
     # TODO: Refactor into a loop.
 
@@ -308,14 +315,18 @@ install_ext_deps() {
     ./configure --prefix="${deps_dir}" --disable-dap-remote-tests && make && make install && make check
     popd &> /dev/null
 
-    # Leave the external-dependencies directory.
+    # Exit and remove the temporary source-code directory.
+    popd &> /dev/null
+    /bin/rm -rf ${tmp_name}
+
+    # Exit the top-level external-dependencies directory.
     popd &> /dev/null
 }
 
 # Process the --download-ext-deps option.
 if [ "$download_deps" == 1 ]; then
     if [ -z "$deps_dir" ]; then
-        deps_dir="$(pwd)/external"
+        deps_dir="$(pwd)/ext-deps"
     fi
     install_ext_deps "${deps_dir}"
 fi
