@@ -3,6 +3,9 @@
 # Note that portions of this file have been copied or adapted from
 # (https://github.com/github/gitignore/blob/main/Autotools.gitignore).
 
+# Default directory for external dependencies
+ext-deps
+
 # Python files
 __pycache__
 
