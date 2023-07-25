@@ -87,10 +87,10 @@ ${textbf}DESCRIPTION${textnm}
                 Look for external dependencies in DIR/include and DIR/lib.
         ${textbf}--with-libconfig-dir=DIR${textnm}
                 Look for libconfig header files in DIR/include and look for 
-                libraries in DIR/lib. Overrides --with-ext-deps option.
+                libraries in DIR/lib. Supersedes the --with-ext-deps option.
         ${textbf}--with-netcdf-dir=DIR${textnm}
                 Look for netcdf header files in DIR/include and look for 
-                libraries in DIR/lib. Overrides --with-ext-deps option.
+                libraries in DIR/lib. Supersedes the --with-ext-deps option.
         ${textbf}--install[=DIR]${textnm}
                 Install the executable. If DIR is included, this will directly 
                 install the executable in DIR; if not, it will install it to 
