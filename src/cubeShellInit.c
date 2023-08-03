@@ -22,9 +22,11 @@
 /* license online at http://www.gnu.org/copyleft/gpl.html. */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 #include <time.h>
 #include <float.h>
+#include <string.h>
 
 #include "global.h"
 #include "cubeShellInit.h"

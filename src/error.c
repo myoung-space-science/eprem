@@ -68,8 +68,8 @@ static FILE *warningsFile = NULL;
 {
   if (isnan(value))
   {
-    printf("NaN value in %s", msg);
-    printf("proc %i\tface %i\trow %i\tcol %i\tshell %i\n",
+    printf("NaN value in %s: ", msg);
+    printf("proc %i, face %i, row %i, col %i, shell %i\n",
            proc, face, row, col, shell);
     panic("NaN value recorded!\n");
   }
@@ -95,8 +95,8 @@ static FILE *warningsFile = NULL;
 {
   if (isinf(value))
   {
-    printf("Inf value in %s", msg);
-    printf("proc %i\tface %i\trow %i\tcol %i\tshell %i\n",
+    printf("Inf value in %s: ", msg);
+    printf("proc %i, face %i, row %i, col %i, shell %i\n",
            proc, face, row, col, shell);
     panic("Inf value recorded!\n");
   }
