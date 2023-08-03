@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.2.5
+## v0.2.5 (11Apr2023)
 
 - Redefined options for `setup.sh`.
 
