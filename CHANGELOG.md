@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.2.6 (03Aug2023)
+
+- Add `--download-ext-deps` to `setup.sh` CLI.
+
 ## v0.2.5 (11Apr2023)
 
 - Redefined options for `setup.sh`.
