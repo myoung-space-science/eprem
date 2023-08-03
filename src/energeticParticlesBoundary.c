@@ -12,6 +12,7 @@
 
 #include <stdio.h>
 #include <math.h>
+#include <float.h>
 
 #include "global.h"
 #include "configuration.h"
@@ -98,38 +99,47 @@
 /*-----------------------------------------------------------------------------*/
 {/*----------------------------------------------------------------------------*/
 
-  Scalar_t normJHe, normJ;
+  Scalar_t normJXi, normJ;
   Scalar_t normJ0;
   Scalar_t normRadius, radialTerm;
   Scalar_t normE1, powerLawTerm;
   Scalar_t normE0, expTerm;
   Scalar_t normf;
 
-  const double one = 1.0; // 1.0 with appropriate precision
-  const double two = 2.0; // 2.0 with appropriate precision
-  const double r1  = 1.0; // Reference radius = 1 au
-  const double E1  = 1.0; // Reference energy = 1 MeV/nuc
+  const double one   = 1.0;                // 1.0 with appropriate precision
+  const double two   = 2.0;                // 2.0 with appropriate precision
+  const double r1    = 1.0;                // Reference radius = 1 au
+  const double E1    = 1.0;                // Reference energy = 1 MeV/nuc
+  const double Enorm = MEV / (MP * C * C); // Energy-normalization factor
 
+  /* Define local variables corresponding to runtime options. */
   Scalar_t J0 = config.boundaryFunctAmplitude;
-  Scalar_t xi = config.boundaryFunctXi;
+  Scalar_t Xi = config.boundaryFunctXi;
   Scalar_t gamma = config.boundaryFunctGamma;
   Scalar_t beta = config.boundaryFunctBeta;
   Scalar_t E0 = config.boundaryFunctEcutoff;
   Scalar_t rScale = config.rScale;
 
+  /* Define normalized variables. */
   normJ0 = J0 * (MP * C) / (MHD_DENSITY_NORM * MEV);
   normRadius = r1 / config.rScale;
-  normE1 = E1 * MEV / (MP * C * C);
-  normE0 = E0 * MEV / (MP * C * C);
+  normE1 = E1 * Enorm;
+  normE0 = E0 * Enorm;
 
-  radialTerm = pow( (r / normRadius), -beta );
-  powerLawTerm = pow( (energy / normE1), -gamma);
-  expTerm = exp( -(energy / normE0) );
+  /* Define terms in the analytic spectrum. */
+  radialTerm   = pow( (r / normRadius), -beta );  // radial power-law dependence
+  powerLawTerm = pow( (energy / normE1), -gamma); // energetic power-law below E0
+  expTerm      = exp( -(energy / normE0) );       // exponential fall-off above E0
 
-  normJHe = normJ0 * radialTerm * powerLawTerm * expTerm;
-  normJ  = normJHe / xi;
+  /* Compute the flux spectrum. */
+  normJXi = normJ0 * radialTerm * powerLawTerm * expTerm;
+  normJ  = normJXi / Xi;
 
+  /* Convert flux to a distribution function. */
   normf = normJ / (two * energy);
+
+  /* Floor the distribution at DBL_MIN, to prevent log(f) = -inf. */
+  if (normf < DBL_MIN) normf = DBL_MIN;
 
   return normf;
 

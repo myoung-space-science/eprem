@@ -61,7 +61,7 @@ getParams( char* configFilename)
   config.numEnergySteps = readInt("numEnergySteps", 20, 2, BADINT);
   config.numMuSteps = readInt("numMuSteps", 20, 2, BADINT);
 
-  config.rScale = readDouble("rScale", 0.005, VERYSMALL, BADVALUE);
+  config.rScale = readDouble("rScale", RSAU, VERYSMALL, BADVALUE);
   config.flowMag = readDouble("flowMag", 400.0e5, VERYSMALL, BADVALUE);
   config.mhdDensityAu = readDouble("mhdDensityAu", 8.30, VERYSMALL, BADVALUE);
   config.mhdBAu = readDouble("mhdBAu", 1.60e-5, VERYSMALL, BADVALUE);
