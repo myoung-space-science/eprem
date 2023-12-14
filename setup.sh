@@ -99,12 +99,12 @@ ${textbf}DESCRIPTION${textnm}
                 libraries in DIR/lib. Supersedes the --with-ext-deps option.
         ${textbf}--install[=DIR]${textnm}
                 Install the executable. If DIR is included, this will directly 
-                install the executable in DIR; if not, it will install it to 
-                the default location for the host system or PREFIX, if set (see 
-                --prefix). The default action is to not install the executable. 
-                Including DIR is the equivalent of passing --bindir=DIR to 
-                ./configure. Using this in combination with --prefix=PREFIX 
-                will install the executable in PREFIX/DIR.
+                install the executable in DIR; if not, it will install the 
+                executable to  the default location for the host system or to 
+                PREFIX, if set (see --prefix). The default action is to not 
+                install the executable. Including DIR is the equivalent of 
+                passing --bindir=DIR to ./configure. Using this in combination 
+                with --prefix=PREFIX will install the executable in PREFIX/DIR.
         ${textbf}--prefix=PREFIX${textnm}
                 Set the top-level installation directory (default: /usr/local). 
                 This is equivalent to passing --prefix=PREFIX to ./configure. 
