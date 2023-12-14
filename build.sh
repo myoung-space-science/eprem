@@ -52,7 +52,6 @@ endul=$(tput rmul)
 # Store the initial working directory.
 script_dir="$(dirname "$(readlink -f "${0}")")"
 buildlog=${script_dir}/build.log
-> $buildlog
 
 # Set option defaults.
 verbose=0
@@ -275,6 +274,10 @@ if [ -n "${extra_args}" ]; then
     echo
     exit 1
 fi
+
+# Create a fresh build log. We do this after reading and checking command-like
+# arguments because in order to avoid unnecessarily creating a new log.
+> $buildlog
 
 # Declare a status flag.
 status=

@@ -52,7 +52,6 @@ endul=$(tput rmul)
 # Store the initial working directory.
 script_dir="$(dirname "$(readlink -f "${0}")")"
 setuplog=${script_dir}/setup.log
-> $setuplog
 
 # Set option defaults.
 verbose=0
@@ -165,6 +164,10 @@ if [ -n "${extra_args}" ]; then
     echo "Did you misspell something?"
     exit 1
 fi
+
+# Create a fresh setup log. We do this after reading and checking command-like
+# arguments because in order to avoid unnecessarily creating a new log.
+> $setuplog
 
 # Declare a status flag.
 status=
