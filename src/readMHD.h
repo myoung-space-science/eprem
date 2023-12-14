@@ -10,210 +10,210 @@
 /* Temple Place, Suite 330, Boston MA 02111-1307 USA or by viewing the */
 /* license online at http://www.gnu.org/copyleft/gpl.html. */
 
-#ifndef READMAS_H
-#define READMAS_H
+#ifndef READMHD_H
+#define READMHD_H
 #include <hdf5.h>
 #include <hdf5_hl.h>
 #include <mfhdf.h>
 #include "cubeShellStruct.h"
 
-extern Scalar_t *masTime;
-extern Scalar_t *masHelTime;
+extern Scalar_t *mhdTime;
+extern Scalar_t *mhdHelTime;
 
 extern Scalar_t phiOffset;
 extern Scalar_t phiHelOffset;
 
-extern Index_t masFileIndex0;
-extern Index_t masFileIndex1;
-extern Index_t masHelFileIndex0;
-extern Index_t masHelFileIndex1;
+extern Index_t mhdFileIndex0;
+extern Index_t mhdFileIndex1;
+extern Index_t mhdHelFileIndex0;
+extern Index_t mhdHelFileIndex1;
 
-extern Index_t masMallocFlag;
-extern Index_t masEqFileFlag;
+extern Index_t mhdMallocFlag;
+extern Index_t mhdEqFileFlag;
 
-extern int32 masDimMin[1];
+extern int32 mhdDimMin[1];
 
-extern int32 masBppDimMax[1];
-extern int32 masBptDimMax[1];
-extern int32 masBprDimMax[1];
-extern int32 masHelBppDimMax[1];
-extern int32 masHelBptDimMax[1];
-extern int32 masHelBprDimMax[1];
+extern int32 mhdBppDimMax[1];
+extern int32 mhdBptDimMax[1];
+extern int32 mhdBprDimMax[1];
+extern int32 mhdHelBppDimMax[1];
+extern int32 mhdHelBptDimMax[1];
+extern int32 mhdHelBprDimMax[1];
 
-extern int32 masBtpDimMax[1];
-extern int32 masBttDimMax[1];
-extern int32 masBtrDimMax[1];
-extern int32 masHelBtpDimMax[1];
-extern int32 masHelBttDimMax[1];
-extern int32 masHelBtrDimMax[1];
+extern int32 mhdBtpDimMax[1];
+extern int32 mhdBttDimMax[1];
+extern int32 mhdBtrDimMax[1];
+extern int32 mhdHelBtpDimMax[1];
+extern int32 mhdHelBttDimMax[1];
+extern int32 mhdHelBtrDimMax[1];
 
-extern int32 masBrpDimMax[1];
-extern int32 masBrtDimMax[1];
-extern int32 masBrrDimMax[1];
-extern int32 masHelBrpDimMax[1];
-extern int32 masHelBrtDimMax[1];
-extern int32 masHelBrrDimMax[1];
+extern int32 mhdBrpDimMax[1];
+extern int32 mhdBrtDimMax[1];
+extern int32 mhdBrrDimMax[1];
+extern int32 mhdHelBrpDimMax[1];
+extern int32 mhdHelBrtDimMax[1];
+extern int32 mhdHelBrrDimMax[1];
 
-extern int32 masVppDimMax[1];
-extern int32 masVptDimMax[1];
-extern int32 masVprDimMax[1];
-extern int32 masHelVppDimMax[1];
-extern int32 masHelVptDimMax[1];
-extern int32 masHelVprDimMax[1];
+extern int32 mhdVppDimMax[1];
+extern int32 mhdVptDimMax[1];
+extern int32 mhdVprDimMax[1];
+extern int32 mhdHelVppDimMax[1];
+extern int32 mhdHelVptDimMax[1];
+extern int32 mhdHelVprDimMax[1];
 
-extern int32 masVtpDimMax[1];
-extern int32 masVttDimMax[1];
-extern int32 masVtrDimMax[1];
-extern int32 masHelVtpDimMax[1];
-extern int32 masHelVttDimMax[1];
-extern int32 masHelVtrDimMax[1];
+extern int32 mhdVtpDimMax[1];
+extern int32 mhdVttDimMax[1];
+extern int32 mhdVtrDimMax[1];
+extern int32 mhdHelVtpDimMax[1];
+extern int32 mhdHelVttDimMax[1];
+extern int32 mhdHelVtrDimMax[1];
 
-extern int32 masVrpDimMax[1];
-extern int32 masVrtDimMax[1];
-extern int32 masVrrDimMax[1];
-extern int32 masHelVrpDimMax[1];
-extern int32 masHelVrtDimMax[1];
-extern int32 masHelVrrDimMax[1];
+extern int32 mhdVrpDimMax[1];
+extern int32 mhdVrtDimMax[1];
+extern int32 mhdVrrDimMax[1];
+extern int32 mhdHelVrpDimMax[1];
+extern int32 mhdHelVrtDimMax[1];
+extern int32 mhdHelVrrDimMax[1];
 
-extern int32 masDpDimMax[1];
-extern int32 masDtDimMax[1];
-extern int32 masDrDimMax[1];
-extern int32 masHelDpDimMax[1];
-extern int32 masHelDtDimMax[1];
-extern int32 masHelDrDimMax[1];
+extern int32 mhdDpDimMax[1];
+extern int32 mhdDtDimMax[1];
+extern int32 mhdDrDimMax[1];
+extern int32 mhdHelDpDimMax[1];
+extern int32 mhdHelDtDimMax[1];
+extern int32 mhdHelDrDimMax[1];
 
-extern float * masBppDim;
-extern float * masBptDim;
-extern float * masBprDim;
-extern float * masHelBppDim;
-extern float * masHelBptDim;
-extern float * masHelBprDim;
+extern float * mhdBppDim;
+extern float * mhdBptDim;
+extern float * mhdBprDim;
+extern float * mhdHelBppDim;
+extern float * mhdHelBptDim;
+extern float * mhdHelBprDim;
 
-extern float * masBtpDim;
-extern float * masBttDim;
-extern float * masBtrDim;
-extern float * masHelBtpDim;
-extern float * masHelBttDim;
-extern float * masHelBtrDim;
+extern float * mhdBtpDim;
+extern float * mhdBttDim;
+extern float * mhdBtrDim;
+extern float * mhdHelBtpDim;
+extern float * mhdHelBttDim;
+extern float * mhdHelBtrDim;
 
-extern float * masBrpDim;
-extern float * masBrtDim;
-extern float * masBrrDim;
-extern float * masHelBrpDim;
-extern float * masHelBrtDim;
-extern float * masHelBrrDim;
+extern float * mhdBrpDim;
+extern float * mhdBrtDim;
+extern float * mhdBrrDim;
+extern float * mhdHelBrpDim;
+extern float * mhdHelBrtDim;
+extern float * mhdHelBrrDim;
 
-extern float * masVppDim;
-extern float * masVptDim;
-extern float * masVprDim;
-extern float * masHelVppDim;
-extern float * masHelVptDim;
-extern float * masHelVprDim;
+extern float * mhdVppDim;
+extern float * mhdVptDim;
+extern float * mhdVprDim;
+extern float * mhdHelVppDim;
+extern float * mhdHelVptDim;
+extern float * mhdHelVprDim;
 
-extern float * masVtpDim;
-extern float * masVttDim;
-extern float * masVtrDim;
-extern float * masHelVtpDim;
-extern float * masHelVttDim;
-extern float * masHelVtrDim;
+extern float * mhdVtpDim;
+extern float * mhdVttDim;
+extern float * mhdVtrDim;
+extern float * mhdHelVtpDim;
+extern float * mhdHelVttDim;
+extern float * mhdHelVtrDim;
 
-extern float * masVrpDim;
-extern float * masVrtDim;
-extern float * masVrrDim;
-extern float * masHelVrpDim;
-extern float * masHelVrtDim;
-extern float * masHelVrrDim;
+extern float * mhdVrpDim;
+extern float * mhdVrtDim;
+extern float * mhdVrrDim;
+extern float * mhdHelVrpDim;
+extern float * mhdHelVrtDim;
+extern float * mhdHelVrrDim;
 
-extern float * masDpDim;
-extern float * masDtDim;
-extern float * masDrDim;
-extern float * masHelDpDim;
-extern float * masHelDtDim;
-extern float * masHelDrDim;
+extern float * mhdDpDim;
+extern float * mhdDtDim;
+extern float * mhdDrDim;
+extern float * mhdHelDpDim;
+extern float * mhdHelDtDim;
+extern float * mhdHelDrDim;
 
 
-extern float * masBp_0;
-extern float * masBt_0;
-extern float * masBr_0;
-extern float * masVp_0;
-extern float * masVt_0;
-extern float * masVr_0;
-extern float * masD_0;
-extern float * masHelBp_0;
-extern float * masHelBt_0;
-extern float * masHelBr_0;
-extern float * masHelVp_0;
-extern float * masHelVt_0;
-extern float * masHelVr_0;
-extern float * masHelD_0;
+extern float * mhdBp_0;
+extern float * mhdBt_0;
+extern float * mhdBr_0;
+extern float * mhdVp_0;
+extern float * mhdVt_0;
+extern float * mhdVr_0;
+extern float * mhdD_0;
+extern float * mhdHelBp_0;
+extern float * mhdHelBt_0;
+extern float * mhdHelBr_0;
+extern float * mhdHelVp_0;
+extern float * mhdHelVt_0;
+extern float * mhdHelVr_0;
+extern float * mhdHelD_0;
 
-extern float * masBp_1;
-extern float * masBt_1;
-extern float * masBr_1;
-extern float * masVp_1;
-extern float * masVt_1;
-extern float * masVr_1;
-extern float * masD_1;
-extern float * masHelBp_1;
-extern float * masHelBt_1;
-extern float * masHelBr_1;
-extern float * masHelVp_1;
-extern float * masHelVt_1;
-extern float * masHelVr_1;
-extern float * masHelD_1;
+extern float * mhdBp_1;
+extern float * mhdBt_1;
+extern float * mhdBr_1;
+extern float * mhdVp_1;
+extern float * mhdVt_1;
+extern float * mhdVr_1;
+extern float * mhdD_1;
+extern float * mhdHelBp_1;
+extern float * mhdHelBt_1;
+extern float * mhdHelBr_1;
+extern float * mhdHelVp_1;
+extern float * mhdHelVt_1;
+extern float * mhdHelVr_1;
+extern float * mhdHelD_1;
 
 /*-- Windows for shared arrays. --*/
-extern MPI_Win masBp_0_win;
-extern MPI_Win masBt_0_win;
-extern MPI_Win masBr_0_win;
-extern MPI_Win masVp_0_win;
-extern MPI_Win masVt_0_win;
-extern MPI_Win masVr_0_win;
-extern MPI_Win masD_0_win;
-extern MPI_Win masHelBp_0_win;
-extern MPI_Win masHelBt_0_win;
-extern MPI_Win masHelBr_0_win;
-extern MPI_Win masHelVp_0_win;
-extern MPI_Win masHelVt_0_win;
-extern MPI_Win masHelVr_0_win;
-extern MPI_Win masHelD_0_win;
+extern MPI_Win mhdBp_0_win;
+extern MPI_Win mhdBt_0_win;
+extern MPI_Win mhdBr_0_win;
+extern MPI_Win mhdVp_0_win;
+extern MPI_Win mhdVt_0_win;
+extern MPI_Win mhdVr_0_win;
+extern MPI_Win mhdD_0_win;
+extern MPI_Win mhdHelBp_0_win;
+extern MPI_Win mhdHelBt_0_win;
+extern MPI_Win mhdHelBr_0_win;
+extern MPI_Win mhdHelVp_0_win;
+extern MPI_Win mhdHelVt_0_win;
+extern MPI_Win mhdHelVr_0_win;
+extern MPI_Win mhdHelD_0_win;
 
-extern MPI_Win masBp_1_win;
-extern MPI_Win masBt_1_win;
-extern MPI_Win masBr_1_win;
-extern MPI_Win masVp_1_win;
-extern MPI_Win masVt_1_win;
-extern MPI_Win masVr_1_win;
-extern MPI_Win masD_1_win;
-extern MPI_Win masHelBp_1_win;
-extern MPI_Win masHelBt_1_win;
-extern MPI_Win masHelBr_1_win;
-extern MPI_Win masHelVp_1_win;
-extern MPI_Win masHelVt_1_win;
-extern MPI_Win masHelVr_1_win;
-extern MPI_Win masHelD_1_win;
+extern MPI_Win mhdBp_1_win;
+extern MPI_Win mhdBt_1_win;
+extern MPI_Win mhdBr_1_win;
+extern MPI_Win mhdVp_1_win;
+extern MPI_Win mhdVt_1_win;
+extern MPI_Win mhdVr_1_win;
+extern MPI_Win mhdD_1_win;
+extern MPI_Win mhdHelBp_1_win;
+extern MPI_Win mhdHelBt_1_win;
+extern MPI_Win mhdHelBr_1_win;
+extern MPI_Win mhdHelVp_1_win;
+extern MPI_Win mhdHelVt_1_win;
+extern MPI_Win mhdHelVr_1_win;
+extern MPI_Win mhdHelD_1_win;
 extern char file_extension[5];
 
 void ERR(intn);
 
-void masFetchCouplingInfo(void);
+void mhdFetchCouplingInfo(void);
 
-void masFetchFileList(void);
+void mhdFetchFileList(void);
 
-void masGetInterpData( Scalar_t dt );
+void mhdGetInterpData( Scalar_t dt );
 
-void masReadData(Index_t fileIndex,
-                 float * *masBp, float * *masBt, float * *masBr,
-                 float * *masVp, float * *masVt, float * *masVr,
-                 float * *masD);
+void mhdReadData(Index_t fileIndex,
+                 float * *mhdBp, float * *mhdBt, float * *mhdBr,
+                 float * *mhdVp, float * *mhdVt, float * *mhdVr,
+                 float * *mhdD);
 
-void masHelReadData(Index_t fileIndex,
-                    float * *masBp, float * *masBt, float * *masBr,
-                    float * *masVp, float * *masVt, float * *masVr,
-                    float * *masD);
+void mhdHelReadData(Index_t fileIndex,
+                    float * *mhdBp, float * *mhdBt, float * *mhdBr,
+                    float * *mhdVp, float * *mhdVt, float * *mhdVr,
+                    float * *mhdD);
 
-void masReadFieldIndex(void);
-void masHelReadFieldIndex(void);
+void mhdReadFieldIndex(void);
+void mhdHelReadFieldIndex(void);
 
 /*------------------------------------------------------------------*/
 /*------------------------------------------------------------------*/

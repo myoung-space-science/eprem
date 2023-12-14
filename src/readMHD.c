@@ -14,7 +14,7 @@
 #include <hdf5.h>
 #include <hdf5_hl.h>
 #include <mfhdf.h>
-#include "readMAS.h"
+#include "readMHD.h"
 #include "mpiInit.h"
 #include "global.h"
 #include "configuration.h"
@@ -23,187 +23,187 @@
 #include "flow.h"
 #include "observerOutput.h"
 #include "timers.h"
-#include "masIO.h"
+#include "mhdIO.h"
 
-Scalar_t *masTime;
-Scalar_t *masHelTime;
+Scalar_t *mhdTime;
+Scalar_t *mhdHelTime;
 
 Scalar_t phiOffset;
 Scalar_t phiHelOffset;
 
-Index_t masFileIndex0;
-Index_t masFileIndex1;
-Index_t masHelFileIndex0;
-Index_t masHelFileIndex1;
+Index_t mhdFileIndex0;
+Index_t mhdFileIndex1;
+Index_t mhdHelFileIndex0;
+Index_t mhdHelFileIndex1;
 
-Index_t masFileIndex_loaded0=-9999;
-Index_t masFileIndex_loaded1=-9999;
-Index_t masHelFileIndex_loaded0=-9999;
-Index_t masHelFileIndex_loaded1=-9999;
+Index_t mhdFileIndex_loaded0=-9999;
+Index_t mhdFileIndex_loaded1=-9999;
+Index_t mhdHelFileIndex_loaded0=-9999;
+Index_t mhdHelFileIndex_loaded1=-9999;
 
-Index_t masMallocFlag;
-Index_t masEqFileFlag;
+Index_t mhdMallocFlag;
+Index_t mhdEqFileFlag;
 
-int32 masDimMin[1] = {0};
+int32 mhdDimMin[1] = {0};
 
-int32 masBppDimMax[1];
-int32 masBptDimMax[1];
-int32 masBprDimMax[1];
-int32 masHelBppDimMax[1];
-int32 masHelBptDimMax[1];
-int32 masHelBprDimMax[1];
+int32 mhdBppDimMax[1];
+int32 mhdBptDimMax[1];
+int32 mhdBprDimMax[1];
+int32 mhdHelBppDimMax[1];
+int32 mhdHelBptDimMax[1];
+int32 mhdHelBprDimMax[1];
 
-int32 masBtpDimMax[1];
-int32 masBttDimMax[1];
-int32 masBtrDimMax[1];
-int32 masHelBtpDimMax[1];
-int32 masHelBttDimMax[1];
-int32 masHelBtrDimMax[1];
+int32 mhdBtpDimMax[1];
+int32 mhdBttDimMax[1];
+int32 mhdBtrDimMax[1];
+int32 mhdHelBtpDimMax[1];
+int32 mhdHelBttDimMax[1];
+int32 mhdHelBtrDimMax[1];
 
-int32 masBrpDimMax[1];
-int32 masBrtDimMax[1];
-int32 masBrrDimMax[1];
-int32 masHelBrpDimMax[1];
-int32 masHelBrtDimMax[1];
-int32 masHelBrrDimMax[1];
+int32 mhdBrpDimMax[1];
+int32 mhdBrtDimMax[1];
+int32 mhdBrrDimMax[1];
+int32 mhdHelBrpDimMax[1];
+int32 mhdHelBrtDimMax[1];
+int32 mhdHelBrrDimMax[1];
 
-int32 masVppDimMax[1];
-int32 masVptDimMax[1];
-int32 masVprDimMax[1];
-int32 masHelVppDimMax[1];
-int32 masHelVptDimMax[1];
-int32 masHelVprDimMax[1];
+int32 mhdVppDimMax[1];
+int32 mhdVptDimMax[1];
+int32 mhdVprDimMax[1];
+int32 mhdHelVppDimMax[1];
+int32 mhdHelVptDimMax[1];
+int32 mhdHelVprDimMax[1];
 
-int32 masVtpDimMax[1];
-int32 masVttDimMax[1];
-int32 masVtrDimMax[1];
-int32 masHelVtpDimMax[1];
-int32 masHelVttDimMax[1];
-int32 masHelVtrDimMax[1];
+int32 mhdVtpDimMax[1];
+int32 mhdVttDimMax[1];
+int32 mhdVtrDimMax[1];
+int32 mhdHelVtpDimMax[1];
+int32 mhdHelVttDimMax[1];
+int32 mhdHelVtrDimMax[1];
 
-int32 masVrpDimMax[1];
-int32 masVrtDimMax[1];
-int32 masVrrDimMax[1];
-int32 masHelVrpDimMax[1];
-int32 masHelVrtDimMax[1];
-int32 masHelVrrDimMax[1];
+int32 mhdVrpDimMax[1];
+int32 mhdVrtDimMax[1];
+int32 mhdVrrDimMax[1];
+int32 mhdHelVrpDimMax[1];
+int32 mhdHelVrtDimMax[1];
+int32 mhdHelVrrDimMax[1];
 
-int32 masDpDimMax[1];
-int32 masDtDimMax[1];
-int32 masDrDimMax[1];
-int32 masHelDpDimMax[1];
-int32 masHelDtDimMax[1];
-int32 masHelDrDimMax[1];
+int32 mhdDpDimMax[1];
+int32 mhdDtDimMax[1];
+int32 mhdDrDimMax[1];
+int32 mhdHelDpDimMax[1];
+int32 mhdHelDtDimMax[1];
+int32 mhdHelDrDimMax[1];
 
-float * masBppDim;
-float * masBptDim;
-float * masBprDim;
-float * masHelBppDim;
-float * masHelBptDim;
-float * masHelBprDim;
+float * mhdBppDim;
+float * mhdBptDim;
+float * mhdBprDim;
+float * mhdHelBppDim;
+float * mhdHelBptDim;
+float * mhdHelBprDim;
 
-float * masBtpDim;
-float * masBttDim;
-float * masBtrDim;
-float * masHelBtpDim;
-float * masHelBttDim;
-float * masHelBtrDim;
+float * mhdBtpDim;
+float * mhdBttDim;
+float * mhdBtrDim;
+float * mhdHelBtpDim;
+float * mhdHelBttDim;
+float * mhdHelBtrDim;
 
-float * masBrpDim;
-float * masBrtDim;
-float * masBrrDim;
-float * masHelBrpDim;
-float * masHelBrtDim;
-float * masHelBrrDim;
+float * mhdBrpDim;
+float * mhdBrtDim;
+float * mhdBrrDim;
+float * mhdHelBrpDim;
+float * mhdHelBrtDim;
+float * mhdHelBrrDim;
 
-float * masVppDim;
-float * masVptDim;
-float * masVprDim;
-float * masHelVppDim;
-float * masHelVptDim;
-float * masHelVprDim;
+float * mhdVppDim;
+float * mhdVptDim;
+float * mhdVprDim;
+float * mhdHelVppDim;
+float * mhdHelVptDim;
+float * mhdHelVprDim;
 
-float * masVtpDim;
-float * masVttDim;
-float * masVtrDim;
-float * masHelVtpDim;
-float * masHelVttDim;
-float * masHelVtrDim;
+float * mhdVtpDim;
+float * mhdVttDim;
+float * mhdVtrDim;
+float * mhdHelVtpDim;
+float * mhdHelVttDim;
+float * mhdHelVtrDim;
 
-float * masVrpDim;
-float * masVrtDim;
-float * masVrrDim;
-float * masHelVrpDim;
-float * masHelVrtDim;
-float * masHelVrrDim;
+float * mhdVrpDim;
+float * mhdVrtDim;
+float * mhdVrrDim;
+float * mhdHelVrpDim;
+float * mhdHelVrtDim;
+float * mhdHelVrrDim;
 
-float * masDpDim;
-float * masDtDim;
-float * masDrDim;
-float * masHelDpDim;
-float * masHelDtDim;
-float * masHelDrDim;
+float * mhdDpDim;
+float * mhdDtDim;
+float * mhdDrDim;
+float * mhdHelDpDim;
+float * mhdHelDtDim;
+float * mhdHelDrDim;
 
 
-float * masBp_0;
-float * masBt_0;
-float * masBr_0;
-float * masVp_0;
-float * masVt_0;
-float * masVr_0;
-float * masD_0;
-float * masHelBp_0;
-float * masHelBt_0;
-float * masHelBr_0;
-float * masHelVp_0;
-float * masHelVt_0;
-float * masHelVr_0;
-float * masHelD_0;
+float * mhdBp_0;
+float * mhdBt_0;
+float * mhdBr_0;
+float * mhdVp_0;
+float * mhdVt_0;
+float * mhdVr_0;
+float * mhdD_0;
+float * mhdHelBp_0;
+float * mhdHelBt_0;
+float * mhdHelBr_0;
+float * mhdHelVp_0;
+float * mhdHelVt_0;
+float * mhdHelVr_0;
+float * mhdHelD_0;
 
-float * masBp_1;
-float * masBt_1;
-float * masBr_1;
-float * masVp_1;
-float * masVt_1;
-float * masVr_1;
-float * masD_1;
-float * masHelBp_1;
-float * masHelBt_1;
-float * masHelBr_1;
-float * masHelVp_1;
-float * masHelVt_1;
-float * masHelVr_1;
-float * masHelD_1;
+float * mhdBp_1;
+float * mhdBt_1;
+float * mhdBr_1;
+float * mhdVp_1;
+float * mhdVt_1;
+float * mhdVr_1;
+float * mhdD_1;
+float * mhdHelBp_1;
+float * mhdHelBt_1;
+float * mhdHelBr_1;
+float * mhdHelVp_1;
+float * mhdHelVt_1;
+float * mhdHelVr_1;
+float * mhdHelD_1;
 
-MPI_Win masBp_0_win;
-MPI_Win masBt_0_win;
-MPI_Win masBr_0_win;
-MPI_Win masVp_0_win;
-MPI_Win masVt_0_win;
-MPI_Win masVr_0_win;
-MPI_Win masD_0_win;
-MPI_Win masHelBp_0_win;
-MPI_Win masHelBt_0_win;
-MPI_Win masHelBr_0_win;
-MPI_Win masHelVp_0_win;
-MPI_Win masHelVt_0_win;
-MPI_Win masHelVr_0_win;
-MPI_Win masHelD_0_win;
+MPI_Win mhdBp_0_win;
+MPI_Win mhdBt_0_win;
+MPI_Win mhdBr_0_win;
+MPI_Win mhdVp_0_win;
+MPI_Win mhdVt_0_win;
+MPI_Win mhdVr_0_win;
+MPI_Win mhdD_0_win;
+MPI_Win mhdHelBp_0_win;
+MPI_Win mhdHelBt_0_win;
+MPI_Win mhdHelBr_0_win;
+MPI_Win mhdHelVp_0_win;
+MPI_Win mhdHelVt_0_win;
+MPI_Win mhdHelVr_0_win;
+MPI_Win mhdHelD_0_win;
 
-MPI_Win masBp_1_win;
-MPI_Win masBt_1_win;
-MPI_Win masBr_1_win;
-MPI_Win masVp_1_win;
-MPI_Win masVt_1_win;
-MPI_Win masVr_1_win;
-MPI_Win masD_1_win;
-MPI_Win masHelBp_1_win;
-MPI_Win masHelBt_1_win;
-MPI_Win masHelBr_1_win;
-MPI_Win masHelVp_1_win;
-MPI_Win masHelVt_1_win;
-MPI_Win masHelVr_1_win;
-MPI_Win masHelD_1_win;
+MPI_Win mhdBp_1_win;
+MPI_Win mhdBt_1_win;
+MPI_Win mhdBr_1_win;
+MPI_Win mhdVp_1_win;
+MPI_Win mhdVt_1_win;
+MPI_Win mhdVr_1_win;
+MPI_Win mhdD_1_win;
+MPI_Win mhdHelBp_1_win;
+MPI_Win mhdHelBt_1_win;
+MPI_Win mhdHelBr_1_win;
+MPI_Win mhdHelVp_1_win;
+MPI_Win mhdHelVt_1_win;
+MPI_Win mhdHelVr_1_win;
+MPI_Win mhdHelD_1_win;
 
 int coupleStarted=0;
 char file_extension[5];
@@ -227,9 +227,9 @@ char file_extension[5];
 /*------------------------------------------------------------------*/
 /*------------------------------------------------------------------*/
 /*--*/     void                                                 /*--*/
-/*--*/     masFetchCouplingInfo(void)                           /*--*/
+/*--*/     mhdFetchCouplingInfo(void)                           /*--*/
 /*--                                                              --*/
-/*--  This function loads coupling info from the MAS directories  --*/
+/*--  This function loads coupling info from the MHD directories  --*/
 /*------------------------------------------------------------------*/
 {/*-----------------------------------------------------------------*/
 
@@ -242,24 +242,24 @@ char file_extension[5];
   char *value = NULL;
   char delims[] = ": ";
 
-  char masHelInfoFilename[MAX_STRING_SIZE] = "mas_helio_run_info.txt";
-  char masHelInfoFilenameWithPath[MAX_STRING_SIZE];
+  char mhdHelInfoFilename[MAX_STRING_SIZE] = "mhd_helio_run_info.txt";
+  char mhdHelInfoFilenameWithPath[MAX_STRING_SIZE];
 
   // -- coronal coupling --//
 
   // -- heliospheric coupling --//
-  if (config.masHelCouple > 0) {
+  if (config.mhdHelCouple > 0) {
 
     // build the path to the info file
-    sprintf(masHelInfoFilenameWithPath, "%s%s", config.masHelDirectory, masHelInfoFilename);
+    sprintf(mhdHelInfoFilenameWithPath, "%s%s", config.mhdHelDirectory, mhdHelInfoFilename);
 
     // attempt to open the info file
-    rfile = fopen(masHelInfoFilenameWithPath, "r");
+    rfile = fopen(mhdHelInfoFilenameWithPath, "r");
     if (rfile==NULL) {
-      printf("ERROR - Could not open file \"%s\"\nReverting to defaults\n", masHelInfoFilenameWithPath);
+      printf("ERROR - Could not open file \"%s\"\nReverting to defaults\n", mhdHelInfoFilenameWithPath);
     } else {
       if (mpi_rank == 0) {
-        printf("Reading parameters from \"%s\"\n", masHelInfoFilenameWithPath);
+        printf("Reading parameters from \"%s\"\n", mhdHelInfoFilenameWithPath);
       }
     }
 
@@ -286,16 +286,16 @@ char file_extension[5];
 
   }
 
-}/*-------- END masFetchCouplingInfo()  ----------------------------*/
+}/*-------- END mhdFetchCouplingInfo()  ----------------------------*/
 /*------------------------------------------------------------------*/
 
 /*------------------------------------------------------------------*/
 /*------------------------------------------------------------------*/
 /*--*/     void                                                 /*--*/
-/*--*/     masFetchFileList(void)                               /*--*/
+/*--*/     mhdFetchFileList(void)                               /*--*/
 /*--                                                              --*/
 /*--  This function loads the list timesteps and filenames to use --*/
-/*--  with MAS files.                                             --*/
+/*--  with MHD files.                                             --*/
 /*------------------------------------------------------------------*/
 {/*-----------------------------------------------------------------*/
 
@@ -309,8 +309,8 @@ char file_extension[5];
   char *result = NULL;
   char delims[] = " \t\n\r";
 
-  char masTimeFilename[MAX_STRING_SIZE] = "masTime.txt";
-  char masTimeFilenameWithPath[MAX_STRING_SIZE];
+  char mhdTimeFilename[MAX_STRING_SIZE] = "mhdTime.txt";
+  char mhdTimeFilenameWithPath[MAX_STRING_SIZE];
 
   Scalar_t initialTime, timeVar;
 
@@ -319,13 +319,13 @@ char file_extension[5];
   int disp_unit;
 
   // build the path to the time file
-  sprintf(masTimeFilenameWithPath, "%s%s", config.masDirectory, masTimeFilename);
+  sprintf(mhdTimeFilenameWithPath, "%s%s", config.mhdDirectory, mhdTimeFilename);
 
   // attempt to open the time file
-  rfile = fopen(masTimeFilenameWithPath, "r");
+  rfile = fopen(mhdTimeFilenameWithPath, "r");
   if (rfile==NULL) {
-    printf("ERROR - Could not open file \"%s\"\n", masTimeFilenameWithPath);
-    panic("Can't find MAS time list.");
+    printf("ERROR - Could not open file \"%s\"\n", mhdTimeFilenameWithPath);
+    panic("Can't find MHD time list.");
   }
 
   // read the number of lines in the time file list
@@ -333,7 +333,7 @@ char file_extension[5];
   while (fgets(line, max, rfile) != NULL) {
     nFileLines++;
   }
-  masTime = (Scalar_t *)malloc(sizeof(Scalar_t) * nFileLines);
+  mhdTime = (Scalar_t *)malloc(sizeof(Scalar_t) * nFileLines);
 
   // reset the file pointer to the beginning of the file
   rewind(rfile);
@@ -343,9 +343,9 @@ char file_extension[5];
     if (fgets(line, max, rfile) != NULL) {
       result = strtok(line, delims);
       if (result != NULL) {
-        timeVar = (Scalar_t)atof(result) * MAS_TIME_CONVERT / DAY;
+        timeVar = (Scalar_t)atof(result) * config.mhdTimeConvert / DAY;
         if (t == 0) {initialTime = timeVar;}
-        masTime[t] = config.masStartTime / DAY + (timeVar - initialTime);
+        mhdTime[t] = config.mhdStartTime / DAY + (timeVar - initialTime);
       }
       result = strtok(NULL, delims);
     }
@@ -355,21 +355,21 @@ char file_extension[5];
   fclose(rfile);
 
   // store the number of files
-  config.masNumFiles = nFileLines;
+  config.mhdNumFiles = nFileLines;
 
   result = NULL;
 
   // if coupling to the heliospheric domain
-  if (config.masHelCouple > 0) {
+  if (config.mhdHelCouple > 0) {
 
     // build the path to the time file
-    sprintf(masTimeFilenameWithPath, "%s%s", config.masHelDirectory, masTimeFilename);
+    sprintf(mhdTimeFilenameWithPath, "%s%s", config.mhdHelDirectory, mhdTimeFilename);
 
     // attempt to open the time file
-    rfile = fopen(masTimeFilenameWithPath, "r");
+    rfile = fopen(mhdTimeFilenameWithPath, "r");
     if (rfile==NULL) {
-      printf("ERROR - Could not open file \"%s\"\n", masTimeFilenameWithPath);
-      panic("Can't find MAS Helio time list.");
+      printf("ERROR - Could not open file \"%s\"\n", mhdTimeFilenameWithPath);
+      panic("Can't find MHD Helio time list.");
     }
 
     // read the number of lines in the time file list
@@ -377,7 +377,7 @@ char file_extension[5];
     while (fgets(line, max, rfile) != NULL) {
       nFileLines++;
     }
-    masHelTime = (Scalar_t *)malloc(sizeof(Scalar_t) * nFileLines);
+    mhdHelTime = (Scalar_t *)malloc(sizeof(Scalar_t) * nFileLines);
 
     // reset the file pointer to the beginning of the file
     rewind(rfile);
@@ -387,9 +387,9 @@ char file_extension[5];
       if (fgets(line, max, rfile) != NULL) {
         result = strtok(line, delims);
         if (result != NULL) {
-          timeVar = (Scalar_t)atof(result) * MAS_TIME_CONVERT / DAY;
+          timeVar = (Scalar_t)atof(result) * config.mhdTimeConvert / DAY;
           if (t == 0) {initialTime = timeVar;}
-          masHelTime[t] = config.masStartTime / DAY + (timeVar - initialTime);
+          mhdHelTime[t] = config.mhdStartTime / DAY + (timeVar - initialTime);
         }
         result = strtok(NULL, delims);
       }
@@ -399,185 +399,185 @@ char file_extension[5];
     fclose(rfile);
 
     // store the number of files
-    config.masHelNumFiles = nFileLines;
+    config.mhdHelNumFiles = nFileLines;
 
     result = NULL;
 
   }
 
   // Malloc arrays. (Only malloc once).
-  if (masMallocFlag == 0) {
+  if (mhdMallocFlag == 0) {
 
     // Set file type to hdf4.  RMC: Eventually this needs to either be
     // an input flag, or auto-detected (the current autodetection in
-    // masIO.c does not work on some systems).  This will be moved from here
+    // mhdIO.c does not work on some systems).  This will be moved from here
     // to a more logical place eventually.
 
     hdf5_input = 0;
     strncpy(file_extension,".hdf",strlen(".hdf")+1);
 
     // The size of the index arrays doesn't change in time in this version.
-    masReadFieldIndex();
+    mhdReadFieldIndex();
     // heliospheric coupling
-    if (config.masHelCouple > 0)
-      masHelReadFieldIndex();
+    if (config.mhdHelCouple > 0)
+      mhdHelReadFieldIndex();
 
     if(mpi_rank_shared==0){
-      N=(int)masBprDimMax[0]*(int)masBptDimMax[0]*(int)masBppDimMax[0];
-      MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &masBp_0, &masBp_0_win);
-      MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &masBp_1, &masBp_1_win);
-      N=(int)masBtrDimMax[0]*(int)masBttDimMax[0]*(int)masBtpDimMax[0];
-      MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &masBt_0, &masBt_0_win);
-      MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &masBt_1, &masBt_1_win);
-      N=(int)masBrrDimMax[0]*(int)masBrtDimMax[0]*(int)masBrpDimMax[0];
-      MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &masBr_0, &masBr_0_win);
-      MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &masBr_1, &masBr_1_win);
-      N=(int)masVprDimMax[0]*(int)masVptDimMax[0]*(int)masVppDimMax[0];
-      MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &masVp_0, &masVp_0_win);
-      MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &masVp_1, &masVp_1_win);
-      N=(int)masVtrDimMax[0]*(int)masVttDimMax[0]*(int)masVtpDimMax[0];
-      MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &masVt_0, &masVt_0_win);
-      MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &masVt_1, &masVt_1_win);
-      N=(int)masVrrDimMax[0]*(int)masVrtDimMax[0]*(int)masVrpDimMax[0];
-      MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &masVr_0, &masVr_0_win);
-      MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &masVr_1, &masVr_1_win);
-      N=(int)masDrDimMax[0]*(int)masDtDimMax[0]*(int)masDpDimMax[0];
-      MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &masD_0, &masD_0_win);
-      MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &masD_1, &masD_1_win);
+      N=(int)mhdBprDimMax[0]*(int)mhdBptDimMax[0]*(int)mhdBppDimMax[0];
+      MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &mhdBp_0, &mhdBp_0_win);
+      MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &mhdBp_1, &mhdBp_1_win);
+      N=(int)mhdBtrDimMax[0]*(int)mhdBttDimMax[0]*(int)mhdBtpDimMax[0];
+      MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &mhdBt_0, &mhdBt_0_win);
+      MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &mhdBt_1, &mhdBt_1_win);
+      N=(int)mhdBrrDimMax[0]*(int)mhdBrtDimMax[0]*(int)mhdBrpDimMax[0];
+      MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &mhdBr_0, &mhdBr_0_win);
+      MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &mhdBr_1, &mhdBr_1_win);
+      N=(int)mhdVprDimMax[0]*(int)mhdVptDimMax[0]*(int)mhdVppDimMax[0];
+      MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &mhdVp_0, &mhdVp_0_win);
+      MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &mhdVp_1, &mhdVp_1_win);
+      N=(int)mhdVtrDimMax[0]*(int)mhdVttDimMax[0]*(int)mhdVtpDimMax[0];
+      MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &mhdVt_0, &mhdVt_0_win);
+      MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &mhdVt_1, &mhdVt_1_win);
+      N=(int)mhdVrrDimMax[0]*(int)mhdVrtDimMax[0]*(int)mhdVrpDimMax[0];
+      MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &mhdVr_0, &mhdVr_0_win);
+      MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &mhdVr_1, &mhdVr_1_win);
+      N=(int)mhdDrDimMax[0]*(int)mhdDtDimMax[0]*(int)mhdDpDimMax[0];
+      MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &mhdD_0, &mhdD_0_win);
+      MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &mhdD_1, &mhdD_1_win);
 
       // heliospheric coupling
-      if (config.masHelCouple > 0) {
+      if (config.mhdHelCouple > 0) {
 
-        N=(int)masHelBprDimMax[0]*(int)masHelBptDimMax[0]*(int)masHelBppDimMax[0];
-        MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &masHelBp_0, &masHelBp_0_win);
-        MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &masHelBp_1, &masHelBp_1_win);
-        N=(int)masHelBtrDimMax[0]*(int)masHelBttDimMax[0]*(int)masHelBtpDimMax[0];
-        MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &masHelBt_0, &masHelBt_0_win);
-        MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &masHelBt_1, &masHelBt_1_win);
-        N=(int)masHelBrrDimMax[0]*(int)masHelBrtDimMax[0]*(int)masHelBrpDimMax[0];
-        MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &masHelBr_0, &masHelBr_0_win);
-        MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &masHelBr_1, &masHelBr_1_win);
-        N=(int)masHelVprDimMax[0]*(int)masHelVptDimMax[0]*(int)masHelVppDimMax[0];
-        MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &masHelVp_0, &masHelVp_0_win);
-        MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &masHelVp_1, &masHelVp_1_win);
-        N=(int)masHelVtrDimMax[0]*(int)masHelVttDimMax[0]*(int)masHelVtpDimMax[0];
-        MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &masHelVt_0, &masHelVt_0_win);
-        MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &masHelVt_1, &masHelVt_1_win);
-        N=(int)masHelVrrDimMax[0]*(int)masHelVrtDimMax[0]*(int)masHelVrpDimMax[0];
-        MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &masHelVr_0, &masHelVr_0_win);
-        MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &masHelVr_1, &masHelVr_1_win);
-        N=(int)masHelDrDimMax[0]*(int)masHelDtDimMax[0]*(int)masHelDpDimMax[0];
-        MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &masHelD_0, &masHelD_0_win);
-        MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &masHelD_1, &masHelD_1_win);
+        N=(int)mhdHelBprDimMax[0]*(int)mhdHelBptDimMax[0]*(int)mhdHelBppDimMax[0];
+        MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &mhdHelBp_0, &mhdHelBp_0_win);
+        MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &mhdHelBp_1, &mhdHelBp_1_win);
+        N=(int)mhdHelBtrDimMax[0]*(int)mhdHelBttDimMax[0]*(int)mhdHelBtpDimMax[0];
+        MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &mhdHelBt_0, &mhdHelBt_0_win);
+        MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &mhdHelBt_1, &mhdHelBt_1_win);
+        N=(int)mhdHelBrrDimMax[0]*(int)mhdHelBrtDimMax[0]*(int)mhdHelBrpDimMax[0];
+        MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &mhdHelBr_0, &mhdHelBr_0_win);
+        MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &mhdHelBr_1, &mhdHelBr_1_win);
+        N=(int)mhdHelVprDimMax[0]*(int)mhdHelVptDimMax[0]*(int)mhdHelVppDimMax[0];
+        MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &mhdHelVp_0, &mhdHelVp_0_win);
+        MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &mhdHelVp_1, &mhdHelVp_1_win);
+        N=(int)mhdHelVtrDimMax[0]*(int)mhdHelVttDimMax[0]*(int)mhdHelVtpDimMax[0];
+        MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &mhdHelVt_0, &mhdHelVt_0_win);
+        MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &mhdHelVt_1, &mhdHelVt_1_win);
+        N=(int)mhdHelVrrDimMax[0]*(int)mhdHelVrtDimMax[0]*(int)mhdHelVrpDimMax[0];
+        MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &mhdHelVr_0, &mhdHelVr_0_win);
+        MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &mhdHelVr_1, &mhdHelVr_1_win);
+        N=(int)mhdHelDrDimMax[0]*(int)mhdHelDtDimMax[0]*(int)mhdHelDpDimMax[0];
+        MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &mhdHelD_0, &mhdHelD_0_win);
+        MPI_Win_allocate_shared(N*sizeof(float), sizeof(float), MPI_INFO_NULL, comm_shared, &mhdHelD_1, &mhdHelD_1_win);
 
       }
 
     }else{
-      MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &masBp_0, &masBp_0_win);
-      MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &masBp_1, &masBp_1_win);
-      MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &masBt_0, &masBt_0_win);
-      MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &masBt_1, &masBt_1_win);
-      MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &masBr_0, &masBr_0_win);
-      MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &masBr_1, &masBr_1_win);
-      MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &masVp_0, &masVp_0_win);
-      MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &masVp_1, &masVp_1_win);
-      MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &masVt_0, &masVt_0_win);
-      MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &masVt_1, &masVt_1_win);
-      MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &masVr_0, &masVr_0_win);
-      MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &masVr_1, &masVr_1_win);
-      MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &masD_0, &masD_0_win);
-      MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &masD_1, &masD_1_win);
-      MPI_Win_shared_query(masBp_0_win, 0, &size, &disp_unit, &masBp_0);
-      MPI_Win_shared_query(masBt_0_win, 0, &size, &disp_unit, &masBt_0);
-      MPI_Win_shared_query(masBr_0_win, 0, &size, &disp_unit, &masBr_0);
-      MPI_Win_shared_query(masVp_0_win, 0, &size, &disp_unit, &masVp_0);
-      MPI_Win_shared_query(masVt_0_win, 0, &size, &disp_unit, &masVt_0);
-      MPI_Win_shared_query(masVr_0_win, 0, &size, &disp_unit, &masVr_0);
-      MPI_Win_shared_query(masD_0_win, 0, &size, &disp_unit, &masD_0);
-      MPI_Win_shared_query(masBp_1_win, 0, &size, &disp_unit, &masBp_1);
-      MPI_Win_shared_query(masBt_1_win, 0, &size, &disp_unit, &masBt_1);
-      MPI_Win_shared_query(masBr_1_win, 0, &size, &disp_unit, &masBr_1);
-      MPI_Win_shared_query(masVp_1_win, 0, &size, &disp_unit, &masVp_1);
-      MPI_Win_shared_query(masVt_1_win, 0, &size, &disp_unit, &masVt_1);
-      MPI_Win_shared_query(masVr_1_win, 0, &size, &disp_unit, &masVr_1);
-      MPI_Win_shared_query(masD_1_win, 0, &size, &disp_unit, &masD_1);
+      MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &mhdBp_0, &mhdBp_0_win);
+      MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &mhdBp_1, &mhdBp_1_win);
+      MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &mhdBt_0, &mhdBt_0_win);
+      MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &mhdBt_1, &mhdBt_1_win);
+      MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &mhdBr_0, &mhdBr_0_win);
+      MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &mhdBr_1, &mhdBr_1_win);
+      MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &mhdVp_0, &mhdVp_0_win);
+      MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &mhdVp_1, &mhdVp_1_win);
+      MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &mhdVt_0, &mhdVt_0_win);
+      MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &mhdVt_1, &mhdVt_1_win);
+      MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &mhdVr_0, &mhdVr_0_win);
+      MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &mhdVr_1, &mhdVr_1_win);
+      MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &mhdD_0, &mhdD_0_win);
+      MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &mhdD_1, &mhdD_1_win);
+      MPI_Win_shared_query(mhdBp_0_win, 0, &size, &disp_unit, &mhdBp_0);
+      MPI_Win_shared_query(mhdBt_0_win, 0, &size, &disp_unit, &mhdBt_0);
+      MPI_Win_shared_query(mhdBr_0_win, 0, &size, &disp_unit, &mhdBr_0);
+      MPI_Win_shared_query(mhdVp_0_win, 0, &size, &disp_unit, &mhdVp_0);
+      MPI_Win_shared_query(mhdVt_0_win, 0, &size, &disp_unit, &mhdVt_0);
+      MPI_Win_shared_query(mhdVr_0_win, 0, &size, &disp_unit, &mhdVr_0);
+      MPI_Win_shared_query(mhdD_0_win, 0, &size, &disp_unit, &mhdD_0);
+      MPI_Win_shared_query(mhdBp_1_win, 0, &size, &disp_unit, &mhdBp_1);
+      MPI_Win_shared_query(mhdBt_1_win, 0, &size, &disp_unit, &mhdBt_1);
+      MPI_Win_shared_query(mhdBr_1_win, 0, &size, &disp_unit, &mhdBr_1);
+      MPI_Win_shared_query(mhdVp_1_win, 0, &size, &disp_unit, &mhdVp_1);
+      MPI_Win_shared_query(mhdVt_1_win, 0, &size, &disp_unit, &mhdVt_1);
+      MPI_Win_shared_query(mhdVr_1_win, 0, &size, &disp_unit, &mhdVr_1);
+      MPI_Win_shared_query(mhdD_1_win, 0, &size, &disp_unit, &mhdD_1);
 
       // heliospheric coupling
-      if (config.masHelCouple > 0) {
+      if (config.mhdHelCouple > 0) {
 
-        MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &masHelBp_0, &masHelBp_0_win);
-        MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &masHelBp_1, &masHelBp_1_win);
-        MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &masHelBt_0, &masHelBt_0_win);
-        MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &masHelBt_1, &masHelBt_1_win);
-        MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &masHelBr_0, &masHelBr_0_win);
-        MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &masHelBr_1, &masHelBr_1_win);
-        MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &masHelVp_0, &masHelVp_0_win);
-        MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &masHelVp_1, &masHelVp_1_win);
-        MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &masHelVt_0, &masHelVt_0_win);
-        MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &masHelVt_1, &masHelVt_1_win);
-        MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &masHelVr_0, &masHelVr_0_win);
-        MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &masHelVr_1, &masHelVr_1_win);
-        MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &masHelD_0, &masHelD_0_win);
-        MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &masHelD_1, &masHelD_1_win);
-        MPI_Win_shared_query(masHelBp_0_win, 0, &size, &disp_unit, &masHelBp_0);
-        MPI_Win_shared_query(masHelBt_0_win, 0, &size, &disp_unit, &masHelBt_0);
-        MPI_Win_shared_query(masHelBr_0_win, 0, &size, &disp_unit, &masHelBr_0);
-        MPI_Win_shared_query(masHelVp_0_win, 0, &size, &disp_unit, &masHelVp_0);
-        MPI_Win_shared_query(masHelVt_0_win, 0, &size, &disp_unit, &masHelVt_0);
-        MPI_Win_shared_query(masHelVr_0_win, 0, &size, &disp_unit, &masHelVr_0);
-        MPI_Win_shared_query(masHelD_0_win, 0, &size, &disp_unit, &masHelD_0);
-        MPI_Win_shared_query(masHelBp_1_win, 0, &size, &disp_unit, &masHelBp_1);
-        MPI_Win_shared_query(masHelBt_1_win, 0, &size, &disp_unit, &masHelBt_1);
-        MPI_Win_shared_query(masHelBr_1_win, 0, &size, &disp_unit, &masHelBr_1);
-        MPI_Win_shared_query(masHelVp_1_win, 0, &size, &disp_unit, &masHelVp_1);
-        MPI_Win_shared_query(masHelVt_1_win, 0, &size, &disp_unit, &masHelVt_1);
-        MPI_Win_shared_query(masHelVr_1_win, 0, &size, &disp_unit, &masHelVr_1);
-        MPI_Win_shared_query(masHelD_1_win, 0, &size, &disp_unit, &masHelD_1);
+        MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &mhdHelBp_0, &mhdHelBp_0_win);
+        MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &mhdHelBp_1, &mhdHelBp_1_win);
+        MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &mhdHelBt_0, &mhdHelBt_0_win);
+        MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &mhdHelBt_1, &mhdHelBt_1_win);
+        MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &mhdHelBr_0, &mhdHelBr_0_win);
+        MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &mhdHelBr_1, &mhdHelBr_1_win);
+        MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &mhdHelVp_0, &mhdHelVp_0_win);
+        MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &mhdHelVp_1, &mhdHelVp_1_win);
+        MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &mhdHelVt_0, &mhdHelVt_0_win);
+        MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &mhdHelVt_1, &mhdHelVt_1_win);
+        MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &mhdHelVr_0, &mhdHelVr_0_win);
+        MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &mhdHelVr_1, &mhdHelVr_1_win);
+        MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &mhdHelD_0, &mhdHelD_0_win);
+        MPI_Win_allocate_shared(0, sizeof(float), MPI_INFO_NULL, comm_shared, &mhdHelD_1, &mhdHelD_1_win);
+        MPI_Win_shared_query(mhdHelBp_0_win, 0, &size, &disp_unit, &mhdHelBp_0);
+        MPI_Win_shared_query(mhdHelBt_0_win, 0, &size, &disp_unit, &mhdHelBt_0);
+        MPI_Win_shared_query(mhdHelBr_0_win, 0, &size, &disp_unit, &mhdHelBr_0);
+        MPI_Win_shared_query(mhdHelVp_0_win, 0, &size, &disp_unit, &mhdHelVp_0);
+        MPI_Win_shared_query(mhdHelVt_0_win, 0, &size, &disp_unit, &mhdHelVt_0);
+        MPI_Win_shared_query(mhdHelVr_0_win, 0, &size, &disp_unit, &mhdHelVr_0);
+        MPI_Win_shared_query(mhdHelD_0_win, 0, &size, &disp_unit, &mhdHelD_0);
+        MPI_Win_shared_query(mhdHelBp_1_win, 0, &size, &disp_unit, &mhdHelBp_1);
+        MPI_Win_shared_query(mhdHelBt_1_win, 0, &size, &disp_unit, &mhdHelBt_1);
+        MPI_Win_shared_query(mhdHelBr_1_win, 0, &size, &disp_unit, &mhdHelBr_1);
+        MPI_Win_shared_query(mhdHelVp_1_win, 0, &size, &disp_unit, &mhdHelVp_1);
+        MPI_Win_shared_query(mhdHelVt_1_win, 0, &size, &disp_unit, &mhdHelVt_1);
+        MPI_Win_shared_query(mhdHelVr_1_win, 0, &size, &disp_unit, &mhdHelVr_1);
+        MPI_Win_shared_query(mhdHelD_1_win, 0, &size, &disp_unit, &mhdHelD_1);
 
       }
 
     }
-    MPI_Win_lock_all(MPI_MODE_NOCHECK, masBp_0_win);
-    MPI_Win_lock_all(MPI_MODE_NOCHECK, masBt_0_win);
-    MPI_Win_lock_all(MPI_MODE_NOCHECK, masBr_0_win);
-    MPI_Win_lock_all(MPI_MODE_NOCHECK, masVp_0_win);
-    MPI_Win_lock_all(MPI_MODE_NOCHECK, masVt_0_win);
-    MPI_Win_lock_all(MPI_MODE_NOCHECK, masVr_0_win);
-    MPI_Win_lock_all(MPI_MODE_NOCHECK, masD_0_win);
-    MPI_Win_lock_all(MPI_MODE_NOCHECK, masBp_1_win);
-    MPI_Win_lock_all(MPI_MODE_NOCHECK, masBt_1_win);
-    MPI_Win_lock_all(MPI_MODE_NOCHECK, masBr_1_win);
-    MPI_Win_lock_all(MPI_MODE_NOCHECK, masVp_1_win);
-    MPI_Win_lock_all(MPI_MODE_NOCHECK, masVt_1_win);
-    MPI_Win_lock_all(MPI_MODE_NOCHECK, masVr_1_win);
-    MPI_Win_lock_all(MPI_MODE_NOCHECK, masD_1_win);
+    MPI_Win_lock_all(MPI_MODE_NOCHECK, mhdBp_0_win);
+    MPI_Win_lock_all(MPI_MODE_NOCHECK, mhdBt_0_win);
+    MPI_Win_lock_all(MPI_MODE_NOCHECK, mhdBr_0_win);
+    MPI_Win_lock_all(MPI_MODE_NOCHECK, mhdVp_0_win);
+    MPI_Win_lock_all(MPI_MODE_NOCHECK, mhdVt_0_win);
+    MPI_Win_lock_all(MPI_MODE_NOCHECK, mhdVr_0_win);
+    MPI_Win_lock_all(MPI_MODE_NOCHECK, mhdD_0_win);
+    MPI_Win_lock_all(MPI_MODE_NOCHECK, mhdBp_1_win);
+    MPI_Win_lock_all(MPI_MODE_NOCHECK, mhdBt_1_win);
+    MPI_Win_lock_all(MPI_MODE_NOCHECK, mhdBr_1_win);
+    MPI_Win_lock_all(MPI_MODE_NOCHECK, mhdVp_1_win);
+    MPI_Win_lock_all(MPI_MODE_NOCHECK, mhdVt_1_win);
+    MPI_Win_lock_all(MPI_MODE_NOCHECK, mhdVr_1_win);
+    MPI_Win_lock_all(MPI_MODE_NOCHECK, mhdD_1_win);
 
     // heliospheric coupling
-    if (config.masHelCouple > 0) {
+    if (config.mhdHelCouple > 0) {
 
-      MPI_Win_lock_all(MPI_MODE_NOCHECK, masHelBp_0_win);
-      MPI_Win_lock_all(MPI_MODE_NOCHECK, masHelBt_0_win);
-      MPI_Win_lock_all(MPI_MODE_NOCHECK, masHelBr_0_win);
-      MPI_Win_lock_all(MPI_MODE_NOCHECK, masHelVp_0_win);
-      MPI_Win_lock_all(MPI_MODE_NOCHECK, masHelVt_0_win);
-      MPI_Win_lock_all(MPI_MODE_NOCHECK, masHelVr_0_win);
-      MPI_Win_lock_all(MPI_MODE_NOCHECK, masHelD_0_win);
-      MPI_Win_lock_all(MPI_MODE_NOCHECK, masHelBp_1_win);
-      MPI_Win_lock_all(MPI_MODE_NOCHECK, masHelBt_1_win);
-      MPI_Win_lock_all(MPI_MODE_NOCHECK, masHelBr_1_win);
-      MPI_Win_lock_all(MPI_MODE_NOCHECK, masHelVp_1_win);
-      MPI_Win_lock_all(MPI_MODE_NOCHECK, masHelVt_1_win);
-      MPI_Win_lock_all(MPI_MODE_NOCHECK, masHelVr_1_win);
-      MPI_Win_lock_all(MPI_MODE_NOCHECK, masHelD_1_win);
+      MPI_Win_lock_all(MPI_MODE_NOCHECK, mhdHelBp_0_win);
+      MPI_Win_lock_all(MPI_MODE_NOCHECK, mhdHelBt_0_win);
+      MPI_Win_lock_all(MPI_MODE_NOCHECK, mhdHelBr_0_win);
+      MPI_Win_lock_all(MPI_MODE_NOCHECK, mhdHelVp_0_win);
+      MPI_Win_lock_all(MPI_MODE_NOCHECK, mhdHelVt_0_win);
+      MPI_Win_lock_all(MPI_MODE_NOCHECK, mhdHelVr_0_win);
+      MPI_Win_lock_all(MPI_MODE_NOCHECK, mhdHelD_0_win);
+      MPI_Win_lock_all(MPI_MODE_NOCHECK, mhdHelBp_1_win);
+      MPI_Win_lock_all(MPI_MODE_NOCHECK, mhdHelBt_1_win);
+      MPI_Win_lock_all(MPI_MODE_NOCHECK, mhdHelBr_1_win);
+      MPI_Win_lock_all(MPI_MODE_NOCHECK, mhdHelVp_1_win);
+      MPI_Win_lock_all(MPI_MODE_NOCHECK, mhdHelVt_1_win);
+      MPI_Win_lock_all(MPI_MODE_NOCHECK, mhdHelVr_1_win);
+      MPI_Win_lock_all(MPI_MODE_NOCHECK, mhdHelD_1_win);
 
     }
 
-    masMallocFlag = 1;
+    mhdMallocFlag = 1;
 
   }
 
 
-}/*-------- END masFetchFileList()  --------------------------------*/
+}/*-------- END mhdFetchFileList()  --------------------------------*/
 /*------------------------------------------------------------------*/
 
 /*------------------------------------------------------------------*/
@@ -589,70 +589,70 @@ char file_extension[5];
 /*------------------------------------------------------------------*/
 {/*-----------------------------------------------------------------*/
 
-   if (config.masCouple > 0) {
-      MPI_Win_unlock_all(masBp_0_win);
-      MPI_Win_unlock_all(masBt_0_win);
-      MPI_Win_unlock_all(masBr_0_win);
-      MPI_Win_unlock_all(masVp_0_win);
-      MPI_Win_unlock_all(masVt_0_win);
-      MPI_Win_unlock_all(masVr_0_win);
-      MPI_Win_unlock_all(masD_0_win);
-      MPI_Win_unlock_all(masBp_1_win);
-      MPI_Win_unlock_all(masBt_1_win);
-      MPI_Win_unlock_all(masBr_1_win);
-      MPI_Win_unlock_all(masVp_1_win);
-      MPI_Win_unlock_all(masVt_1_win);
-      MPI_Win_unlock_all(masVr_1_win);
-      MPI_Win_unlock_all(masD_1_win);
+   if (config.mhdCouple > 0) {
+      MPI_Win_unlock_all(mhdBp_0_win);
+      MPI_Win_unlock_all(mhdBt_0_win);
+      MPI_Win_unlock_all(mhdBr_0_win);
+      MPI_Win_unlock_all(mhdVp_0_win);
+      MPI_Win_unlock_all(mhdVt_0_win);
+      MPI_Win_unlock_all(mhdVr_0_win);
+      MPI_Win_unlock_all(mhdD_0_win);
+      MPI_Win_unlock_all(mhdBp_1_win);
+      MPI_Win_unlock_all(mhdBt_1_win);
+      MPI_Win_unlock_all(mhdBr_1_win);
+      MPI_Win_unlock_all(mhdVp_1_win);
+      MPI_Win_unlock_all(mhdVt_1_win);
+      MPI_Win_unlock_all(mhdVr_1_win);
+      MPI_Win_unlock_all(mhdD_1_win);
 
-      MPI_Win_free(&masBp_0_win);
-      MPI_Win_free(&masBt_0_win);
-      MPI_Win_free(&masBr_0_win);
-      MPI_Win_free(&masVp_0_win);
-      MPI_Win_free(&masVt_0_win);
-      MPI_Win_free(&masVr_0_win);
-      MPI_Win_free(&masD_0_win);
-      MPI_Win_free(&masBp_1_win);
-      MPI_Win_free(&masBt_1_win);
-      MPI_Win_free(&masBr_1_win);
-      MPI_Win_free(&masVp_1_win);
-      MPI_Win_free(&masVt_1_win);
-      MPI_Win_free(&masVr_1_win);
-      MPI_Win_free(&masD_1_win);
+      MPI_Win_free(&mhdBp_0_win);
+      MPI_Win_free(&mhdBt_0_win);
+      MPI_Win_free(&mhdBr_0_win);
+      MPI_Win_free(&mhdVp_0_win);
+      MPI_Win_free(&mhdVt_0_win);
+      MPI_Win_free(&mhdVr_0_win);
+      MPI_Win_free(&mhdD_0_win);
+      MPI_Win_free(&mhdBp_1_win);
+      MPI_Win_free(&mhdBt_1_win);
+      MPI_Win_free(&mhdBr_1_win);
+      MPI_Win_free(&mhdVp_1_win);
+      MPI_Win_free(&mhdVt_1_win);
+      MPI_Win_free(&mhdVr_1_win);
+      MPI_Win_free(&mhdD_1_win);
   }
 
   // heliospheric coupling
-  if (config.masHelCouple > 0) {
+  if (config.mhdHelCouple > 0) {
 
-    MPI_Win_unlock_all(masHelBp_0_win);
-    MPI_Win_unlock_all(masHelBt_0_win);
-    MPI_Win_unlock_all(masHelBr_0_win);
-    MPI_Win_unlock_all(masHelVp_0_win);
-    MPI_Win_unlock_all(masHelVt_0_win);
-    MPI_Win_unlock_all(masHelVr_0_win);
-    MPI_Win_unlock_all(masHelD_0_win);
-    MPI_Win_unlock_all(masHelBp_1_win);
-    MPI_Win_unlock_all(masHelBt_1_win);
-    MPI_Win_unlock_all(masHelBr_1_win);
-    MPI_Win_unlock_all(masHelVp_1_win);
-    MPI_Win_unlock_all(masHelVt_1_win);
-    MPI_Win_unlock_all(masHelVr_1_win);
-    MPI_Win_unlock_all(masHelD_1_win);
+    MPI_Win_unlock_all(mhdHelBp_0_win);
+    MPI_Win_unlock_all(mhdHelBt_0_win);
+    MPI_Win_unlock_all(mhdHelBr_0_win);
+    MPI_Win_unlock_all(mhdHelVp_0_win);
+    MPI_Win_unlock_all(mhdHelVt_0_win);
+    MPI_Win_unlock_all(mhdHelVr_0_win);
+    MPI_Win_unlock_all(mhdHelD_0_win);
+    MPI_Win_unlock_all(mhdHelBp_1_win);
+    MPI_Win_unlock_all(mhdHelBt_1_win);
+    MPI_Win_unlock_all(mhdHelBr_1_win);
+    MPI_Win_unlock_all(mhdHelVp_1_win);
+    MPI_Win_unlock_all(mhdHelVt_1_win);
+    MPI_Win_unlock_all(mhdHelVr_1_win);
+    MPI_Win_unlock_all(mhdHelD_1_win);
 
-    MPI_Win_free(&masHelBp_0_win);
-    MPI_Win_free(&masHelBt_0_win);
-    MPI_Win_free(&masHelBr_0_win);
-    MPI_Win_free(&masHelVp_0_win);
-    MPI_Win_free(&masHelVt_0_win);
-    MPI_Win_free(&masHelVr_0_win);
-    MPI_Win_free(&masHelD_0_win);
-    MPI_Win_free(&masHelBp_1_win);
-    MPI_Win_free(&masHelBt_1_win);
-    MPI_Win_free(&masHelBr_1_win);
-    MPI_Win_free(&masHelVp_1_win);
-    MPI_Win_free(&masHelVt_1_win);
-    MPI_Win_free(&masHelVr_1_win);
-    MPI_Win_free(&masHelD_1_win);
+    MPI_Win_free(&mhdHelBp_0_win);
+    MPI_Win_free(&mhdHelBt_0_win);
+    MPI_Win_free(&mhdHelBr_0_win);
+    MPI_Win_free(&mhdHelVp_0_win);
+    MPI_Win_free(&mhdHelVt_0_win);
+    MPI_Win_free(&mhdHelVr_0_win);
+    MPI_Win_free(&mhdHelD_0_win);
+    MPI_Win_free(&mhdHelBp_1_win);
+    MPI_Win_free(&mhdHelBt_1_win);
+    MPI_Win_free(&mhdHelBr_1_win);
+    MPI_Win_free(&mhdHelVp_1_win);
+    MPI_Win_free(&mhdHelVt_1_win);
+    MPI_Win_free(&mhdHelVr_1_win);
+    MPI_Win_free(&mhdHelD_1_win);
 
   }
 
@@ -662,10 +662,10 @@ char file_extension[5];
 /*------------------------------------------------------------------*/
 /*------------------------------------------------------------------*/
 /*--*/     void                                                 /*--*/
-/*--*/     masGetInterpData ( Scalar_t dt )                     /*--*/
+/*--*/     mhdGetInterpData ( Scalar_t dt )                     /*--*/
 /*--                                                              --*/
 /*-- This function checks if the simulation time is right to read --*/
-/*-- or copy MAS data, and does so if needed.                     --*/
+/*-- or copy MHD data, and does so if needed.                     --*/
 /*-- It also sets the interpolation factors 's_cor' and 's_hel'   --*/
 /*------------------------------------------------------------------*/
 /*------------------------------------------------------------------*/
@@ -682,96 +682,96 @@ char file_extension[5];
   time_interp = t_global + dt;
 
 //
-// Check if MAS is being used yet.
+// Check if MHD is being used yet.
 //
-  if ((t_global < masTime[0]) && (config.masSteadyState == 0)){
+  if ((t_global < mhdTime[0]) && (config.mhdSteadyState == 0)){
     mhdGridStatus = MHD_DEFAULT;
     return;
   }
   else{
-    mhdGridStatus = MHD_MAS;
+    mhdGridStatus = MHD_COUPLED;
   }
 
 //
-// Find the two MAS files that bound the current time_interp, and set
+// Find the two MHD files that bound the current time_interp, and set
 // interpolation factors.
 //
 
-  if (time_interp <= masTime[0]){
+  if (time_interp <= mhdTime[0]){
 
-    masFileIndex0 = 0;
-    masFileIndex1 = 0;
+    mhdFileIndex0 = 0;
+    mhdFileIndex1 = 0;
 
     s_cor = 0.0;
 
-  } else if (time_interp >= masTime[config.masNumFiles-1]){
+  } else if (time_interp >= mhdTime[config.mhdNumFiles-1]){
 
-    masFileIndex0 = config.masNumFiles-1;
-    masFileIndex1 = config.masNumFiles-1;
+    mhdFileIndex0 = config.mhdNumFiles-1;
+    mhdFileIndex1 = config.mhdNumFiles-1;
 
     s_cor = 0.0;
 
   } else {
 
-    for (i=1; i<config.masNumFiles; i++){
-      if (masTime[i] > time_interp ){
-         masFileIndex0 = i-1;
-         masFileIndex1 = i;
+    for (i=1; i<config.mhdNumFiles; i++){
+      if (mhdTime[i] > time_interp ){
+         mhdFileIndex0 = i-1;
+         mhdFileIndex1 = i;
          break;
       }
     }
 
-    s_cor = ( time_interp - masTime[masFileIndex0] ) /
-            ( masTime[masFileIndex1] - masTime[masFileIndex0]);
+    s_cor = ( time_interp - mhdTime[mhdFileIndex0] ) /
+            ( mhdTime[mhdFileIndex1] - mhdTime[mhdFileIndex0]);
 
   }
 
 //
-// Read or copy MAS data as needed.
+// Read or copy MHD data as needed.
 //
 
-  if (masFileIndex0 != masFileIndex_loaded0){ // if state0 needs to be updated
+  if (mhdFileIndex0 != mhdFileIndex_loaded0){ // if state0 needs to be updated
     MPI_Barrier(comm_shared);
-    if (masFileIndex0 == masFileIndex_loaded1){ // if state0 used is already stored previously in state1
+    if (mhdFileIndex0 == mhdFileIndex_loaded1){ // if state0 used is already stored previously in state1
       if(mpi_rank_shared==0) {
-        N=(int)masBprDimMax[0]*(int)masBptDimMax[0]*(int)masBppDimMax[0];
-        memcpy(&masBp_0[0],&masBp_1[0],N*sizeof(float));
-        N=(int)masBtrDimMax[0]*(int)masBttDimMax[0]*(int)masBtpDimMax[0];
-        memcpy(&masBt_0[0],&masBt_1[0],N*sizeof(float));
-        N=(int)masBrrDimMax[0]*(int)masBrtDimMax[0]*(int)masBrpDimMax[0];
-        memcpy(&masBr_0[0],&masBr_1[0],N*sizeof(float));
-        N=(int)masVprDimMax[0]*(int)masVptDimMax[0]*(int)masVppDimMax[0];
-        memcpy(&masVp_0[0],&masVp_1[0],N*sizeof(float));
-        N=(int)masVtrDimMax[0]*(int)masVttDimMax[0]*(int)masVtpDimMax[0];
-        memcpy(&masVt_0[0],&masVt_1[0],N*sizeof(float));
-        N=(int)masVrrDimMax[0]*(int)masVrtDimMax[0]*(int)masVrpDimMax[0];
-        memcpy(&masVr_0[0],&masVr_1[0],N*sizeof(float));
-        N=(int)masDrDimMax[0]*(int)masDtDimMax[0]*(int)masDpDimMax[0];
-        memcpy(&masD_0[0],&masD_1[0],N*sizeof(float));
+        N=(int)mhdBprDimMax[0]*(int)mhdBptDimMax[0]*(int)mhdBppDimMax[0];
+        memcpy(&mhdBp_0[0],&mhdBp_1[0],N*sizeof(float));
+        N=(int)mhdBtrDimMax[0]*(int)mhdBttDimMax[0]*(int)mhdBtpDimMax[0];
+        memcpy(&mhdBt_0[0],&mhdBt_1[0],N*sizeof(float));
+        N=(int)mhdBrrDimMax[0]*(int)mhdBrtDimMax[0]*(int)mhdBrpDimMax[0];
+        memcpy(&mhdBr_0[0],&mhdBr_1[0],N*sizeof(float));
+        N=(int)mhdVprDimMax[0]*(int)mhdVptDimMax[0]*(int)mhdVppDimMax[0];
+        memcpy(&mhdVp_0[0],&mhdVp_1[0],N*sizeof(float));
+        N=(int)mhdVtrDimMax[0]*(int)mhdVttDimMax[0]*(int)mhdVtpDimMax[0];
+        memcpy(&mhdVt_0[0],&mhdVt_1[0],N*sizeof(float));
+        N=(int)mhdVrrDimMax[0]*(int)mhdVrtDimMax[0]*(int)mhdVrpDimMax[0];
+        memcpy(&mhdVr_0[0],&mhdVr_1[0],N*sizeof(float));
+        N=(int)mhdDrDimMax[0]*(int)mhdDtDimMax[0]*(int)mhdDpDimMax[0];
+        memcpy(&mhdD_0[0],&mhdD_1[0],N*sizeof(float));
       }
     } else {
       if(mpi_rank_shared==0) {
-        masReadData(masFileIndex0,
-                &masBp_0, &masBt_0, &masBr_0,
-                &masVp_0, &masVt_0, &masVr_0,
-                &masD_0);
+        mhdReadData(mhdFileIndex0,
+                &mhdBp_0, &mhdBt_0, &mhdBr_0,
+                &mhdVp_0, &mhdVt_0, &mhdVr_0,
+                &mhdD_0);
       }
     }
-    masFileIndex_loaded0 = masFileIndex0;
+    mhdFileIndex_loaded0 = mhdFileIndex0;
     need_sync_0 = 1;
   } else {
     need_sync_0 = 0;
   }
 
-  if (masFileIndex1 != masFileIndex_loaded1){
+  if (mhdFileIndex1 != mhdFileIndex_loaded1){
     MPI_Barrier(comm_shared);
     if(mpi_rank_shared==0) {
-      masReadData(masFileIndex1,
-                &masBp_1, &masBt_1, &masBr_1,
-                &masVp_1, &masVt_1, &masVr_1,
-                &masD_1);
+      mhdReadData(mhdFileIndex1,
+                &mhdBp_1, &mhdBt_1, &mhdBr_1,
+                &mhdVp_1, &mhdVt_1, &mhdVr_1,
+                &mhdD_1);
     }
-    masFileIndex_loaded1 = masFileIndex1;
+    mhdFileIndex_loaded1 = mhdFileIndex1;
     need_sync_1 = 1;
   } else {
     need_sync_1 = 0;
@@ -779,112 +779,112 @@ char file_extension[5];
 
   if (need_sync_0 == 1){
     MPI_Barrier(comm_shared);
-    MPI_Win_sync(masBp_0_win);
-    MPI_Win_sync(masBt_0_win);
-    MPI_Win_sync(masBr_0_win);
-    MPI_Win_sync(masVp_0_win);
-    MPI_Win_sync(masVt_0_win);
-    MPI_Win_sync(masVr_0_win);
-    MPI_Win_sync(masD_0_win);
+    MPI_Win_sync(mhdBp_0_win);
+    MPI_Win_sync(mhdBt_0_win);
+    MPI_Win_sync(mhdBr_0_win);
+    MPI_Win_sync(mhdVp_0_win);
+    MPI_Win_sync(mhdVt_0_win);
+    MPI_Win_sync(mhdVr_0_win);
+    MPI_Win_sync(mhdD_0_win);
   }
 
   if (need_sync_1 == 1){
     MPI_Barrier(comm_shared);
-    MPI_Win_sync(masBp_1_win);
-    MPI_Win_sync(masBt_1_win);
-    MPI_Win_sync(masBr_1_win);
-    MPI_Win_sync(masVp_1_win);
-    MPI_Win_sync(masVt_1_win);
-    MPI_Win_sync(masVr_1_win);
-    MPI_Win_sync(masD_1_win);
+    MPI_Win_sync(mhdBp_1_win);
+    MPI_Win_sync(mhdBt_1_win);
+    MPI_Win_sync(mhdBr_1_win);
+    MPI_Win_sync(mhdVp_1_win);
+    MPI_Win_sync(mhdVt_1_win);
+    MPI_Win_sync(mhdVr_1_win);
+    MPI_Win_sync(mhdD_1_win);
   }
 
   if (need_sync_0 + need_sync_1 > 0) MPI_Barrier(comm_shared);
 //
 // Now do everything with the heliosphere.
 //
-  if (config.masHelCouple > 0) {
+  if (config.mhdHelCouple > 0) {
 
 //
-// Find the two MAS HELIO files that bound the current time_interp, and set
+// Find the two MHD HELIO files that bound the current time_interp, and set
 // interpolation factors.
 //
-    if (time_interp < masHelTime[0]){
+    if (time_interp < mhdHelTime[0]){
 
-      masHelFileIndex0 = 0;
-      masHelFileIndex1 = 0;
+      mhdHelFileIndex0 = 0;
+      mhdHelFileIndex1 = 0;
 
       s_hel = 0.0;
 
-    } else if (time_interp > masHelTime[config.masHelNumFiles-1]){
+    } else if (time_interp > mhdHelTime[config.mhdHelNumFiles-1]){
 
-      masHelFileIndex0 = config.masHelNumFiles-1;
-      masHelFileIndex1 = config.masHelNumFiles-1;
+      mhdHelFileIndex0 = config.mhdHelNumFiles-1;
+      mhdHelFileIndex1 = config.mhdHelNumFiles-1;
 
       s_hel = 0.0;
 
     } else {
 
-      for (i=1; i<config.masHelNumFiles; i++){
-        if (masHelTime[i] > time_interp){
-          masHelFileIndex0 = i-1;
-          masHelFileIndex1 = i;
+      for (i=1; i<config.mhdHelNumFiles; i++){
+        if (mhdHelTime[i] > time_interp){
+          mhdHelFileIndex0 = i-1;
+          mhdHelFileIndex1 = i;
           break;
         }
       }
 
-      s_hel = ( time_interp - masHelTime[masHelFileIndex0] ) /
-              ( masHelTime[masHelFileIndex1] - masHelTime[masHelFileIndex0]);
+      s_hel = ( time_interp - mhdHelTime[mhdHelFileIndex0] ) /
+              ( mhdHelTime[mhdHelFileIndex1] - mhdHelTime[mhdHelFileIndex0]);
 
     }
 
 //
-// Read or copy MAS HELIO data as needed.
+// Read or copy MHD HELIO data as needed.
 //
-    if (masHelFileIndex0 != masHelFileIndex_loaded0){// If new data needs to be read into state 0
+    if (mhdHelFileIndex0 != mhdHelFileIndex_loaded0){// If new data needs to be read into state 0
       MPI_Barrier(comm_shared);
-      if (masHelFileIndex0 == masHelFileIndex_loaded1)// If data already exists in previous state 1
+      if (mhdHelFileIndex0 == mhdHelFileIndex_loaded1)// If data already exists in previous state 1
       {
         if(mpi_rank_shared==0) {
-          N=(int)masHelBprDimMax[0]*(int)masHelBptDimMax[0]*(int)masHelBppDimMax[0];
-          memcpy(&masHelBp_0[0],&masHelBp_1[0],N*sizeof(float));
-          N=(int)masHelBtrDimMax[0]*(int)masHelBttDimMax[0]*(int)masHelBtpDimMax[0];
-          memcpy(&masHelBt_0[0],&masHelBt_1[0],N*sizeof(float));
-          N=(int)masHelBrrDimMax[0]*(int)masHelBrtDimMax[0]*(int)masHelBrpDimMax[0];
-          memcpy(&masHelBr_0[0],&masHelBr_1[0],N*sizeof(float));
-          N=(int)masHelVprDimMax[0]*(int)masHelVptDimMax[0]*(int)masHelVppDimMax[0];
-          memcpy(&masHelVp_0[0],&masHelVp_1[0],N*sizeof(float));
-          N=(int)masHelVtrDimMax[0]*(int)masHelVttDimMax[0]*(int)masHelVtpDimMax[0];
-          memcpy(&masHelVt_0[0],&masHelVt_1[0],N*sizeof(float));
-          N=(int)masHelVrrDimMax[0]*(int)masHelVrtDimMax[0]*(int)masHelVrpDimMax[0];
-          memcpy(&masHelVr_0[0],&masHelVr_1[0],N*sizeof(float));
-          N=(int)masHelDrDimMax[0]*(int)masHelDtDimMax[0]*(int)masHelDpDimMax[0];
-          memcpy(&masHelD_0[0],&masHelD_1[0],N*sizeof(float));
+          N=(int)mhdHelBprDimMax[0]*(int)mhdHelBptDimMax[0]*(int)mhdHelBppDimMax[0];
+          memcpy(&mhdHelBp_0[0],&mhdHelBp_1[0],N*sizeof(float));
+          N=(int)mhdHelBtrDimMax[0]*(int)mhdHelBttDimMax[0]*(int)mhdHelBtpDimMax[0];
+          memcpy(&mhdHelBt_0[0],&mhdHelBt_1[0],N*sizeof(float));
+          N=(int)mhdHelBrrDimMax[0]*(int)mhdHelBrtDimMax[0]*(int)mhdHelBrpDimMax[0];
+          memcpy(&mhdHelBr_0[0],&mhdHelBr_1[0],N*sizeof(float));
+          N=(int)mhdHelVprDimMax[0]*(int)mhdHelVptDimMax[0]*(int)mhdHelVppDimMax[0];
+          memcpy(&mhdHelVp_0[0],&mhdHelVp_1[0],N*sizeof(float));
+          N=(int)mhdHelVtrDimMax[0]*(int)mhdHelVttDimMax[0]*(int)mhdHelVtpDimMax[0];
+          memcpy(&mhdHelVt_0[0],&mhdHelVt_1[0],N*sizeof(float));
+          N=(int)mhdHelVrrDimMax[0]*(int)mhdHelVrtDimMax[0]*(int)mhdHelVrpDimMax[0];
+          memcpy(&mhdHelVr_0[0],&mhdHelVr_1[0],N*sizeof(float));
+          N=(int)mhdHelDrDimMax[0]*(int)mhdHelDtDimMax[0]*(int)mhdHelDpDimMax[0];
+          memcpy(&mhdHelD_0[0],&mhdHelD_1[0],N*sizeof(float));
         }
       }
       else {// Read in new data
         if(mpi_rank_shared==0) {
-          masHelReadData(masHelFileIndex0,
-                  &masHelBp_0, &masHelBt_0, &masHelBr_0,
-                  &masHelVp_0, &masHelVt_0, &masHelVr_0,
-                  &masHelD_0);
+          mhdHelReadData(mhdHelFileIndex0,
+                  &mhdHelBp_0, &mhdHelBt_0, &mhdHelBr_0,
+                  &mhdHelVp_0, &mhdHelVt_0, &mhdHelVr_0,
+                  &mhdHelD_0);
         }
       }
-      masHelFileIndex_loaded0 = masHelFileIndex0;
+      mhdHelFileIndex_loaded0 = mhdHelFileIndex0;
       need_sync_0 = 1;
     } else {// Nothing changed
       need_sync_0 = 0;
     }
 
-    if (masHelFileIndex1 != masHelFileIndex_loaded1){ //  Check if state1 needs to be read in
+    if (mhdHelFileIndex1 != mhdHelFileIndex_loaded1){ //  Check if state1 needs to be read in
       MPI_Barrier(comm_shared);
       if(mpi_rank_shared==0) {
-        masHelReadData(masHelFileIndex1,
-                  &masHelBp_1, &masHelBt_1, &masHelBr_1,
-                  &masHelVp_1, &masHelVt_1, &masHelVr_1,
-                  &masHelD_1);
+        mhdHelReadData(mhdHelFileIndex1,
+                  &mhdHelBp_1, &mhdHelBt_1, &mhdHelBr_1,
+                  &mhdHelVp_1, &mhdHelVt_1, &mhdHelVr_1,
+                  &mhdHelD_1);
       }
-      masHelFileIndex_loaded1 = masHelFileIndex1;
+      mhdHelFileIndex_loaded1 = mhdHelFileIndex1;
       need_sync_1 = 1;
     } else {
       need_sync_1 = 0;
@@ -892,24 +892,24 @@ char file_extension[5];
 
     if (need_sync_0 == 1){
       MPI_Barrier(comm_shared);
-      MPI_Win_sync(masHelBp_0_win);
-      MPI_Win_sync(masHelBt_0_win);
-      MPI_Win_sync(masHelBr_0_win);
-      MPI_Win_sync(masHelVp_0_win);
-      MPI_Win_sync(masHelVt_0_win);
-      MPI_Win_sync(masHelVr_0_win);
-      MPI_Win_sync(masHelD_0_win);
+      MPI_Win_sync(mhdHelBp_0_win);
+      MPI_Win_sync(mhdHelBt_0_win);
+      MPI_Win_sync(mhdHelBr_0_win);
+      MPI_Win_sync(mhdHelVp_0_win);
+      MPI_Win_sync(mhdHelVt_0_win);
+      MPI_Win_sync(mhdHelVr_0_win);
+      MPI_Win_sync(mhdHelD_0_win);
     }
 
     if (need_sync_1 == 1){
       MPI_Barrier(comm_shared);
-      MPI_Win_sync(masHelBp_1_win);
-      MPI_Win_sync(masHelBt_1_win);
-      MPI_Win_sync(masHelBr_1_win);
-      MPI_Win_sync(masHelVp_1_win);
-      MPI_Win_sync(masHelVt_1_win);
-      MPI_Win_sync(masHelVr_1_win);
-      MPI_Win_sync(masHelD_1_win);
+      MPI_Win_sync(mhdHelBp_1_win);
+      MPI_Win_sync(mhdHelBt_1_win);
+      MPI_Win_sync(mhdHelBr_1_win);
+      MPI_Win_sync(mhdHelVp_1_win);
+      MPI_Win_sync(mhdHelVt_1_win);
+      MPI_Win_sync(mhdHelVr_1_win);
+      MPI_Win_sync(mhdHelD_1_win);
     }
 
     if (need_sync_0 + need_sync_1 > 0) MPI_Barrier(comm_shared);
@@ -919,41 +919,41 @@ char file_extension[5];
 // Tell everyone what we just did.
 //
   if (mpi_rank==0) {
-    printf("  --> MAS(C) Couple: Time: %14.8e  Time+Dt: %14.8e  s_cor: %10.8f\n",
+    printf("  --> MHD(C) Couple: Time: %14.8e  Time+Dt: %14.8e  s_cor: %10.8f\n",
           t_global,
           time_interp,s_cor);
-    printf("  -->                idx0: %03d  idx1: %03d  masTime0: %14.8e  masTime1: %14.8e\n",
-          masFileIndex0+1,
-          masFileIndex1+1,
-          masTime[masFileIndex0],
-          masTime[masFileIndex1]);
-    if (config.masHelCouple > 0){
-      printf("  --> MAS(H) Couple: Time: %14.8e  Time+Dt: %14.8e  s_hel: %10.8f\n",
+    printf("  -->                idx0: %03d  idx1: %03d  mhdTime0: %14.8e  mhdTime1: %14.8e\n",
+          mhdFileIndex0+1,
+          mhdFileIndex1+1,
+          mhdTime[mhdFileIndex0],
+          mhdTime[mhdFileIndex1]);
+    if (config.mhdHelCouple > 0){
+      printf("  --> MHD(H) Couple: Time: %14.8e  Time+Dt: %14.8e  s_hel: %10.8f\n",
           t_global,
           time_interp,s_hel);
-      printf("  -->                idx0: %03d  idx1: %03d  masTime0: %14.8e  masTime1: %14.8e\n",
-          masHelFileIndex0+1,
-          masHelFileIndex1+1,
-          masHelTime[masHelFileIndex0],
-          masHelTime[masHelFileIndex1]);
+      printf("  -->                idx0: %03d  idx1: %03d  mhdTime0: %14.8e  mhdTime1: %14.8e\n",
+          mhdHelFileIndex0+1,
+          mhdHelFileIndex1+1,
+          mhdHelTime[mhdHelFileIndex0],
+          mhdHelTime[mhdHelFileIndex1]);
     }
   }
 
 }
-/*----------------- END masGetInterpData(dt)  ------------------------*/
+/*----------------- END mhdGetInterpData(dt)  ------------------------*/
 /*--------------------------------------------------------------------*/
 
 /*--------------------------------------------------------------------*/
 /*--------------------------------------------------------------------*/
 /*--------------------------------------------------------------------*/
 /*--*/     void                                                   /*--*/
-/*--*/     masReadData(Index_t fileIndex,                         /*--*/
-/*--*/            float *masBp[], float *masBt[], float *masBr[], /*--*/
-/*--*/            float *masVp[], float *masVt[], float *masVr[], /*--*/
-/*--*/            float *masD[])                                  /*--*/
+/*--*/     mhdReadData(Index_t fileIndex,                         /*--*/
+/*--*/            float *mhdBp[], float *mhdBt[], float *mhdBr[], /*--*/
+/*--*/            float *mhdVp[], float *mhdVt[], float *mhdVr[], /*--*/
+/*--*/            float *mhdD[])                                  /*--*/
 /*--*/                                                            /*--*/
 /*--                                                                --*/
-/*--This function reads the MAS data from a HDF file.              --*/
+/*--This function reads the MHD data from a HDF file.              --*/
 /*--------------------------------------------------------------------*/
 {/*-------------------------------------------------------------------*/
   char fileNames[7][MAX_STRING_SIZE];
@@ -962,54 +962,54 @@ char file_extension[5];
 
   timer_tmp = MPI_Wtime();
 
-  if (config.masDigits == 3) {
+  if (config.mhdDigits == 3) {
 
-    sprintf(fileNames[0], "%sbp%03d%s", config.masDirectory, fileIndex + 1, file_extension);
-    sprintf(fileNames[1], "%sbt%03d%s", config.masDirectory, fileIndex + 1, file_extension);
-    sprintf(fileNames[2], "%sbr%03d%s", config.masDirectory, fileIndex + 1, file_extension);
-    sprintf(fileNames[3], "%svp%03d%s", config.masDirectory, fileIndex + 1, file_extension);
-    sprintf(fileNames[4], "%svt%03d%s", config.masDirectory, fileIndex + 1, file_extension);
-    sprintf(fileNames[5], "%svr%03d%s", config.masDirectory, fileIndex + 1, file_extension);
-    sprintf(fileNames[6], "%srho%03d%s", config.masDirectory, fileIndex + 1, file_extension);
+    sprintf(fileNames[0], "%sbp%03d%s", config.mhdDirectory, fileIndex + 1, file_extension);
+    sprintf(fileNames[1], "%sbt%03d%s", config.mhdDirectory, fileIndex + 1, file_extension);
+    sprintf(fileNames[2], "%sbr%03d%s", config.mhdDirectory, fileIndex + 1, file_extension);
+    sprintf(fileNames[3], "%svp%03d%s", config.mhdDirectory, fileIndex + 1, file_extension);
+    sprintf(fileNames[4], "%svt%03d%s", config.mhdDirectory, fileIndex + 1, file_extension);
+    sprintf(fileNames[5], "%svr%03d%s", config.mhdDirectory, fileIndex + 1, file_extension);
+    sprintf(fileNames[6], "%srho%03d%s", config.mhdDirectory, fileIndex + 1, file_extension);
 
   } else {
 
-    sprintf(fileNames[0], "%sbp%06d%s", config.masDirectory, fileIndex + 1, file_extension);
-    sprintf(fileNames[1], "%sbt%06d%s", config.masDirectory, fileIndex + 1, file_extension);
-    sprintf(fileNames[2], "%sbr%06d%s", config.masDirectory, fileIndex + 1, file_extension);
-    sprintf(fileNames[3], "%svp%06d%s", config.masDirectory, fileIndex + 1, file_extension);
-    sprintf(fileNames[4], "%svt%06d%s", config.masDirectory, fileIndex + 1, file_extension);
-    sprintf(fileNames[5], "%svr%06d%s", config.masDirectory, fileIndex + 1, file_extension);
-    sprintf(fileNames[6], "%srho%06d%s", config.masDirectory, fileIndex + 1, file_extension);
+    sprintf(fileNames[0], "%sbp%06d%s", config.mhdDirectory, fileIndex + 1, file_extension);
+    sprintf(fileNames[1], "%sbt%06d%s", config.mhdDirectory, fileIndex + 1, file_extension);
+    sprintf(fileNames[2], "%sbr%06d%s", config.mhdDirectory, fileIndex + 1, file_extension);
+    sprintf(fileNames[3], "%svp%06d%s", config.mhdDirectory, fileIndex + 1, file_extension);
+    sprintf(fileNames[4], "%svt%06d%s", config.mhdDirectory, fileIndex + 1, file_extension);
+    sprintf(fileNames[5], "%svr%06d%s", config.mhdDirectory, fileIndex + 1, file_extension);
+    sprintf(fileNames[6], "%srho%06d%s", config.mhdDirectory, fileIndex + 1, file_extension);
 
   }
 
   // reading in Bp
-  masReadDatafromFile(fileNames[0], masBp);
+  mhdReadDatafromFile(fileNames[0], mhdBp);
 
   // reading in Bt
-  masReadDatafromFile(fileNames[1], masBt);
+  mhdReadDatafromFile(fileNames[1], mhdBt);
 
   // reading in Br
-  masReadDatafromFile(fileNames[2], masBr);
+  mhdReadDatafromFile(fileNames[2], mhdBr);
 
   // reading in Vp
-  masReadDatafromFile(fileNames[3], masVp);
+  mhdReadDatafromFile(fileNames[3], mhdVp);
 
   // reading in Vt
-  masReadDatafromFile(fileNames[4], masVt);
+  mhdReadDatafromFile(fileNames[4], mhdVt);
 
   // reading in Vr
-  masReadDatafromFile(fileNames[5], masVr);
+  mhdReadDatafromFile(fileNames[5], mhdVr);
 
   // reading in D
-  masReadDatafromFile(fileNames[6], masD);
+  mhdReadDatafromFile(fileNames[6], mhdD);
 
-  if (mpi_rank == 0) printf("  --> IO MAS: Coronal sequence %03d read.\n",fileIndex+1);
+  if (mpi_rank == 0) printf("  --> IO MHD: Coronal sequence %03d read.\n",fileIndex+1);
 
-  timer_mas_io = timer_mas_io + (MPI_Wtime() - timer_tmp);
+  timer_mhd_io = timer_mhd_io + (MPI_Wtime() - timer_tmp);
 
-}/*-------- END masReadData()  -----------------------*/
+}/*-------- END mhdReadData()  -----------------------*/
 /*------------------------------------------------------------------*/
 
 
@@ -1017,14 +1017,14 @@ char file_extension[5];
 /*--------------------------------------------------------------------*/
 /*--------------------------------------------------------------------*/
 /*--*/     void                                                   /*--*/
-/*--*/     masHelReadData(Index_t fileIndex,                      /*--*/
-/*--*/            float *masBp[], float *masBt[], float *masBr[], /*--*/
-/*--*/            float *masVp[], float *masVt[], float *masVr[], /*--*/
-/*--*/            float *masD[])                                  /*--*/
+/*--*/     mhdHelReadData(Index_t fileIndex,                      /*--*/
+/*--*/            float *mhdBp[], float *mhdBt[], float *mhdBr[], /*--*/
+/*--*/            float *mhdVp[], float *mhdVt[], float *mhdVr[], /*--*/
+/*--*/            float *mhdD[])                                  /*--*/
 /*--*/                                                            /*--*/
 /*--                                                                --*/
 /*--This function checks if the simulation time is right to load    --*/
-/*--another timestep file from the MAS HEL data, and does if so.    --*/
+/*--another timestep file from the MHD HEL data, and does if so.    --*/
 /*--------------------------------------------------------------------*/
 {/*-------------------------------------------------------------------*/
 
@@ -1034,53 +1034,53 @@ char file_extension[5];
 
   timer_tmp = MPI_Wtime();
 
-  if (config.masHelDigits == 3) {
+  if (config.mhdHelDigits == 3) {
 
-    sprintf(fileNames[0], "%sbp%03d%s", config.masHelDirectory, fileIndex + 1, file_extension);
-    sprintf(fileNames[1], "%sbt%03d%s", config.masHelDirectory, fileIndex + 1, file_extension);
-    sprintf(fileNames[2], "%sbr%03d%s", config.masHelDirectory, fileIndex + 1, file_extension);
-    sprintf(fileNames[3], "%svp%03d%s", config.masHelDirectory, fileIndex + 1, file_extension);
-    sprintf(fileNames[4], "%svt%03d%s", config.masHelDirectory, fileIndex + 1, file_extension);
-    sprintf(fileNames[5], "%svr%03d%s", config.masHelDirectory, fileIndex + 1, file_extension);
-    sprintf(fileNames[6], "%srho%03d%s", config.masHelDirectory, fileIndex + 1, file_extension);
+    sprintf(fileNames[0], "%sbp%03d%s", config.mhdHelDirectory, fileIndex + 1, file_extension);
+    sprintf(fileNames[1], "%sbt%03d%s", config.mhdHelDirectory, fileIndex + 1, file_extension);
+    sprintf(fileNames[2], "%sbr%03d%s", config.mhdHelDirectory, fileIndex + 1, file_extension);
+    sprintf(fileNames[3], "%svp%03d%s", config.mhdHelDirectory, fileIndex + 1, file_extension);
+    sprintf(fileNames[4], "%svt%03d%s", config.mhdHelDirectory, fileIndex + 1, file_extension);
+    sprintf(fileNames[5], "%svr%03d%s", config.mhdHelDirectory, fileIndex + 1, file_extension);
+    sprintf(fileNames[6], "%srho%03d%s", config.mhdHelDirectory, fileIndex + 1, file_extension);
   }
   else
   {
-    sprintf(fileNames[0], "%sbp%06d%s", config.masHelDirectory, fileIndex + 1, file_extension);
-    sprintf(fileNames[1], "%sbt%06d%s", config.masHelDirectory, fileIndex + 1, file_extension);
-    sprintf(fileNames[2], "%sbr%06d%s", config.masHelDirectory, fileIndex + 1, file_extension);
-    sprintf(fileNames[3], "%svp%06d%s", config.masHelDirectory, fileIndex + 1, file_extension);
-    sprintf(fileNames[4], "%svt%06d%s", config.masHelDirectory, fileIndex + 1, file_extension);
-    sprintf(fileNames[5], "%svr%06d%s", config.masHelDirectory, fileIndex + 1, file_extension);
-    sprintf(fileNames[6], "%srho%06d%s", config.masHelDirectory, fileIndex + 1, file_extension);
+    sprintf(fileNames[0], "%sbp%06d%s", config.mhdHelDirectory, fileIndex + 1, file_extension);
+    sprintf(fileNames[1], "%sbt%06d%s", config.mhdHelDirectory, fileIndex + 1, file_extension);
+    sprintf(fileNames[2], "%sbr%06d%s", config.mhdHelDirectory, fileIndex + 1, file_extension);
+    sprintf(fileNames[3], "%svp%06d%s", config.mhdHelDirectory, fileIndex + 1, file_extension);
+    sprintf(fileNames[4], "%svt%06d%s", config.mhdHelDirectory, fileIndex + 1, file_extension);
+    sprintf(fileNames[5], "%svr%06d%s", config.mhdHelDirectory, fileIndex + 1, file_extension);
+    sprintf(fileNames[6], "%srho%06d%s", config.mhdHelDirectory, fileIndex + 1, file_extension);
   }
 
   // reading in Bp
-  masReadDatafromFile(fileNames[0], masBp);
+  mhdReadDatafromFile(fileNames[0], mhdBp);
 
   // reading in Bt
-  masReadDatafromFile(fileNames[1], masBt);
+  mhdReadDatafromFile(fileNames[1], mhdBt);
 
   // reading in Br
-  masReadDatafromFile(fileNames[2], masBr);
+  mhdReadDatafromFile(fileNames[2], mhdBr);
 
   // reading in Vp
-  masReadDatafromFile(fileNames[3], masVp);
+  mhdReadDatafromFile(fileNames[3], mhdVp);
 
   // reading in Vt
-  masReadDatafromFile(fileNames[4], masVt);
+  mhdReadDatafromFile(fileNames[4], mhdVt);
 
   // reading in Vr
-  masReadDatafromFile(fileNames[5], masVr);
+  mhdReadDatafromFile(fileNames[5], mhdVr);
 
   // reading in D
-  masReadDatafromFile(fileNames[6], masD);
+  mhdReadDatafromFile(fileNames[6], mhdD);
 
-  if (mpi_rank == 0) printf("  --> IO MAS: Helio sequence %03d read.\n",fileIndex+1);
+  if (mpi_rank == 0) printf("  --> IO MHD: Helio sequence %03d read.\n",fileIndex+1);
 
-  timer_mas_io = timer_mas_io + (MPI_Wtime() - timer_tmp);
+  timer_mhd_io = timer_mhd_io + (MPI_Wtime() - timer_tmp);
 
-}/*-------- END masHelReadData()  ----------------------------------*/
+}/*-------- END mhdHelReadData()  ----------------------------------*/
 /*------------------------------------------------------------------*/
 
 
@@ -1088,7 +1088,7 @@ char file_extension[5];
 /*------------------------------------------------------------------*/
 /*------------------------------------------------------------------*/
 /*--*/     void                                                 /*--*/
-/*--*/     masReadFieldIndex(void)                              /*--*/
+/*--*/     mhdReadFieldIndex(void)                              /*--*/
 /*--                                                              --*/
 /*------------------------------------------------------------------*/
 {/*-----------------------------------------------------------------*/
@@ -1101,201 +1101,201 @@ char file_extension[5];
 
   timer_tmp = MPI_Wtime();
 
-  if (config.masDigits == 3) {
+  if (config.mhdDigits == 3) {
 
-    sprintf(fileNames[0], "%sbp%03d%s", config.masDirectory, 1, file_extension);
-    sprintf(fileNames[1], "%sbt%03d%s", config.masDirectory, 1, file_extension);
-    sprintf(fileNames[2], "%sbr%03d%s", config.masDirectory, 1, file_extension);
-    sprintf(fileNames[3], "%svp%03d%s", config.masDirectory, 1, file_extension);
-    sprintf(fileNames[4], "%svt%03d%s", config.masDirectory, 1, file_extension);
-    sprintf(fileNames[5], "%svr%03d%s", config.masDirectory, 1, file_extension);
-    sprintf(fileNames[6], "%srho%03d%s", config.masDirectory, 1, file_extension);
+    sprintf(fileNames[0], "%sbp%03d%s", config.mhdDirectory, 1, file_extension);
+    sprintf(fileNames[1], "%sbt%03d%s", config.mhdDirectory, 1, file_extension);
+    sprintf(fileNames[2], "%sbr%03d%s", config.mhdDirectory, 1, file_extension);
+    sprintf(fileNames[3], "%svp%03d%s", config.mhdDirectory, 1, file_extension);
+    sprintf(fileNames[4], "%svt%03d%s", config.mhdDirectory, 1, file_extension);
+    sprintf(fileNames[5], "%svr%03d%s", config.mhdDirectory, 1, file_extension);
+    sprintf(fileNames[6], "%srho%03d%s", config.mhdDirectory, 1, file_extension);
 
   } else {
 
-    sprintf(fileNames[0], "%sbp%06d%s", config.masDirectory, 1, file_extension);
-    sprintf(fileNames[1], "%sbt%06d%s", config.masDirectory, 1, file_extension);
-    sprintf(fileNames[2], "%sbr%06d%s", config.masDirectory, 1, file_extension);
-    sprintf(fileNames[3], "%svp%06d%s", config.masDirectory, 1, file_extension);
-    sprintf(fileNames[4], "%svt%06d%s", config.masDirectory, 1, file_extension);
-    sprintf(fileNames[5], "%svr%06d%s", config.masDirectory, 1, file_extension);
-    sprintf(fileNames[6], "%srho%06d%s", config.masDirectory, 1, file_extension);
+    sprintf(fileNames[0], "%sbp%06d%s", config.mhdDirectory, 1, file_extension);
+    sprintf(fileNames[1], "%sbt%06d%s", config.mhdDirectory, 1, file_extension);
+    sprintf(fileNames[2], "%sbr%06d%s", config.mhdDirectory, 1, file_extension);
+    sprintf(fileNames[3], "%svp%06d%s", config.mhdDirectory, 1, file_extension);
+    sprintf(fileNames[4], "%svt%06d%s", config.mhdDirectory, 1, file_extension);
+    sprintf(fileNames[5], "%svr%06d%s", config.mhdDirectory, 1, file_extension);
+    sprintf(fileNames[6], "%srho%06d%s", config.mhdDirectory, 1, file_extension);
 
   }
 
   // Read in dimensions --> Allocate the mesh storage --> Read the mesh
 
-    // masBpp
-    masReadMeshDimensions(fileNames[0], "dim3", 0, &masBppDimMax[0]);
-    masBppDim = (float *)malloc(sizeof(float) * (int)(masBppDimMax[0]));
-    masReadMesh(fileNames[0], "dim3", 0, &masBppDim);
+    // mhdBpp
+    mhdReadMeshDimensions(fileNames[0], "dim3", 0, &mhdBppDimMax[0]);
+    mhdBppDim = (float *)malloc(sizeof(float) * (int)(mhdBppDimMax[0]));
+    mhdReadMesh(fileNames[0], "dim3", 0, &mhdBppDim);
 
-    // masBptDim
-    masReadMeshDimensions(fileNames[0], "dim2", 1, &masBptDimMax[0]);
-    masBptDim = (float *)malloc(sizeof(float) * (int)(masBptDimMax[0]));
-    masReadMesh(fileNames[0], "dim2", 1, &masBptDim);
+    // mhdBptDim
+    mhdReadMeshDimensions(fileNames[0], "dim2", 1, &mhdBptDimMax[0]);
+    mhdBptDim = (float *)malloc(sizeof(float) * (int)(mhdBptDimMax[0]));
+    mhdReadMesh(fileNames[0], "dim2", 1, &mhdBptDim);
 
-    // masBprDim
-    masReadMeshDimensions(fileNames[0], "dim1", 2, &masBprDimMax[0]);
-    masBprDim = (float *)malloc(sizeof(float) * (int)(masBprDimMax[0]));
-    masReadMesh(fileNames[0], "dim1", 2, &masBprDim);
-
-    // grab the min and max for the r
-    rMin = masBprDim[0];
-    rMax = masBprDim[masBprDimMax[0] - 1];
-
-    // masBtpDim
-    masReadMeshDimensions(fileNames[1], "dim3", 0, &masBtpDimMax[0]);
-    masBtpDim = (float *)malloc(sizeof(float) * (int)(masBtpDimMax[0]));
-    masReadMesh(fileNames[1], "dim3", 0, &masBtpDim);
-
-    // masBttDim
-    masReadMeshDimensions(fileNames[1], "dim2", 1, &masBttDimMax[0]);
-    masBttDim = (float *)malloc(sizeof(float) * (int)(masBttDimMax[0]));
-    masReadMesh(fileNames[1], "dim2", 1, &masBttDim);
-
-    // masBtrDim
-    masReadMeshDimensions(fileNames[1], "dim1", 2, &masBtrDimMax[0]);
-    masBtrDim = (float *)malloc(sizeof(float) * (int)(masBtrDimMax[0]));
-    masReadMesh(fileNames[1], "dim1", 2, &masBtrDim);
+    // mhdBprDim
+    mhdReadMeshDimensions(fileNames[0], "dim1", 2, &mhdBprDimMax[0]);
+    mhdBprDim = (float *)malloc(sizeof(float) * (int)(mhdBprDimMax[0]));
+    mhdReadMesh(fileNames[0], "dim1", 2, &mhdBprDim);
 
     // grab the min and max for the r
-    rTemp = masBtrDim[0];
+    rMin = mhdBprDim[0];
+    rMax = mhdBprDim[mhdBprDimMax[0] - 1];
+
+    // mhdBtpDim
+    mhdReadMeshDimensions(fileNames[1], "dim3", 0, &mhdBtpDimMax[0]);
+    mhdBtpDim = (float *)malloc(sizeof(float) * (int)(mhdBtpDimMax[0]));
+    mhdReadMesh(fileNames[1], "dim3", 0, &mhdBtpDim);
+
+    // mhdBttDim
+    mhdReadMeshDimensions(fileNames[1], "dim2", 1, &mhdBttDimMax[0]);
+    mhdBttDim = (float *)malloc(sizeof(float) * (int)(mhdBttDimMax[0]));
+    mhdReadMesh(fileNames[1], "dim2", 1, &mhdBttDim);
+
+    // mhdBtrDim
+    mhdReadMeshDimensions(fileNames[1], "dim1", 2, &mhdBtrDimMax[0]);
+    mhdBtrDim = (float *)malloc(sizeof(float) * (int)(mhdBtrDimMax[0]));
+    mhdReadMesh(fileNames[1], "dim1", 2, &mhdBtrDim);
+
+    // grab the min and max for the r
+    rTemp = mhdBtrDim[0];
     if (rTemp > rMin)
       rMin = rTemp;
 
-    rTemp = masBtrDim[masBtrDimMax[0] - 1];
+    rTemp = mhdBtrDim[mhdBtrDimMax[0] - 1];
     if (rTemp < rMax)
       rMax = rTemp;
 
-    // masBrpDim
-    masReadMeshDimensions(fileNames[2], "dim3", 0, &masBrpDimMax[0]);
-    masBrpDim = (float *)malloc(sizeof(float) * (int)(masBrpDimMax[0]));
-    masReadMesh(fileNames[2], "dim3", 0, &masBrpDim);
+    // mhdBrpDim
+    mhdReadMeshDimensions(fileNames[2], "dim3", 0, &mhdBrpDimMax[0]);
+    mhdBrpDim = (float *)malloc(sizeof(float) * (int)(mhdBrpDimMax[0]));
+    mhdReadMesh(fileNames[2], "dim3", 0, &mhdBrpDim);
 
-    // masBrtDim
-    masReadMeshDimensions(fileNames[2], "dim2", 1, &masBrtDimMax[0]);
-    masBrtDim = (float *)malloc(sizeof(float) * (int)(masBrtDimMax[0]));
-    masReadMesh(fileNames[2], "dim2", 1, &masBrtDim);
+    // mhdBrtDim
+    mhdReadMeshDimensions(fileNames[2], "dim2", 1, &mhdBrtDimMax[0]);
+    mhdBrtDim = (float *)malloc(sizeof(float) * (int)(mhdBrtDimMax[0]));
+    mhdReadMesh(fileNames[2], "dim2", 1, &mhdBrtDim);
 
-    // masBrrDim
-    masReadMeshDimensions(fileNames[2], "dim1", 2, &masBrrDimMax[0]);
-    masBrrDim = (float *)malloc(sizeof(float) * (int)(masBrrDimMax[0]));
-    masReadMesh(fileNames[2], "dim1", 2, &masBrrDim);
+    // mhdBrrDim
+    mhdReadMeshDimensions(fileNames[2], "dim1", 2, &mhdBrrDimMax[0]);
+    mhdBrrDim = (float *)malloc(sizeof(float) * (int)(mhdBrrDimMax[0]));
+    mhdReadMesh(fileNames[2], "dim1", 2, &mhdBrrDim);
 
     // grab the min and max for the r
-    rTemp = masBrrDim[0];
+    rTemp = mhdBrrDim[0];
     if (rTemp > rMin)
       rMin = rTemp;
 
-    rTemp = masBrrDim[masBrrDimMax[0] - 1];
+    rTemp = mhdBrrDim[mhdBrrDimMax[0] - 1];
     if (rTemp < rMax)
       rMax = rTemp;
 
-    // masVppDim
-    masReadMeshDimensions(fileNames[3], "dim3", 0, &masVppDimMax[0]);
-    masVppDim = (float *)malloc(sizeof(float) * (int)(masVppDimMax[0]));
-    masReadMesh(fileNames[3], "dim3", 0, &masVppDim);
+    // mhdVppDim
+    mhdReadMeshDimensions(fileNames[3], "dim3", 0, &mhdVppDimMax[0]);
+    mhdVppDim = (float *)malloc(sizeof(float) * (int)(mhdVppDimMax[0]));
+    mhdReadMesh(fileNames[3], "dim3", 0, &mhdVppDim);
 
-    // masVptDim
-    masReadMeshDimensions(fileNames[3], "dim2", 1, &masVptDimMax[0]);
-    masVptDim = (float *)malloc(sizeof(float) * (int)(masVptDimMax[0]));
-    masReadMesh(fileNames[3], "dim2", 1, &masVptDim);
+    // mhdVptDim
+    mhdReadMeshDimensions(fileNames[3], "dim2", 1, &mhdVptDimMax[0]);
+    mhdVptDim = (float *)malloc(sizeof(float) * (int)(mhdVptDimMax[0]));
+    mhdReadMesh(fileNames[3], "dim2", 1, &mhdVptDim);
 
-    // masVprDim
-    masReadMeshDimensions(fileNames[3], "dim1", 2, &masVprDimMax[0]);
-    masVprDim = (float *)malloc(sizeof(float) * (int)(masVprDimMax[0]));
-    masReadMesh(fileNames[3], "dim1", 2, &masVprDim);
+    // mhdVprDim
+    mhdReadMeshDimensions(fileNames[3], "dim1", 2, &mhdVprDimMax[0]);
+    mhdVprDim = (float *)malloc(sizeof(float) * (int)(mhdVprDimMax[0]));
+    mhdReadMesh(fileNames[3], "dim1", 2, &mhdVprDim);
 
     // grab the min and max for the r
-    rTemp = masVprDim[0];
+    rTemp = mhdVprDim[0];
     if (rTemp > rMin)
       rMin = rTemp;
 
-    rTemp = masVprDim[masVprDimMax[0] - 1];
+    rTemp = mhdVprDim[mhdVprDimMax[0] - 1];
     if (rTemp < rMax)
       rMax = rTemp;
 
-    // masVtpDim
-    masReadMeshDimensions(fileNames[4], "dim3", 0, &masVtpDimMax[0]);
-    masVtpDim = (float *)malloc(sizeof(float) * (int)(masVtpDimMax[0]));
-    masReadMesh(fileNames[4], "dim3", 0, &masVtpDim);
+    // mhdVtpDim
+    mhdReadMeshDimensions(fileNames[4], "dim3", 0, &mhdVtpDimMax[0]);
+    mhdVtpDim = (float *)malloc(sizeof(float) * (int)(mhdVtpDimMax[0]));
+    mhdReadMesh(fileNames[4], "dim3", 0, &mhdVtpDim);
 
-    // masVttDim
-    masReadMeshDimensions(fileNames[4], "dim2", 1, &masVttDimMax[0]);
-    masVttDim = (float *)malloc(sizeof(float) * (int)(masVttDimMax[0]));
-    masReadMesh(fileNames[4], "dim2", 1, &masVttDim);
+    // mhdVttDim
+    mhdReadMeshDimensions(fileNames[4], "dim2", 1, &mhdVttDimMax[0]);
+    mhdVttDim = (float *)malloc(sizeof(float) * (int)(mhdVttDimMax[0]));
+    mhdReadMesh(fileNames[4], "dim2", 1, &mhdVttDim);
 
-    // masVtrDim
-    masReadMeshDimensions(fileNames[4], "dim1", 2, &masVtrDimMax[0]);
-    masVtrDim = (float *)malloc(sizeof(float) * (int)(masVtrDimMax[0]));
-    masReadMesh(fileNames[4], "dim1", 2, &masVtrDim);
+    // mhdVtrDim
+    mhdReadMeshDimensions(fileNames[4], "dim1", 2, &mhdVtrDimMax[0]);
+    mhdVtrDim = (float *)malloc(sizeof(float) * (int)(mhdVtrDimMax[0]));
+    mhdReadMesh(fileNames[4], "dim1", 2, &mhdVtrDim);
 
     // grab the min and max for the r
-    rTemp = masVtrDim[0];
+    rTemp = mhdVtrDim[0];
     if (rTemp > rMin)
       rMin = rTemp;
 
-    rTemp = masVtrDim[masVtrDimMax[0] - 1];
+    rTemp = mhdVtrDim[mhdVtrDimMax[0] - 1];
     if (rTemp < rMax)
       rMax = rTemp;
 
-    // masVrpDim
-    masReadMeshDimensions(fileNames[5], "dim3", 0, &masVrpDimMax[0]);
-    masVrpDim = (float *)malloc(sizeof(float) * (int)(masVrpDimMax[0]));
-    masReadMesh(fileNames[5], "dim3", 0, &masVrpDim);
+    // mhdVrpDim
+    mhdReadMeshDimensions(fileNames[5], "dim3", 0, &mhdVrpDimMax[0]);
+    mhdVrpDim = (float *)malloc(sizeof(float) * (int)(mhdVrpDimMax[0]));
+    mhdReadMesh(fileNames[5], "dim3", 0, &mhdVrpDim);
 
-    // masVrtDim
-    masReadMeshDimensions(fileNames[5], "dim2", 1, &masVrtDimMax[0]);
-    masVrtDim = (float *)malloc(sizeof(float) * (int)(masVrtDimMax[0]));
-    masReadMesh(fileNames[5], "dim2", 1, &masVrtDim);
+    // mhdVrtDim
+    mhdReadMeshDimensions(fileNames[5], "dim2", 1, &mhdVrtDimMax[0]);
+    mhdVrtDim = (float *)malloc(sizeof(float) * (int)(mhdVrtDimMax[0]));
+    mhdReadMesh(fileNames[5], "dim2", 1, &mhdVrtDim);
 
-    // masVrrDim
-    masReadMeshDimensions(fileNames[5], "dim1", 2, &masVrrDimMax[0]);
-    masVrrDim = (float *)malloc(sizeof(float) * (int)(masVrrDimMax[0]));
-    masReadMesh(fileNames[5], "dim1", 2, &masVrrDim);
+    // mhdVrrDim
+    mhdReadMeshDimensions(fileNames[5], "dim1", 2, &mhdVrrDimMax[0]);
+    mhdVrrDim = (float *)malloc(sizeof(float) * (int)(mhdVrrDimMax[0]));
+    mhdReadMesh(fileNames[5], "dim1", 2, &mhdVrrDim);
 
     // grab the min and max for the r
-    rTemp = masVrrDim[0];
+    rTemp = mhdVrrDim[0];
     if (rTemp > rMin)
       rMin = rTemp;
 
-    rTemp = masVrrDim[masVrrDimMax[0] - 1];
+    rTemp = mhdVrrDim[mhdVrrDimMax[0] - 1];
     if (rTemp < rMax)
       rMax = rTemp;
 
-    // masDpDim
-    masReadMeshDimensions(fileNames[6], "dim3", 0, &masDpDimMax[0]);
-    masDpDim = (float *)malloc(sizeof(float) * (int)(masDpDimMax[0]));
-    masReadMesh(fileNames[6], "dim3", 0, &masDpDim);
+    // mhdDpDim
+    mhdReadMeshDimensions(fileNames[6], "dim3", 0, &mhdDpDimMax[0]);
+    mhdDpDim = (float *)malloc(sizeof(float) * (int)(mhdDpDimMax[0]));
+    mhdReadMesh(fileNames[6], "dim3", 0, &mhdDpDim);
 
-    // masDtDim
-    masReadMeshDimensions(fileNames[6], "dim2", 1, &masDtDimMax[0]);
-    masDtDim = (float *)malloc(sizeof(float) * (int)(masDtDimMax[0]));
-    masReadMesh(fileNames[6], "dim2", 1, &masDtDim);
+    // mhdDtDim
+    mhdReadMeshDimensions(fileNames[6], "dim2", 1, &mhdDtDimMax[0]);
+    mhdDtDim = (float *)malloc(sizeof(float) * (int)(mhdDtDimMax[0]));
+    mhdReadMesh(fileNames[6], "dim2", 1, &mhdDtDim);
 
-    // masDrDim
-    masReadMeshDimensions(fileNames[6], "dim1", 2, &masDrDimMax[0]);
-    masDrDim = (float *)malloc(sizeof(float) * (int)(masDrDimMax[0]));
-    masReadMesh(fileNames[6], "dim1", 2, &masDrDim);
+    // mhdDrDim
+    mhdReadMeshDimensions(fileNames[6], "dim1", 2, &mhdDrDimMax[0]);
+    mhdDrDim = (float *)malloc(sizeof(float) * (int)(mhdDrDimMax[0]));
+    mhdReadMesh(fileNames[6], "dim1", 2, &mhdDrDim);
 
     // grab the min and max for the r
-    rTemp = masDrDim[0];
+    rTemp = mhdDrDim[0];
     if (rTemp > rMin)
       rMin = rTemp;
 
-    rTemp = masDrDim[masDrDimMax[0] - 1];
+    rTemp = mhdDrDim[mhdDrDimMax[0] - 1];
     if (rTemp < rMax)
       rMax = rTemp;
 
-  // set rScale, and masRadialMin/Max
+  // set rScale, and mhdRadialMin/Max
   config.rScale = rMin * RSAU;
-  config.masRadialMin = rMin;
-  config.masRadialMax = rMax;
+  config.mhdRadialMin = rMin;
+  config.mhdRadialMax = rMax;
 
-  timer_mas_io = timer_mas_io + (MPI_Wtime() - timer_tmp);
+  timer_mhd_io = timer_mhd_io + (MPI_Wtime() - timer_tmp);
 
-}/*-------- END masReadFieldIndex()  -----------------------*/
+}/*-------- END mhdReadFieldIndex()  -----------------------*/
 /*------------------------------------------------------------------*/
 
 
@@ -1303,7 +1303,7 @@ char file_extension[5];
 /*------------------------------------------------------------------*/
 /*------------------------------------------------------------------*/
 /*--*/     void                                                 /*--*/
-/*--*/     masHelReadFieldIndex(void)                           /*--*/
+/*--*/     mhdHelReadFieldIndex(void)                           /*--*/
 /*--                                                              --*/
 /*------------------------------------------------------------------*/
 {/*-----------------------------------------------------------------*/
@@ -1315,195 +1315,195 @@ char file_extension[5];
 
   timer_tmp = MPI_Wtime();
 
-  if (config.masHelDigits == 3)
+  if (config.mhdHelDigits == 3)
   {
-    sprintf(fileNames[0], "%sbp%03d%s", config.masHelDirectory, 1, file_extension);
-    sprintf(fileNames[1], "%sbt%03d%s", config.masHelDirectory, 1, file_extension);
-    sprintf(fileNames[2], "%sbr%03d%s", config.masHelDirectory, 1, file_extension);
-    sprintf(fileNames[3], "%svp%03d%s", config.masHelDirectory, 1, file_extension);
-    sprintf(fileNames[4], "%svt%03d%s", config.masHelDirectory, 1, file_extension);
-    sprintf(fileNames[5], "%svr%03d%s", config.masHelDirectory, 1, file_extension);
-    sprintf(fileNames[6], "%srho%03d%s", config.masHelDirectory,1, file_extension);
+    sprintf(fileNames[0], "%sbp%03d%s", config.mhdHelDirectory, 1, file_extension);
+    sprintf(fileNames[1], "%sbt%03d%s", config.mhdHelDirectory, 1, file_extension);
+    sprintf(fileNames[2], "%sbr%03d%s", config.mhdHelDirectory, 1, file_extension);
+    sprintf(fileNames[3], "%svp%03d%s", config.mhdHelDirectory, 1, file_extension);
+    sprintf(fileNames[4], "%svt%03d%s", config.mhdHelDirectory, 1, file_extension);
+    sprintf(fileNames[5], "%svr%03d%s", config.mhdHelDirectory, 1, file_extension);
+    sprintf(fileNames[6], "%srho%03d%s", config.mhdHelDirectory,1, file_extension);
   }
   else
   {
-    sprintf(fileNames[0], "%sbp%06d%s", config.masHelDirectory,  1, file_extension);
-    sprintf(fileNames[1], "%sbt%06d%s", config.masHelDirectory,  1, file_extension);
-    sprintf(fileNames[2], "%sbr%06d%s", config.masHelDirectory,  1, file_extension);
-    sprintf(fileNames[3], "%svp%06d%s", config.masHelDirectory,  1, file_extension);
-    sprintf(fileNames[4], "%svt%06d%s", config.masHelDirectory,  1, file_extension);
-    sprintf(fileNames[5], "%svr%06d%s", config.masHelDirectory,  1, file_extension);
-    sprintf(fileNames[6], "%srho%06d%s", config.masHelDirectory, 1, file_extension);
+    sprintf(fileNames[0], "%sbp%06d%s", config.mhdHelDirectory,  1, file_extension);
+    sprintf(fileNames[1], "%sbt%06d%s", config.mhdHelDirectory,  1, file_extension);
+    sprintf(fileNames[2], "%sbr%06d%s", config.mhdHelDirectory,  1, file_extension);
+    sprintf(fileNames[3], "%svp%06d%s", config.mhdHelDirectory,  1, file_extension);
+    sprintf(fileNames[4], "%svt%06d%s", config.mhdHelDirectory,  1, file_extension);
+    sprintf(fileNames[5], "%svr%06d%s", config.mhdHelDirectory,  1, file_extension);
+    sprintf(fileNames[6], "%srho%06d%s", config.mhdHelDirectory, 1, file_extension);
   }
 
-    // masHelBpp
-    masReadMeshDimensions(fileNames[0], "dim3", 0, &masHelBppDimMax[0]);
-    masHelBppDim = (float *)malloc(sizeof(float) * (int)(masHelBppDimMax[0]));
-    masReadMesh(fileNames[0], "dim3", 0, &masHelBppDim);
+    // mhdHelBpp
+    mhdReadMeshDimensions(fileNames[0], "dim3", 0, &mhdHelBppDimMax[0]);
+    mhdHelBppDim = (float *)malloc(sizeof(float) * (int)(mhdHelBppDimMax[0]));
+    mhdReadMesh(fileNames[0], "dim3", 0, &mhdHelBppDim);
 
-    // masHelBptDim
-    masReadMeshDimensions(fileNames[0], "dim2", 1, &masHelBptDimMax[0]);
-    masHelBptDim = (float *)malloc(sizeof(float) * (int)(masHelBptDimMax[0]));
-    masReadMesh(fileNames[0], "dim2", 1, &masHelBptDim);
+    // mhdHelBptDim
+    mhdReadMeshDimensions(fileNames[0], "dim2", 1, &mhdHelBptDimMax[0]);
+    mhdHelBptDim = (float *)malloc(sizeof(float) * (int)(mhdHelBptDimMax[0]));
+    mhdReadMesh(fileNames[0], "dim2", 1, &mhdHelBptDim);
 
-    // masHelBprDim
-    masReadMeshDimensions(fileNames[0], "dim1", 2, &masHelBprDimMax[0]);
-    masHelBprDim = (float *)malloc(sizeof(float) * (int)(masHelBprDimMax[0]));
-    masReadMesh(fileNames[0], "dim1", 2, &masHelBprDim);
-
-    // grab the min and max for the r
-    rMin = masHelBprDim[0];
-    rMax = masHelBprDim[masHelBprDimMax[0] - 1];
-
-    // masHelBtpDim
-    masReadMeshDimensions(fileNames[1], "dim3", 0, &masHelBtpDimMax[0]);
-    masHelBtpDim = (float *)malloc(sizeof(float) * (int)(masHelBtpDimMax[0]));
-    masReadMesh(fileNames[1], "dim3", 0, &masHelBtpDim);
-
-    // masHelBttDim
-    masReadMeshDimensions(fileNames[1], "dim2", 1, &masHelBttDimMax[0]);
-    masHelBttDim = (float *)malloc(sizeof(float) * (int)(masHelBttDimMax[0]));
-    masReadMesh(fileNames[1], "dim2", 1, &masHelBttDim);
-
-    // masHelBtrDim
-    masReadMeshDimensions(fileNames[1], "dim1", 2, &masHelBtrDimMax[0]);
-    masHelBtrDim = (float *)malloc(sizeof(float) * (int)(masHelBtrDimMax[0]));
-    masReadMesh(fileNames[1], "dim1", 2, &masHelBtrDim);
+    // mhdHelBprDim
+    mhdReadMeshDimensions(fileNames[0], "dim1", 2, &mhdHelBprDimMax[0]);
+    mhdHelBprDim = (float *)malloc(sizeof(float) * (int)(mhdHelBprDimMax[0]));
+    mhdReadMesh(fileNames[0], "dim1", 2, &mhdHelBprDim);
 
     // grab the min and max for the r
-    rTemp = masHelBtrDim[0];
+    rMin = mhdHelBprDim[0];
+    rMax = mhdHelBprDim[mhdHelBprDimMax[0] - 1];
+
+    // mhdHelBtpDim
+    mhdReadMeshDimensions(fileNames[1], "dim3", 0, &mhdHelBtpDimMax[0]);
+    mhdHelBtpDim = (float *)malloc(sizeof(float) * (int)(mhdHelBtpDimMax[0]));
+    mhdReadMesh(fileNames[1], "dim3", 0, &mhdHelBtpDim);
+
+    // mhdHelBttDim
+    mhdReadMeshDimensions(fileNames[1], "dim2", 1, &mhdHelBttDimMax[0]);
+    mhdHelBttDim = (float *)malloc(sizeof(float) * (int)(mhdHelBttDimMax[0]));
+    mhdReadMesh(fileNames[1], "dim2", 1, &mhdHelBttDim);
+
+    // mhdHelBtrDim
+    mhdReadMeshDimensions(fileNames[1], "dim1", 2, &mhdHelBtrDimMax[0]);
+    mhdHelBtrDim = (float *)malloc(sizeof(float) * (int)(mhdHelBtrDimMax[0]));
+    mhdReadMesh(fileNames[1], "dim1", 2, &mhdHelBtrDim);
+
+    // grab the min and max for the r
+    rTemp = mhdHelBtrDim[0];
     if (rTemp > rMin)
       rMin = rTemp;
 
-    rTemp = masHelBtrDim[masHelBtrDimMax[0] - 1];
+    rTemp = mhdHelBtrDim[mhdHelBtrDimMax[0] - 1];
     if (rTemp < rMax)
       rMax = rTemp;
 
-    // masHelBrpDim
-    masReadMeshDimensions(fileNames[2], "dim3", 0, &masHelBrpDimMax[0]);
-    masHelBrpDim = (float *)malloc(sizeof(float) * (int)(masHelBrpDimMax[0]));
-    masReadMesh(fileNames[2], "dim3", 0, &masHelBrpDim);
+    // mhdHelBrpDim
+    mhdReadMeshDimensions(fileNames[2], "dim3", 0, &mhdHelBrpDimMax[0]);
+    mhdHelBrpDim = (float *)malloc(sizeof(float) * (int)(mhdHelBrpDimMax[0]));
+    mhdReadMesh(fileNames[2], "dim3", 0, &mhdHelBrpDim);
 
-    // masHelBrtDim
-    masReadMeshDimensions(fileNames[2], "dim2", 1, &masHelBrtDimMax[0]);
-    masHelBrtDim = (float *)malloc(sizeof(float) * (int)(masHelBrtDimMax[0]));
-    masReadMesh(fileNames[2], "dim2", 1, &masHelBrtDim);
+    // mhdHelBrtDim
+    mhdReadMeshDimensions(fileNames[2], "dim2", 1, &mhdHelBrtDimMax[0]);
+    mhdHelBrtDim = (float *)malloc(sizeof(float) * (int)(mhdHelBrtDimMax[0]));
+    mhdReadMesh(fileNames[2], "dim2", 1, &mhdHelBrtDim);
 
-    // masHelBrrDim
-    masReadMeshDimensions(fileNames[2], "dim1", 2, &masHelBrrDimMax[0]);
-    masHelBrrDim = (float *)malloc(sizeof(float) * (int)(masHelBrrDimMax[0]));
-    masReadMesh(fileNames[2], "dim1", 2, &masHelBrrDim);
+    // mhdHelBrrDim
+    mhdReadMeshDimensions(fileNames[2], "dim1", 2, &mhdHelBrrDimMax[0]);
+    mhdHelBrrDim = (float *)malloc(sizeof(float) * (int)(mhdHelBrrDimMax[0]));
+    mhdReadMesh(fileNames[2], "dim1", 2, &mhdHelBrrDim);
 
     // grab the min and max for the r
-    rTemp = masHelBrrDim[0];
+    rTemp = mhdHelBrrDim[0];
     if (rTemp > rMin)
       rMin = rTemp;
 
-    rTemp = masHelBrrDim[masHelBrrDimMax[0] - 1];
+    rTemp = mhdHelBrrDim[mhdHelBrrDimMax[0] - 1];
     if (rTemp < rMax)
       rMax = rTemp;
 
-    // masHelVppDim
-    masReadMeshDimensions(fileNames[3], "dim3", 0, &masHelVppDimMax[0]);
-    masHelVppDim = (float *)malloc(sizeof(float) * (int)(masHelVppDimMax[0]));
-    masReadMesh(fileNames[3], "dim3", 0, &masHelVppDim);
+    // mhdHelVppDim
+    mhdReadMeshDimensions(fileNames[3], "dim3", 0, &mhdHelVppDimMax[0]);
+    mhdHelVppDim = (float *)malloc(sizeof(float) * (int)(mhdHelVppDimMax[0]));
+    mhdReadMesh(fileNames[3], "dim3", 0, &mhdHelVppDim);
 
-    // masHelVptDim
-    masReadMeshDimensions(fileNames[3], "dim2", 1, &masHelVptDimMax[0]);
-    masHelVptDim = (float *)malloc(sizeof(float) * (int)(masHelVptDimMax[0]));
-    masReadMesh(fileNames[3], "dim2", 1, &masHelVptDim);
+    // mhdHelVptDim
+    mhdReadMeshDimensions(fileNames[3], "dim2", 1, &mhdHelVptDimMax[0]);
+    mhdHelVptDim = (float *)malloc(sizeof(float) * (int)(mhdHelVptDimMax[0]));
+    mhdReadMesh(fileNames[3], "dim2", 1, &mhdHelVptDim);
 
-    // masHelVprDim
-    masReadMeshDimensions(fileNames[3], "dim1", 2, &masHelVprDimMax[0]);
-    masHelVprDim = (float *)malloc(sizeof(float) * (int)(masHelVprDimMax[0]));
-    masReadMesh(fileNames[3], "dim1", 2, &masHelVprDim);
+    // mhdHelVprDim
+    mhdReadMeshDimensions(fileNames[3], "dim1", 2, &mhdHelVprDimMax[0]);
+    mhdHelVprDim = (float *)malloc(sizeof(float) * (int)(mhdHelVprDimMax[0]));
+    mhdReadMesh(fileNames[3], "dim1", 2, &mhdHelVprDim);
 
     // grab the min and max for the r
-    rTemp = masHelVprDim[0];
+    rTemp = mhdHelVprDim[0];
     if (rTemp > rMin)
       rMin = rTemp;
 
-    rTemp = masHelVprDim[masHelVprDimMax[0] - 1];
+    rTemp = mhdHelVprDim[mhdHelVprDimMax[0] - 1];
     if (rTemp < rMax)
       rMax = rTemp;
 
-    // masHelVtpDim
-    masReadMeshDimensions(fileNames[4], "dim3", 0, &masHelVtpDimMax[0]);
-    masHelVtpDim = (float *)malloc(sizeof(float) * (int)(masHelVtpDimMax[0]));
-    masReadMesh(fileNames[4], "dim3", 0, &masHelVtpDim);
+    // mhdHelVtpDim
+    mhdReadMeshDimensions(fileNames[4], "dim3", 0, &mhdHelVtpDimMax[0]);
+    mhdHelVtpDim = (float *)malloc(sizeof(float) * (int)(mhdHelVtpDimMax[0]));
+    mhdReadMesh(fileNames[4], "dim3", 0, &mhdHelVtpDim);
 
-    // masHelVttDim
-    masReadMeshDimensions(fileNames[4], "dim2", 1, &masHelVttDimMax[0]);
-    masHelVttDim = (float *)malloc(sizeof(float) * (int)(masHelVttDimMax[0]));
-    masReadMesh(fileNames[4], "dim2", 1, &masHelVttDim);
+    // mhdHelVttDim
+    mhdReadMeshDimensions(fileNames[4], "dim2", 1, &mhdHelVttDimMax[0]);
+    mhdHelVttDim = (float *)malloc(sizeof(float) * (int)(mhdHelVttDimMax[0]));
+    mhdReadMesh(fileNames[4], "dim2", 1, &mhdHelVttDim);
 
-    // masHelVtrDim
-    masReadMeshDimensions(fileNames[4], "dim1", 2, &masHelVtrDimMax[0]);
-    masHelVtrDim = (float *)malloc(sizeof(float) * (int)(masHelVtrDimMax[0]));
-    masReadMesh(fileNames[4], "dim1", 2, &masHelVtrDim);
+    // mhdHelVtrDim
+    mhdReadMeshDimensions(fileNames[4], "dim1", 2, &mhdHelVtrDimMax[0]);
+    mhdHelVtrDim = (float *)malloc(sizeof(float) * (int)(mhdHelVtrDimMax[0]));
+    mhdReadMesh(fileNames[4], "dim1", 2, &mhdHelVtrDim);
 
     // grab the min and max for the r
-    rTemp = masHelVtrDim[0];
+    rTemp = mhdHelVtrDim[0];
     if (rTemp > rMin)
       rMin = rTemp;
 
-    rTemp = masHelVtrDim[masHelVtrDimMax[0] - 1];
+    rTemp = mhdHelVtrDim[mhdHelVtrDimMax[0] - 1];
     if (rTemp < rMax)
       rMax = rTemp;
 
-    // masHelVrpDim
-    masReadMeshDimensions(fileNames[5], "dim3", 0, &masHelVrpDimMax[0]);
-    masHelVrpDim = (float *)malloc(sizeof(float) * (int)(masHelVrpDimMax[0]));
-    masReadMesh(fileNames[5], "dim3", 0, &masHelVrpDim);
+    // mhdHelVrpDim
+    mhdReadMeshDimensions(fileNames[5], "dim3", 0, &mhdHelVrpDimMax[0]);
+    mhdHelVrpDim = (float *)malloc(sizeof(float) * (int)(mhdHelVrpDimMax[0]));
+    mhdReadMesh(fileNames[5], "dim3", 0, &mhdHelVrpDim);
 
-    // masHelVrtDim
-    masReadMeshDimensions(fileNames[5], "dim2", 1, &masHelVrtDimMax[0]);
-    masHelVrtDim = (float *)malloc(sizeof(float) * (int)(masHelVrtDimMax[0]));
-    masReadMesh(fileNames[5], "dim2", 1, &masHelVrtDim);
+    // mhdHelVrtDim
+    mhdReadMeshDimensions(fileNames[5], "dim2", 1, &mhdHelVrtDimMax[0]);
+    mhdHelVrtDim = (float *)malloc(sizeof(float) * (int)(mhdHelVrtDimMax[0]));
+    mhdReadMesh(fileNames[5], "dim2", 1, &mhdHelVrtDim);
 
-    // masHelVrrDim
-    masReadMeshDimensions(fileNames[5], "dim1", 2, &masHelVrrDimMax[0]);
-    masHelVrrDim = (float *)malloc(sizeof(float) * (int)(masHelVrrDimMax[0]));
-    masReadMesh(fileNames[5], "dim1", 2, &masHelVrrDim);
+    // mhdHelVrrDim
+    mhdReadMeshDimensions(fileNames[5], "dim1", 2, &mhdHelVrrDimMax[0]);
+    mhdHelVrrDim = (float *)malloc(sizeof(float) * (int)(mhdHelVrrDimMax[0]));
+    mhdReadMesh(fileNames[5], "dim1", 2, &mhdHelVrrDim);
 
     // grab the min and max for the r
-    rTemp = masHelVrrDim[0];
+    rTemp = mhdHelVrrDim[0];
     if (rTemp > rMin)
       rMin = rTemp;
 
-    rTemp = masHelVrrDim[masHelVrrDimMax[0] - 1];
+    rTemp = mhdHelVrrDim[mhdHelVrrDimMax[0] - 1];
     if (rTemp < rMax)
       rMax = rTemp;
 
-    // masHelDpDim
-    masReadMeshDimensions(fileNames[6], "dim3", 0, &masHelDpDimMax[0]);
-    masHelDpDim = (float *)malloc(sizeof(float) * (int)(masHelDpDimMax[0]));
-    masReadMesh(fileNames[6], "dim3", 0, &masHelDpDim);
+    // mhdHelDpDim
+    mhdReadMeshDimensions(fileNames[6], "dim3", 0, &mhdHelDpDimMax[0]);
+    mhdHelDpDim = (float *)malloc(sizeof(float) * (int)(mhdHelDpDimMax[0]));
+    mhdReadMesh(fileNames[6], "dim3", 0, &mhdHelDpDim);
 
-    // masHelDtDim
-    masReadMeshDimensions(fileNames[6], "dim2", 1, &masHelDtDimMax[0]);
-    masHelDtDim = (float *)malloc(sizeof(float) * (int)(masHelDtDimMax[0]));
-    masReadMesh(fileNames[6], "dim2", 1, &masHelDtDim);
+    // mhdHelDtDim
+    mhdReadMeshDimensions(fileNames[6], "dim2", 1, &mhdHelDtDimMax[0]);
+    mhdHelDtDim = (float *)malloc(sizeof(float) * (int)(mhdHelDtDimMax[0]));
+    mhdReadMesh(fileNames[6], "dim2", 1, &mhdHelDtDim);
 
-    // masHelDrDim
-    masReadMeshDimensions(fileNames[6], "dim1", 2, &masHelDrDimMax[0]);
-    masHelDrDim = (float *)malloc(sizeof(float) * (int)(masHelDrDimMax[0]));
-    masReadMesh(fileNames[6], "dim1", 2, &masHelDrDim);
+    // mhdHelDrDim
+    mhdReadMeshDimensions(fileNames[6], "dim1", 2, &mhdHelDrDimMax[0]);
+    mhdHelDrDim = (float *)malloc(sizeof(float) * (int)(mhdHelDrDimMax[0]));
+    mhdReadMesh(fileNames[6], "dim1", 2, &mhdHelDrDim);
 
     // grab the min and max for the r
-    rTemp = masHelDrDim[0];
+    rTemp = mhdHelDrDim[0];
     if (rTemp > rMin)
       rMin = rTemp;
 
-    rTemp = masHelDrDim[masHelDrDimMax[0] - 1];
+    rTemp = mhdHelDrDim[mhdHelDrDimMax[0] - 1];
     if (rTemp < rMax)
       rMax = rTemp;
 
-  // set rScale, and masHelRadialMin/Max
-  config.masHelRadialMin = rMin;
-  config.masHelRadialMax = rMax;
+  // set rScale, and mhdHelRadialMin/Max
+  config.mhdHelRadialMin = rMin;
+  config.mhdHelRadialMax = rMax;
 
-  timer_mas_io = timer_mas_io + (MPI_Wtime() - timer_tmp);
+  timer_mhd_io = timer_mhd_io + (MPI_Wtime() - timer_tmp);
 
-}/*-------- END masHelReadFieldIndex()  ----------------------------*/
+}/*-------- END mhdHelReadFieldIndex()  ----------------------------*/
 /*------------------------------------------------------------------*/

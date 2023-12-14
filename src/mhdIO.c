@@ -15,7 +15,7 @@
 #include <hdf5_hl.h>
 #include <mfhdf.h>
 #include <unistd.h>
-#include "readMAS.h"
+#include "readMHD.h"
 #include "mpiInit.h"
 #include "global.h"
 #include "configuration.h"
@@ -31,11 +31,11 @@
 /*--------------------------------------------------------------------*/
 /*--*/ void                                                        /*--*/
                                                                    /*--*/
-masReadMeshDimensions(char *fname, char *dsetname, int dsetnumber, /*--*/
+mhdReadMeshDimensions(char *fname, char *dsetname, int dsetnumber, /*--*/
                     int32 *DimMax)                                 /*--*/
 /*--*/                                                             /*--*/
 /*--                                                                 --*/
-/*--This function reads MAS mesh dimensions.                         --*/
+/*--This function reads MHD mesh dimensions.                         --*/
 /*--Switch HDF4 or HDF5 based on hdf5_input flag                     --*/
 /*---------------------------------------------------------------------*/
 { /*-------------------------------------------------------------------*/
@@ -76,7 +76,7 @@ masReadMeshDimensions(char *fname, char *dsetname, int dsetnumber, /*--*/
         ERR(status);
     }
 }
-/*----------------- END masReadMeshDimensions() ------------------------*/
+/*----------------- END mhdReadMeshDimensions() ------------------------*/
 /*--------------------------------------------------------------------*/
 
 
@@ -86,10 +86,10 @@ masReadMeshDimensions(char *fname, char *dsetname, int dsetnumber, /*--*/
 /*---------------------------------------------------------------------*/
 /*--*/ void                                                        /*--*/
                                                                    /*--*/
-masReadMesh(char *fname, char *dsetname, int dsetnumber,           /*--*/
+mhdReadMesh(char *fname, char *dsetname, int dsetnumber,           /*--*/
                 float *Dim[])                                      /*--*/
 /*--                                                                --*/
-/*--This function reads MAS mesh coordinates.                       --*/
+/*--This function reads MHD mesh coordinates.                       --*/
 /*--Switch HDF4 or HDF5 based on hdf5_input flag                    --*/
 /*--------------------------------------------------------------------*/
 { /*------------------------------------------------------------------*/
@@ -128,7 +128,7 @@ masReadMesh(char *fname, char *dsetname, int dsetnumber,           /*--*/
         ERR(status);
     }
 }
-/*----------------- END masReadMesh() ----------------------------------*/
+/*----------------- END mhdReadMesh() ----------------------------------*/
 /*----------------------------------------------------------------------*/
 
 
@@ -137,9 +137,9 @@ masReadMesh(char *fname, char *dsetname, int dsetnumber,           /*--*/
 /*-----------------------------------------------------------------------*/
 /*--*/ void                                                           /*--*/
                                                                       /*--*/
-masReadDatafromFile(char *fname, float *buf[])                     /*--*/
+mhdReadDatafromFile(char *fname, float *buf[])                     /*--*/
 /*--                                                                --*/
-/*--This function reads MAS 3D data.                                --*/
+/*--This function reads MHD 3D data.                                --*/
 /*--Switch HDF4 or HDF5 based on hdf5_input flag                    --*/
 /*--------------------------------------------------------------------*/
 { /*------------------------------------------------------------------*/
@@ -183,7 +183,7 @@ masReadDatafromFile(char *fname, float *buf[])                     /*--*/
         ERR(status);
     }
 }
-/*----------------- END masReadDatafromfile() ----------------------------------*/
+/*----------------- END mhdReadDatafromfile() ----------------------------------*/
 /*------------------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------*/
@@ -191,7 +191,7 @@ masReadDatafromFile(char *fname, float *buf[])                     /*--*/
 /*----------------------------------------------------------------------*/
 /*--*/ void                                                         /*--*/
                                                                     /*--*/
-masDatafile_type()                                                  /*--*/
+mhdDatafile_type()                                                  /*--*/
                                                                     /*--*/
 /*--                                                                  --*/
 /*--Checks the file extension H5(default) or HDF4                     --*/
@@ -200,26 +200,26 @@ masDatafile_type()                                                  /*--*/
 
   char fileNames[7][MAX_STRING_SIZE];
 
-  if (config.masDigits == 3)
+  if (config.mhdDigits == 3)
   {
-    sprintf(fileNames[0], "%sbp%03d", config.masDirectory, 1);
+    sprintf(fileNames[0], "%sbp%03d", config.mhdDirectory, 1);
   }
   else
   {
-    sprintf(fileNames[0], "%sbp%06d", config.masDirectory, 1);
+    sprintf(fileNames[0], "%sbp%06d", config.mhdDirectory, 1);
   }
 
     if (access(strcat(fileNames[0],".h5"), F_OK) == 0) {
-        printf("HDF5 mas datafiles detected \n");
+        printf("HDF5 mhd datafiles detected \n");
         hdf5_input =1;
         strncpy(file_extension,".h5",strlen(".h5")+1);
     } else if (access(strcat(fileNames[0],".hdf"), F_OK) == 0){
-        printf("HDF4 mas datafiles detected \n");
+        printf("HDF4 mhd datafiles detected \n");
         hdf5_input =0;
         strncpy(file_extension,".hdf",strlen(".hdf")+1);
     }
     else{
-        printf("No valid mas datafiles detected \n");
+        printf("No valid mhd datafiles detected \n");
         exit(0);
     }
 }

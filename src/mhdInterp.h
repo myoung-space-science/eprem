@@ -10,16 +10,16 @@
 /* Temple Place, Suite 330, Boston MA 02111-1307 USA or by viewing the */
 /* license online at http://www.gnu.org/copyleft/gpl.html. */
 
-#ifndef MASINTERP_H
-#define MASINTERP_H
+#ifndef MHDINTERP_H
+#define MHDINTERP_H
 
-#define Bpindex(r,t,p) ((r) + masBprDimMax[0] * (t) + masBprDimMax[0] * masBptDimMax[0] * (p))
-#define Btindex(r,t,p) ((r) + masBtrDimMax[0] * (t) + masBtrDimMax[0] * masBttDimMax[0] * (p))
-#define Brindex(r,t,p) ((r) + masBrrDimMax[0] * (t) + masBrrDimMax[0] * masBrtDimMax[0] * (p))
-#define Vpindex(r,t,p) ((r) + masVprDimMax[0] * (t) + masVprDimMax[0] * masVptDimMax[0] * (p))
-#define Vtindex(r,t,p) ((r) + masVtrDimMax[0] * (t) + masVtrDimMax[0] * masVttDimMax[0] * (p))
-#define Vrindex(r,t,p) ((r) + masVrrDimMax[0] * (t) + masVrrDimMax[0] * masVrtDimMax[0] * (p))
-#define Dindex(r,t,p)  ((r) + masDrDimMax[0]  * (t) + masDrDimMax[0]  * masDtDimMax[0] * (p))
+#define Bpindex(r,t,p) ((r) + mhdBprDimMax[0] * (t) + mhdBprDimMax[0] * mhdBptDimMax[0] * (p))
+#define Btindex(r,t,p) ((r) + mhdBtrDimMax[0] * (t) + mhdBtrDimMax[0] * mhdBttDimMax[0] * (p))
+#define Brindex(r,t,p) ((r) + mhdBrrDimMax[0] * (t) + mhdBrrDimMax[0] * mhdBrtDimMax[0] * (p))
+#define Vpindex(r,t,p) ((r) + mhdVprDimMax[0] * (t) + mhdVprDimMax[0] * mhdVptDimMax[0] * (p))
+#define Vtindex(r,t,p) ((r) + mhdVtrDimMax[0] * (t) + mhdVtrDimMax[0] * mhdVttDimMax[0] * (p))
+#define Vrindex(r,t,p) ((r) + mhdVrrDimMax[0] * (t) + mhdVrrDimMax[0] * mhdVrtDimMax[0] * (p))
+#define Dindex(r,t,p)  ((r) + mhdDrDimMax[0]  * (t) + mhdDrDimMax[0]  * mhdDtDimMax[0] * (p))
 
 typedef struct {
   SphVec_t r;           /* Position in spherical coords. */
@@ -27,32 +27,32 @@ typedef struct {
   SphVec_t mhdV;        /* Velocity   */
   Scalar_t mhdD;        /* Density    */
   SphVec_t curlBoverB2; /* del x B/B^2 */
-} masNode_t;
+} mhdNode_t;
 
-extern masNode_t masNode;
+extern mhdNode_t mhdNode;
 extern Index_t unwindPhiOffset;
 
-int masBinarySearch(float *, float, int, int);
+int mhdBinarySearch(float *, float, int, int);
 
-Scalar_t masTriLinearBinarySearch(float *, Scalar_t, int *, int *, int, int);
+Scalar_t mhdTriLinearBinarySearch(float *, Scalar_t, int *, int *, int, int);
 
-Scalar_t masInterpolate(float *,
+Scalar_t mhdInterpolate(float *,
                         int, int, int, int, int, int,
                         Scalar_t, Scalar_t, Scalar_t,
                         int, int);
 /*----------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------*/
 /*--*/  SphVec_t                                                          /*--*/
-/*--*/  fetchMasB( SphVec_t r,                                            /*--*/
-/*--*/             float masBp0[], float masBt0[], float masBr0[],        /*--*/
-/*--*/             float masBp1[], float masBt1[], float masBr1[],        /*--*/
+/*--*/  fetchMhdB( SphVec_t r,                                            /*--*/
+/*--*/             float mhdBp0[], float mhdBt0[], float mhdBr0[],        /*--*/
+/*--*/             float mhdBp1[], float mhdBt1[], float mhdBr1[],        /*--*/
 /*--*/             Scalar_t s );                                          /*--*/
 /*----------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------*/
 
 /*----------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------*/
-/*--*/ SphVec_t masCurlBoverB2( SphVec_t r,                               /*--*/
+/*--*/ SphVec_t mhdCurlBoverB2( SphVec_t r,                               /*--*/
 /*--*/                    float Bp0[], float Bt0[], float Br0[],          /*--*/
 /*--*/                    float Bp1[], float Bt1[], float Br1[],          /*--*/
 /*--*/                    int bp_r0, int bp_r1,                           /*--*/
@@ -76,7 +76,7 @@ Scalar_t masInterpolate(float *,
 
 /*----------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------*/
-/*--*/ void masTriLinear( SphVec_t position,                              /*--*/
+/*--*/ void mhdTriLinear( SphVec_t position,                              /*--*/
 /*--*/                    float *, float *, float *,                      /*--*/
 /*--*/                    float *, float *, float *,                      /*--*/
 /*--*/                    float *,                                        /*--*/
@@ -86,7 +86,7 @@ Scalar_t masInterpolate(float *,
 /*--*/                    Scalar_t);                                      /*--*/
 /*--*/                                                                    /*--*/
 /*--*/                                                                    /*--*/
-/*--  Get the data from the nearest mas node and interpolate                --*/
+/*--  Get the data from the nearest mhd node and interpolate                --*/
 /*--  in time.                                                              --*/
 /*----------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------*/
@@ -94,7 +94,7 @@ Scalar_t masInterpolate(float *,
 
 /*----------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------*/
-/*--*/ void masHelTriLinear( SphVec_t position,                           /*--*/
+/*--*/ void mhdHelTriLinear( SphVec_t position,                           /*--*/
 /*--*/                    float *, float *, float *,                      /*--*/
 /*--*/                    float *, float *, float *,                      /*--*/
 /*--*/                    float *,                                        /*--*/
@@ -104,7 +104,7 @@ Scalar_t masInterpolate(float *,
 /*--*/                    Scalar_t);                                      /*--*/
 /*--*/                                                                    /*--*/
 /*--*/                                                                    /*--*/
-/*--  Get the data from the nearest mas node and interpolate                --*/
+/*--  Get the data from the nearest mhd node and interpolate                --*/
 /*--  in time.                                                              --*/
 /*----------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------*/
@@ -121,16 +121,16 @@ Scalar_t masInterpolate(float *,
 /*------------------------------------------------------------------*/
 /*------------------------------------------------------------------*/
 /*--*/ void																											/*--*/
-/*--*/ masGetNode(SphVec_t position,                            /*--*/
+/*--*/ mhdGetNode(SphVec_t position,                            /*--*/
 /*--*/            Node_t node);                         /*--*/
 /*--*/                                                          /*--*/
-/*--   gets the mas data at the specified position                --*/
+/*--   gets the mhd data at the specified position                --*/
 /*------------------------------------------------------------------*/
 /*------------------------------------------------------------------*/
 
 /*------------------------------------------------------------------*/
 /*------------------------------------------------------------------*/
-/*--*/ void masWind(Node_t node);                               /*--*/
+/*--*/ void mhdWind(Node_t node);                               /*--*/
 /*--*/                                                          /*--*/
 /*--  Revert to the Parker wind model.                            --*/
 /*------------------------------------------------------------------*/
@@ -156,7 +156,7 @@ Scalar_t masInterpolate(float *,
 /*-----------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------*/
 /*--*/    Vec_t                                                     /*---*/
-/*--*/    vMas(Vec_t r, Node_t node );                              /*---*/
+/*--*/    vMhd(Vec_t r, Node_t node );                              /*---*/
 /*-----------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------*/
@@ -174,7 +174,7 @@ Scalar_t masInterpolate(float *,
 /*-----------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------*/
 /*--*/    void                                                      /*---*/
-/*--*/    masMoveNodes( Scalar_t dt );                              /*---*/
+/*--*/    mhdMoveNodes( Scalar_t dt );                              /*---*/
 /*-----------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------*/

@@ -14,65 +14,65 @@
 
 #include "global.h"
 #include "configuration.h"
-#include "masInterp.h"
+#include "mhdInterp.h"
 #include "geometry.h"
-#include "readMAS.h"
+#include "readMHD.h"
 #include "mpiInit.h"
 #include "error.h"
 #include "simCore.h"
 #include "flow.h"
 
-masNode_t masNode;
+mhdNode_t mhdNode;
 Index_t unwindPhiOffset;
 
 /*-----------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------*/
 /*--*/ void                                                          /*--*/
-/*--*/ masGetNode(SphVec_t position, Node_t node)                    /*--*/
+/*--*/ mhdGetNode(SphVec_t position, Node_t node)                    /*--*/
 //     Interpolate MHD quantities to position.
-//     Interpolating factors s_cor and s_hel computed in masGetInterpData()
+//     Interpolating factors s_cor and s_hel computed in mhdGetInterpData()
 //     to interpolate to desired time.  If this is called before
-//     masGetInterpData() in main loop, the MHD quantities are
+//     mhdGetInterpData() in main loop, the MHD quantities are
 //     at time t_global (for example in RK4 in moveNodes).
 //     If called after, the MHD quantities are at time t_global+dt.
-//     The quantities are stored in the global "masNode" structure.
+//     The quantities are stored in the global "mhdNode" structure.
 /*-----------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------*/
 {
 
-  if (position.r <= (config.masRadialMax * RSAU))
+  if (position.r <= (config.mhdRadialMax * RSAU))
   {
 
-    masTriLinear(position,  masBp_0, masBt_0, masBr_0,
-                            masVp_0, masVt_0, masVr_0,
-                            masD_0,
-                            masBp_1, masBt_1, masBr_1,
-                            masVp_1, masVt_1, masVr_1,
-                            masD_1,  s_cor);
+    mhdTriLinear(position,  mhdBp_0, mhdBt_0, mhdBr_0,
+                            mhdVp_0, mhdVt_0, mhdVr_0,
+                            mhdD_0,
+                            mhdBp_1, mhdBt_1, mhdBr_1,
+                            mhdVp_1, mhdVt_1, mhdVr_1,
+                            mhdD_1,  s_cor);
 
-  } else if ( (config.masHelCouple > 0) && (position.r <= (config.masHelRadialMax * RSAU)) ) {
+  } else if ( (config.mhdHelCouple > 0) && (position.r <= (config.mhdHelRadialMax * RSAU)) ) {
 
-    masHelTriLinear(position, masHelBp_0, masHelBt_0, masHelBr_0,
-                              masHelVp_0, masHelVt_0, masHelVr_0,
-                              masHelD_0,
-                              masHelBp_1, masHelBt_1, masHelBr_1,
-                              masHelVp_1, masHelVt_1, masHelVr_1,
-                              masHelD_1,  s_hel);
+    mhdHelTriLinear(position, mhdHelBp_0, mhdHelBt_0, mhdHelBr_0,
+                              mhdHelVp_0, mhdHelVt_0, mhdHelVr_0,
+                              mhdHelD_0,
+                              mhdHelBp_1, mhdHelBt_1, mhdHelBr_1,
+                              mhdHelVp_1, mhdHelVt_1, mhdHelVr_1,
+                              mhdHelD_1,  s_hel);
 
   } else {
 
-    masWind(node);
+    mhdWind(node);
 
   }
 
-}/*----------- END masGetNode() ------------------------------------*/
+}/*----------- END mhdGetNode() ------------------------------------*/
 /*------------------------------------------------------------------*/
 
 
 /*-----------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------*/
 /*--*/ int          /*---------------------------------------------------*/
-/*--*/ masBinarySearch(float *A, float key, int imin, int imax)   /* ---*/
+/*--*/ mhdBinarySearch(float *A, float key, int imin, int imax)   /* ---*/
 /*- does a binary search and returns the index                          -*/
 /*-----------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------*/
@@ -110,12 +110,12 @@ Index_t unwindPhiOffset;
   }
 
 }
-/*----------- END masBinarySearch() --------------------------------*/
+/*----------- END mhdBinarySearch() --------------------------------*/
 
 /*------------------------------------------------------------------------------*/
 /*------------------------------------------------------------------------------*/
 /*--*/ Scalar_t         /*------------------------------------------------------*/
-/*--*/ masTriLinearBinarySearch(float *A, Scalar_t key, int *imin, int *imax,/**/
+/*--*/ mhdTriLinearBinarySearch(float *A, Scalar_t key, int *imin, int *imax,/**/
 /*--*/                          int lower, int upper)                         /**/
 /*- does a binary search and returns alpha, imin, and imax                     -*/
 /*------------------------------------------------------------------------------*/
@@ -169,13 +169,13 @@ Index_t unwindPhiOffset;
   return returnValue;
 
 }
-/*----------- END masTriLinearBinarySearch() -------------------------------*/
+/*----------- END mhdTriLinearBinarySearch() -------------------------------*/
 
 
 /*---------------------------------------------------------------------*/
 /*---------------------------------------------------------------------*/
 /*--*/ Scalar_t     /*-------------------------------------------------*/
-/*--*/ masInterpolate(float V[], int r0, int r1, int t0, int t1,    /*-*/
+/*--*/ mhdInterpolate(float V[], int r0, int r1, int t0, int t1,    /*-*/
 /*--*/                int p0, int p1, Scalar_t rd, Scalar_t td,     /*-*/
 /*--*/                Scalar_t pd, int rDimMax, int tDimMax)        /*-*/
 /*--   Trilinearly interpolates and sends back the value              -*/
@@ -198,15 +198,15 @@ Index_t unwindPhiOffset;
   return (c0 * (1.0 - td) + c1 * td);
 
 }
-/*----------- END masInterpolate() ---------------------------------*/
+/*----------- END mhdInterpolate() ---------------------------------*/
 
 
 /*----------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------*/
 /*--*/  SphVec_t                                                          /*--*/
-/*--*/  fetchMasB( SphVec_t r,                                            /*--*/
-/*--*/             float masBp0[], float masBt0[], float masBr0[],        /*--*/
-/*--*/             float masBp1[], float masBt1[], float masBr1[],        /*--*/
+/*--*/  fetchMhdB( SphVec_t r,                                            /*--*/
+/*--*/             float mhdBp0[], float mhdBt0[], float mhdBr0[],        /*--*/
+/*--*/             float mhdBp1[], float mhdBt1[], float mhdBr1[],        /*--*/
 /*--*/             Scalar_t s )                                           /*--*/
 /*----------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------*/
@@ -216,53 +216,53 @@ Index_t unwindPhiOffset;
 
   Scalar_t rr, rd, td, pd;
 
-  Scalar_t Bscale = 2.2068908d / MHD_B_NORM;
+  Scalar_t Bscale = (double)2.2068908 / MHD_B_NORM;
 
   SphVec_t B;
 
-  if ((r.r < config.masRadialMax) && (r.r > config.masRadialMin)) {
+  if ((r.r < config.mhdRadialMax) && (r.r > config.mhdRadialMin)) {
 
     //Br
-    rd = masTriLinearBinarySearch(masBrrDim, r.r, &r0, &r1, masDimMin[0], masBrrDimMax[0]-1);
-    td = masTriLinearBinarySearch(masBrtDim, r.theta, &t0, &t1, masDimMin[0], masBrtDimMax[0]-1);
-    pd = masTriLinearBinarySearch(masBrpDim, r.phi, &p0, &p1, masDimMin[0], masBrpDimMax[0]-1);
+    rd = mhdTriLinearBinarySearch(mhdBrrDim, r.r, &r0, &r1, mhdDimMin[0], mhdBrrDimMax[0]-1);
+    td = mhdTriLinearBinarySearch(mhdBrtDim, r.theta, &t0, &t1, mhdDimMin[0], mhdBrtDimMax[0]-1);
+    pd = mhdTriLinearBinarySearch(mhdBrpDim, r.phi, &p0, &p1, mhdDimMin[0], mhdBrpDimMax[0]-1);
 
-    B.r = ((1.0 - s) * masInterpolate(masBr0,
+    B.r = ((1.0 - s) * mhdInterpolate(mhdBr0,
                                       r0, r1, t0, t1, p0, p1,
                                       rd, td, pd,
-                                      masBrrDimMax[0], masBrtDimMax[0]) +
-                   s * masInterpolate(masBr1,
+                                      mhdBrrDimMax[0], mhdBrtDimMax[0]) +
+                   s * mhdInterpolate(mhdBr1,
                                       r0, r1, t0, t1, p0, p1,
                                       rd, td, pd,
-                                      masBrrDimMax[0], masBrtDimMax[0])) * Bscale;
+                                      mhdBrrDimMax[0], mhdBrtDimMax[0])) * Bscale;
 
     //Bt
-    rd = masTriLinearBinarySearch(masBtrDim, r.r, &r0, &r1, masDimMin[0], masBtrDimMax[0]-1);
-    td = masTriLinearBinarySearch(masBttDim, r.theta, &t0, &t1, masDimMin[0], masBttDimMax[0]-1);
-    pd = masTriLinearBinarySearch(masBtpDim, r.phi, &p0, &p1, masDimMin[0], masBtpDimMax[0]-1);
+    rd = mhdTriLinearBinarySearch(mhdBtrDim, r.r, &r0, &r1, mhdDimMin[0], mhdBtrDimMax[0]-1);
+    td = mhdTriLinearBinarySearch(mhdBttDim, r.theta, &t0, &t1, mhdDimMin[0], mhdBttDimMax[0]-1);
+    pd = mhdTriLinearBinarySearch(mhdBtpDim, r.phi, &p0, &p1, mhdDimMin[0], mhdBtpDimMax[0]-1);
 
-    B.theta = ((1.0 - s) * masInterpolate(masBt0,
+    B.theta = ((1.0 - s) * mhdInterpolate(mhdBt0,
                                           r0, r1, t0, t1, p0, p1,
                                           rd, td, pd,
-                                          masBtrDimMax[0], masBttDimMax[0]) +
-                       s * masInterpolate(masBt1,
+                                          mhdBtrDimMax[0], mhdBttDimMax[0]) +
+                       s * mhdInterpolate(mhdBt1,
                                           r0, r1, t0, t1, p0, p1,
                                           rd, td, pd,
-                                          masBtrDimMax[0], masBttDimMax[0])) * Bscale;
+                                          mhdBtrDimMax[0], mhdBttDimMax[0])) * Bscale;
 
     //Bp
-    rd = masTriLinearBinarySearch(masBprDim, r.r, &r0, &r1, masDimMin[0], masBprDimMax[0]-1);
-    td = masTriLinearBinarySearch(masBptDim, r.theta, &t0, &t1, masDimMin[0], masBptDimMax[0]-1);
-    pd = masTriLinearBinarySearch(masBppDim, r.phi, &p0, &p1, masDimMin[0], masBppDimMax[0]-1);
+    rd = mhdTriLinearBinarySearch(mhdBprDim, r.r, &r0, &r1, mhdDimMin[0], mhdBprDimMax[0]-1);
+    td = mhdTriLinearBinarySearch(mhdBptDim, r.theta, &t0, &t1, mhdDimMin[0], mhdBptDimMax[0]-1);
+    pd = mhdTriLinearBinarySearch(mhdBppDim, r.phi, &p0, &p1, mhdDimMin[0], mhdBppDimMax[0]-1);
 
-    B.phi = ((1.0 - s) * masInterpolate(masBp0,
+    B.phi = ((1.0 - s) * mhdInterpolate(mhdBp0,
                                         r0, r1, t0, t1, p0, p1,
                                         rd, td, pd,
-                                        masBprDimMax[0], masBptDimMax[0]) +
-                     s * masInterpolate(masBp1,
+                                        mhdBprDimMax[0], mhdBptDimMax[0]) +
+                     s * mhdInterpolate(mhdBp1,
                                         r0, r1, t0, t1, p0, p1,
                                         rd, td, pd,
-                                        masBprDimMax[0], masBptDimMax[0])) * Bscale;
+                                        mhdBprDimMax[0], mhdBptDimMax[0])) * Bscale;
 
   } else {
 
@@ -286,7 +286,7 @@ Index_t unwindPhiOffset;
 
 /*----------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------*/
-/*--*/ SphVec_t masCurlBoverB2( SphVec_t r,                               /*--*/
+/*--*/ SphVec_t mhdCurlBoverB2( SphVec_t r,                               /*--*/
 /*--*/                    float Bp0[], float Bt0[], float Br0[],          /*--*/
 /*--*/                    float Bp1[], float Bt1[], float Br1[],          /*--*/
 /*--*/                    int bp_r0, int bp_r1,                           /*--*/
@@ -302,7 +302,7 @@ Index_t unwindPhiOffset;
 /*--*/                                                                    /*--*/
 /*--*/                                                                    /*--*/
 /*--     Calculate the curl of B/B^2 for use in the drift velocity          --*/
-/*--     NOTE! This only works with Coronal MAS domain - Helio needs dev.   --*/
+/*--     NOTE! This only works with Coronal MHD domain - Helio needs dev.   --*/
 /*--                                                                        --*/
 /*----------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------*/
@@ -324,14 +324,14 @@ Index_t unwindPhiOffset;
 
   // Find the maximum cell width
   // it is necessary to check each dimension of each component of the field
-  // due to how the MAS field files are written out.
-  rCellWidth = masBprDim[bp_r1] - masBprDim[bp_r0];
-  thetaCellWidth = masBptDim[bp_t1] - masBptDim[bp_t0];
-  phiCellWidth = masBppDim[bp_p1] - masBppDim[bp_p0];
+  // due to how the MHD field files are written out.
+  rCellWidth = mhdBprDim[bp_r1] - mhdBprDim[bp_r0];
+  thetaCellWidth = mhdBptDim[bp_t1] - mhdBptDim[bp_t0];
+  phiCellWidth = mhdBppDim[bp_p1] - mhdBppDim[bp_p0];
 
-  rCellWidthTemp = masBtrDim[bt_r1] - masBtrDim[bt_r0];
-  thetaCellWidthTemp = masBttDim[bt_t1] - masBttDim[bt_t0];
-  phiCellWidthTemp = masBtpDim[bt_p1] - masBtpDim[bt_p0];
+  rCellWidthTemp = mhdBtrDim[bt_r1] - mhdBtrDim[bt_r0];
+  thetaCellWidthTemp = mhdBttDim[bt_t1] - mhdBttDim[bt_t0];
+  phiCellWidthTemp = mhdBtpDim[bt_p1] - mhdBtpDim[bt_p0];
 
   if (rCellWidthTemp > rCellWidth)
     rCellWidth = rCellWidthTemp;
@@ -342,9 +342,9 @@ Index_t unwindPhiOffset;
   if (phiCellWidthTemp > phiCellWidth)
     phiCellWidth = phiCellWidthTemp;
 
-  rCellWidthTemp = masBrrDim[br_r1] - masBrrDim[br_r0];
-  thetaCellWidthTemp = masBrtDim[br_t1] - masBrtDim[br_t0];
-  phiCellWidthTemp = masBrpDim[br_p1] - masBrpDim[br_p0];
+  rCellWidthTemp = mhdBrrDim[br_r1] - mhdBrrDim[br_r0];
+  thetaCellWidthTemp = mhdBrtDim[br_t1] - mhdBrtDim[br_t0];
+  phiCellWidthTemp = mhdBrpDim[br_p1] - mhdBrpDim[br_p0];
 
   if (rCellWidthTemp > rCellWidth)
     rCellWidth = rCellWidthTemp;
@@ -407,14 +407,14 @@ Index_t unwindPhiOffset;
     while ( phiMinus.phi < 0.0 ) phiMinus.phi = phiMinus.phi + (2.0 * PI);
 
   // Now that we have the spatial components, collect up the actual field values.
-  B_rm = fetchMasB(rMinus,     Bp0, Bt0, Br0, Bp1, Bt1, Br1, s);
-  B_rp = fetchMasB(rPlus,      Bp0, Bt0, Br0, Bp1, Bt1, Br1, s);
+  B_rm = fetchMhdB(rMinus,     Bp0, Bt0, Br0, Bp1, Bt1, Br1, s);
+  B_rp = fetchMhdB(rPlus,      Bp0, Bt0, Br0, Bp1, Bt1, Br1, s);
 
-  B_tm = fetchMasB(thetaMinus, Bp0, Bt0, Br0, Bp1, Bt1, Br1, s);
-  B_tp = fetchMasB(thetaPlus,  Bp0, Bt0, Br0, Bp1, Bt1, Br1, s);
+  B_tm = fetchMhdB(thetaMinus, Bp0, Bt0, Br0, Bp1, Bt1, Br1, s);
+  B_tp = fetchMhdB(thetaPlus,  Bp0, Bt0, Br0, Bp1, Bt1, Br1, s);
 
-  B_pm = fetchMasB(phiMinus,   Bp0, Bt0, Br0, Bp1, Bt1, Br1, s);
-  B_pp = fetchMasB(phiPlus,    Bp0, Bt0, Br0, Bp1, Bt1, Br1, s);
+  B_pm = fetchMhdB(phiMinus,   Bp0, Bt0, Br0, Bp1, Bt1, Br1, s);
+  B_pp = fetchMhdB(phiPlus,    Bp0, Bt0, Br0, Bp1, Bt1, Br1, s);
 
   // calculate the magnitudes
   Bmag_rm = sqrt( B_rm.r * B_rm.r + B_rm.theta * B_rm.theta + B_rm.phi * B_rm.phi);
@@ -466,17 +466,17 @@ Index_t unwindPhiOffset;
 
 /*----------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------*/
-/*--*/ void masTriLinear( SphVec_t position,                              /*--*/
-/*--*/                    float masBp0[], float masBt0[], float masBr0[], /*--*/
-/*--*/                    float masVp0[], float masVt0[], float masVr0[], /*--*/
-/*--*/                    float masD0[],                                  /*--*/
-/*--*/                    float masBp1[], float masBt1[], float masBr1[], /*--*/
-/*--*/                    float masVp1[], float masVt1[], float masVr1[], /*--*/
-/*--*/                    float masD1[],                                  /*--*/
+/*--*/ void mhdTriLinear( SphVec_t position,                              /*--*/
+/*--*/                    float mhdBp0[], float mhdBt0[], float mhdBr0[], /*--*/
+/*--*/                    float mhdVp0[], float mhdVt0[], float mhdVr0[], /*--*/
+/*--*/                    float mhdD0[],                                  /*--*/
+/*--*/                    float mhdBp1[], float mhdBt1[], float mhdBr1[], /*--*/
+/*--*/                    float mhdVp1[], float mhdVt1[], float mhdVr1[], /*--*/
+/*--*/                    float mhdD1[],                                  /*--*/
 /*--*/                    Scalar_t s)                                     /*--*/
 /*--*/                                                                    /*--*/
 /*--*/                                                                    /*--*/
-/*--  Get the data from the nearest mas node and interpolate                --*/
+/*--  Get the data from the nearest mhd node and interpolate                --*/
 /*--  in time.                                                              --*/
 /*----------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------*/
@@ -511,141 +511,141 @@ Index_t unwindPhiOffset;
   }
 
   //position
-  masNode.r.r = position.r; // keep in units of AU
-  masNode.r.theta = position.theta;
-  masNode.r.phi = position.phi;
+  mhdNode.r.r = position.r; // keep in units of AU
+  mhdNode.r.theta = position.theta;
+  mhdNode.r.phi = position.phi;
 
 
   //Bp
-  rd = masTriLinearBinarySearch(masBprDim, r.r, &bp_r0, &bp_r1, masDimMin[0], masBprDimMax[0]-1);
-  td = masTriLinearBinarySearch(masBptDim, r.theta, &bp_t0, &bp_t1, masDimMin[0], masBptDimMax[0]-1);
-  pd = masTriLinearBinarySearch(masBppDim, r.phi, &bp_p0, &bp_p1, masDimMin[0], masBppDimMax[0]-1);
+  rd = mhdTriLinearBinarySearch(mhdBprDim, r.r, &bp_r0, &bp_r1, mhdDimMin[0], mhdBprDimMax[0]-1);
+  td = mhdTriLinearBinarySearch(mhdBptDim, r.theta, &bp_t0, &bp_t1, mhdDimMin[0], mhdBptDimMax[0]-1);
+  pd = mhdTriLinearBinarySearch(mhdBppDim, r.phi, &bp_p0, &bp_p1, mhdDimMin[0], mhdBppDimMax[0]-1);
 
-  masNode.mhdB.phi = ((1.0 - s) * masInterpolate(masBp0,
+  mhdNode.mhdB.phi = ((1.0 - s) * mhdInterpolate(mhdBp0,
                                                 bp_r0, bp_r1, bp_t0, bp_t1, bp_p0, bp_p1,
                                                 rd, td, pd,
-                                                masBprDimMax[0], masBptDimMax[0]) +
-                              s * masInterpolate(masBp1,
+                                                mhdBprDimMax[0], mhdBptDimMax[0]) +
+                              s * mhdInterpolate(mhdBp1,
                                                 bp_r0, bp_r1, bp_t0, bp_t1, bp_p0, bp_p1,
                                                 rd, td, pd,
-                                                masBprDimMax[0], masBptDimMax[0])) * MAS_B_CONVERT;
+                                                mhdBprDimMax[0], mhdBptDimMax[0])) * config.mhdBConvert;
 
   //Bt
-  rd = masTriLinearBinarySearch(masBtrDim, r.r, &bt_r0, &bt_r1, masDimMin[0], masBtrDimMax[0]-1);
-  td = masTriLinearBinarySearch(masBttDim, r.theta, &bt_t0, &bt_t1, masDimMin[0], masBttDimMax[0]-1);
-  pd = masTriLinearBinarySearch(masBtpDim, r.phi, &bt_p0, &bt_p1, masDimMin[0], masBtpDimMax[0]-1);
+  rd = mhdTriLinearBinarySearch(mhdBtrDim, r.r, &bt_r0, &bt_r1, mhdDimMin[0], mhdBtrDimMax[0]-1);
+  td = mhdTriLinearBinarySearch(mhdBttDim, r.theta, &bt_t0, &bt_t1, mhdDimMin[0], mhdBttDimMax[0]-1);
+  pd = mhdTriLinearBinarySearch(mhdBtpDim, r.phi, &bt_p0, &bt_p1, mhdDimMin[0], mhdBtpDimMax[0]-1);
 
-  masNode.mhdB.theta = ((1.0 - s) * masInterpolate(masBt0,
+  mhdNode.mhdB.theta = ((1.0 - s) * mhdInterpolate(mhdBt0,
                                                   bt_r0, bt_r1, bt_t0, bt_t1, bt_p0, bt_p1,
                                                   rd, td, pd,
-                                                  masBtrDimMax[0], masBttDimMax[0]) +
-                                s * masInterpolate(masBt1,
+                                                  mhdBtrDimMax[0], mhdBttDimMax[0]) +
+                                s * mhdInterpolate(mhdBt1,
                                                   bt_r0, bt_r1, bt_t0, bt_t1, bt_p0, bt_p1,
                                                   rd, td, pd,
-                                                  masBtrDimMax[0], masBttDimMax[0])) * MAS_B_CONVERT;
+                                                  mhdBtrDimMax[0], mhdBttDimMax[0])) * config.mhdBConvert;
 
   //Br
-  rd = masTriLinearBinarySearch(masBrrDim, r.r, &br_r0, &br_r1, masDimMin[0], masBrrDimMax[0]-1);
-  td = masTriLinearBinarySearch(masBrtDim, r.theta, &br_t0, &br_t1, masDimMin[0], masBrtDimMax[0]-1);
-  pd = masTriLinearBinarySearch(masBrpDim, r.phi, &br_p0, &br_p1, masDimMin[0], masBrpDimMax[0]-1);
+  rd = mhdTriLinearBinarySearch(mhdBrrDim, r.r, &br_r0, &br_r1, mhdDimMin[0], mhdBrrDimMax[0]-1);
+  td = mhdTriLinearBinarySearch(mhdBrtDim, r.theta, &br_t0, &br_t1, mhdDimMin[0], mhdBrtDimMax[0]-1);
+  pd = mhdTriLinearBinarySearch(mhdBrpDim, r.phi, &br_p0, &br_p1, mhdDimMin[0], mhdBrpDimMax[0]-1);
 
-  masNode.mhdB.r = ((1.0 - s) * masInterpolate(masBr0,
+  mhdNode.mhdB.r = ((1.0 - s) * mhdInterpolate(mhdBr0,
                                               br_r0, br_r1, br_t0, br_t1, br_p0, br_p1,
                                               rd, td, pd,
-                                              masBrrDimMax[0], masBrtDimMax[0]) +
-                            s * masInterpolate(masBr1,
+                                              mhdBrrDimMax[0], mhdBrtDimMax[0]) +
+                            s * mhdInterpolate(mhdBr1,
                                               br_r0, br_r1, br_t0, br_t1, br_p0, br_p1,
                                               rd, td, pd,
-                                              masBrrDimMax[0], masBrtDimMax[0])) * MAS_B_CONVERT;
+                                              mhdBrrDimMax[0], mhdBrtDimMax[0])) * config.mhdBConvert;
 
 
   //Vp
-  rd = masTriLinearBinarySearch(masVprDim, r.r, &r0, &r1, masDimMin[0], masVprDimMax[0]-1);
-  td = masTriLinearBinarySearch(masVptDim, r.theta, &t0, &t1, masDimMin[0], masVptDimMax[0]-1);
-  pd = masTriLinearBinarySearch(masVppDim, r.phi, &p0, &p1, masDimMin[0], masVppDimMax[0]-1);
+  rd = mhdTriLinearBinarySearch(mhdVprDim, r.r, &r0, &r1, mhdDimMin[0], mhdVprDimMax[0]-1);
+  td = mhdTriLinearBinarySearch(mhdVptDim, r.theta, &t0, &t1, mhdDimMin[0], mhdVptDimMax[0]-1);
+  pd = mhdTriLinearBinarySearch(mhdVppDim, r.phi, &p0, &p1, mhdDimMin[0], mhdVppDimMax[0]-1);
 
-  masNode.mhdV.phi = ((1.0 - s) * masInterpolate(masVp0,
+  mhdNode.mhdV.phi = ((1.0 - s) * mhdInterpolate(mhdVp0,
                                                 r0, r1, t0, t1, p0, p1,
                                                 rd, td, pd,
-                                                masVprDimMax[0], masVptDimMax[0]) +
-                              s * masInterpolate(masVp1,
+                                                mhdVprDimMax[0], mhdVptDimMax[0]) +
+                              s * mhdInterpolate(mhdVp1,
                                                 r0, r1, t0, t1, p0, p1,
                                                 rd, td, pd,
-                                                masVprDimMax[0], masVptDimMax[0])) * MAS_V_CONVERT;
+                                                mhdVprDimMax[0], mhdVptDimMax[0])) * config.mhdVConvert;
 
   //Vt
-  rd = masTriLinearBinarySearch(masVtrDim, r.r, &r0, &r1, masDimMin[0], masVtrDimMax[0]-1);
-  td = masTriLinearBinarySearch(masVttDim, r.theta, &t0, &t1, masDimMin[0], masVttDimMax[0]-1);
-  pd = masTriLinearBinarySearch(masVtpDim, r.phi, &p0, &p1, masDimMin[0], masVtpDimMax[0]-1);
+  rd = mhdTriLinearBinarySearch(mhdVtrDim, r.r, &r0, &r1, mhdDimMin[0], mhdVtrDimMax[0]-1);
+  td = mhdTriLinearBinarySearch(mhdVttDim, r.theta, &t0, &t1, mhdDimMin[0], mhdVttDimMax[0]-1);
+  pd = mhdTriLinearBinarySearch(mhdVtpDim, r.phi, &p0, &p1, mhdDimMin[0], mhdVtpDimMax[0]-1);
 
-  masNode.mhdV.theta = ((1.0 - s) * masInterpolate(masVt0,
+  mhdNode.mhdV.theta = ((1.0 - s) * mhdInterpolate(mhdVt0,
                                                   r0, r1, t0, t1, p0, p1,
                                                   rd, td, pd,
-                                                  masVtrDimMax[0], masVttDimMax[0]) +
-                                s * masInterpolate(masVt1,
+                                                  mhdVtrDimMax[0], mhdVttDimMax[0]) +
+                                s * mhdInterpolate(mhdVt1,
                                                   r0, r1, t0, t1, p0, p1,
                                                   rd, td, pd,
-                                                  masVtrDimMax[0], masVttDimMax[0])) * MAS_V_CONVERT;
+                                                  mhdVtrDimMax[0], mhdVttDimMax[0])) * config.mhdVConvert;
 
   //Vr
-  rd = masTriLinearBinarySearch(masVrrDim, r.r, &r0, &r1, masDimMin[0], masVrrDimMax[0]-1);
-  td = masTriLinearBinarySearch(masVrtDim, r.theta, &t0, &t1, masDimMin[0], masVrtDimMax[0]-1);
-  pd = masTriLinearBinarySearch(masVrpDim, r.phi, &p0, &p1, masDimMin[0], masVrpDimMax[0]-1);
+  rd = mhdTriLinearBinarySearch(mhdVrrDim, r.r, &r0, &r1, mhdDimMin[0], mhdVrrDimMax[0]-1);
+  td = mhdTriLinearBinarySearch(mhdVrtDim, r.theta, &t0, &t1, mhdDimMin[0], mhdVrtDimMax[0]-1);
+  pd = mhdTriLinearBinarySearch(mhdVrpDim, r.phi, &p0, &p1, mhdDimMin[0], mhdVrpDimMax[0]-1);
 
-  masNode.mhdV.r = ((1.0 - s) * masInterpolate(masVr0,
+  mhdNode.mhdV.r = ((1.0 - s) * mhdInterpolate(mhdVr0,
                                               r0, r1, t0, t1, p0, p1,
                                               rd, td, pd,
-                                              masVrrDimMax[0], masVrtDimMax[0]) +
-                            s * masInterpolate(masVr1,
+                                              mhdVrrDimMax[0], mhdVrtDimMax[0]) +
+                            s * mhdInterpolate(mhdVr1,
                                               r0, r1, t0, t1, p0, p1,
                                               rd, td, pd,
-                                              masVrrDimMax[0], masVrtDimMax[0])) * MAS_V_CONVERT;
+                                              mhdVrrDimMax[0], mhdVrtDimMax[0])) * config.mhdVConvert;
 
   // check for underflows in Vr and set to min acceptable radial flow
-  if ( masNode.mhdV.r < (config.masVmin / C) ) masNode.mhdV.r = (config.masVmin / C);
+  if ( mhdNode.mhdV.r < (config.mhdVmin / C) ) mhdNode.mhdV.r = (config.mhdVmin / C);
 
   //D
-  rd = masTriLinearBinarySearch(masDrDim, r.r, &r0, &r1, masDimMin[0], masDrDimMax[0]-1);
-  td = masTriLinearBinarySearch(masDtDim, r.theta, &t0, &t1, masDimMin[0], masDtDimMax[0]-1);
-  pd = masTriLinearBinarySearch(masDpDim, r.phi, &p0, &p1, masDimMin[0], masDpDimMax[0]-1);
+  rd = mhdTriLinearBinarySearch(mhdDrDim, r.r, &r0, &r1, mhdDimMin[0], mhdDrDimMax[0]-1);
+  td = mhdTriLinearBinarySearch(mhdDtDim, r.theta, &t0, &t1, mhdDimMin[0], mhdDtDimMax[0]-1);
+  pd = mhdTriLinearBinarySearch(mhdDpDim, r.phi, &p0, &p1, mhdDimMin[0], mhdDpDimMax[0]-1);
 
-  masNode.mhdD = ((1.0 - s) * masInterpolate(masD0,
+  mhdNode.mhdD = ((1.0 - s) * mhdInterpolate(mhdD0,
                                             r0, r1, t0, t1, p0, p1,
                                             rd, td, pd,
-                                            masDrDimMax[0], masDtDimMax[0]) +
-                          s * masInterpolate(masD1,
+                                            mhdDrDimMax[0], mhdDtDimMax[0]) +
+                          s * mhdInterpolate(mhdD1,
                                             r0, r1, t0, t1, p0, p1,
                                             rd, td, pd,
-                                            masDrDimMax[0], masDtDimMax[0])) * MAS_RHO_CONVERT;
+                                            mhdDrDimMax[0], mhdDtDimMax[0])) * config.mhdRhoConvert;
 
 
   // calculate the curl of B/B^2 if using shell drift
   if (config.useDrift > 0)
-    masNode.curlBoverB2 = masCurlBoverB2(r,
-                                         masBp0, masBt0, masBr0,
-                                         masBp1, masBt1, masBr1,
+    mhdNode.curlBoverB2 = mhdCurlBoverB2(r,
+                                         mhdBp0, mhdBt0, mhdBr0,
+                                         mhdBp1, mhdBt1, mhdBr1,
                                          bp_r0, bp_r1, bp_t0, bp_t1, bp_p0, bp_p1,
                                          bt_r0, bt_r1, bt_t0, bt_t1, bt_p0, bt_p1,
                                          br_r0, br_r1, br_t0, br_t1, br_p0, br_p1,
                                          s);
 
 }
-/*----------- END masTriLinear() --------------------------------*/
+/*----------- END mhdTriLinear() --------------------------------*/
 
 
 /*------------------------------------------------------------------------------*/
 /*------------------------------------------------------------------------------*/
-/*--*/ void masHelTriLinear( SphVec_t position,                             /*--*/
-/*--*/                      float masBp0[], float masBt0[], float masBr0[], /*--*/
-/*--*/                      float masVp0[], float masVt0[], float masVr0[], /*--*/
-/*--*/                      float masD0[],                                  /*--*/
-/*--*/                      float masBp1[], float masBt1[], float masBr1[], /*--*/
-/*--*/                      float masVp1[], float masVt1[], float masVr1[], /*--*/
-/*--*/                      float masD1[],                                  /*--*/
+/*--*/ void mhdHelTriLinear( SphVec_t position,                             /*--*/
+/*--*/                      float mhdBp0[], float mhdBt0[], float mhdBr0[], /*--*/
+/*--*/                      float mhdVp0[], float mhdVt0[], float mhdVr0[], /*--*/
+/*--*/                      float mhdD0[],                                  /*--*/
+/*--*/                      float mhdBp1[], float mhdBt1[], float mhdBr1[], /*--*/
+/*--*/                      float mhdVp1[], float mhdVt1[], float mhdVr1[], /*--*/
+/*--*/                      float mhdD1[],                                  /*--*/
 /*--*/                      Scalar_t s)                                     /*--*/
 /*--*/                                                                      /*--*/
 /*--*/                                                                      /*--*/
-/*--  Get the data from the nearest mas node and interpolate                  --*/
+/*--  Get the data from the nearest mhd node and interpolate                  --*/
 /*--  in time.                                                                --*/
 /*------------------------------------------------------------------------------*/
 /*------------------------------------------------------------------------------*/
@@ -689,126 +689,126 @@ Index_t unwindPhiOffset;
     while ( r.phi > (2.0 * PI) ) r.phi -= (2.0 * PI);
 
   //Set position:
-  masNode.r.r = position.r; // keep in units of AU
-  masNode.r.theta = position.theta;
-  masNode.r.phi = position.phi;
+  mhdNode.r.r = position.r; // keep in units of AU
+  mhdNode.r.theta = position.theta;
+  mhdNode.r.phi = position.phi;
 
   //Bp
-  rd = masTriLinearBinarySearch(masHelBprDim, r.r, &bp_r0, &bp_r1, masDimMin[0], masHelBprDimMax[0]-1);
-  td = masTriLinearBinarySearch(masHelBptDim, r.theta, &bp_t0, &bp_t1, masDimMin[0], masHelBptDimMax[0]-1);
-  pd = masTriLinearBinarySearch(masHelBppDim, r.phi, &bp_p0, &bp_p1, masDimMin[0], masHelBppDimMax[0]-1);
+  rd = mhdTriLinearBinarySearch(mhdHelBprDim, r.r, &bp_r0, &bp_r1, mhdDimMin[0], mhdHelBprDimMax[0]-1);
+  td = mhdTriLinearBinarySearch(mhdHelBptDim, r.theta, &bp_t0, &bp_t1, mhdDimMin[0], mhdHelBptDimMax[0]-1);
+  pd = mhdTriLinearBinarySearch(mhdHelBppDim, r.phi, &bp_p0, &bp_p1, mhdDimMin[0], mhdHelBppDimMax[0]-1);
 
-  masNode.mhdB.phi = ((1.0 - s) * masInterpolate(masBp0,
+  mhdNode.mhdB.phi = ((1.0 - s) * mhdInterpolate(mhdBp0,
                                                 bp_r0, bp_r1, bp_t0, bp_t1, bp_p0, bp_p1,
                                                 rd, td, pd,
-                                                masHelBprDimMax[0], masHelBptDimMax[0]) +
-                              s * masInterpolate(masBp1,
+                                                mhdHelBprDimMax[0], mhdHelBptDimMax[0]) +
+                              s * mhdInterpolate(mhdBp1,
                                                 bp_r0, bp_r1, bp_t0, bp_t1, bp_p0, bp_p1,
                                                 rd, td, pd,
-                                                masHelBprDimMax[0], masHelBptDimMax[0])) * MAS_B_CONVERT;
+                                                mhdHelBprDimMax[0], mhdHelBptDimMax[0])) * config.mhdBConvert;
 
   //Bt
-  rd = masTriLinearBinarySearch(masHelBtrDim, r.r, &bt_r0, &bt_r1, masDimMin[0], masHelBtrDimMax[0]-1);
-  td = masTriLinearBinarySearch(masHelBttDim, r.theta, &bt_t0, &bt_t1, masDimMin[0], masHelBttDimMax[0]-1);
-  pd = masTriLinearBinarySearch(masHelBtpDim, r.phi, &bt_p0, &bt_p1, masDimMin[0], masHelBtpDimMax[0]-1);
+  rd = mhdTriLinearBinarySearch(mhdHelBtrDim, r.r, &bt_r0, &bt_r1, mhdDimMin[0], mhdHelBtrDimMax[0]-1);
+  td = mhdTriLinearBinarySearch(mhdHelBttDim, r.theta, &bt_t0, &bt_t1, mhdDimMin[0], mhdHelBttDimMax[0]-1);
+  pd = mhdTriLinearBinarySearch(mhdHelBtpDim, r.phi, &bt_p0, &bt_p1, mhdDimMin[0], mhdHelBtpDimMax[0]-1);
 
-  masNode.mhdB.theta = ((1.0 - s) * masInterpolate(masBt0,
+  mhdNode.mhdB.theta = ((1.0 - s) * mhdInterpolate(mhdBt0,
                                                   bt_r0, bt_r1, bt_t0, bt_t1, bt_p0, bt_p1,
                                                   rd, td, pd,
-                                                  masHelBtrDimMax[0], masHelBttDimMax[0]) +
-                                s * masInterpolate(masBt1,
+                                                  mhdHelBtrDimMax[0], mhdHelBttDimMax[0]) +
+                                s * mhdInterpolate(mhdBt1,
                                                   bt_r0, bt_r1, bt_t0, bt_t1, bt_p0, bt_p1,
                                                   rd, td, pd,
-                                                  masHelBtrDimMax[0], masHelBttDimMax[0])) * MAS_B_CONVERT;
+                                                  mhdHelBtrDimMax[0], mhdHelBttDimMax[0])) * config.mhdBConvert;
 
   //Br
-  rd = masTriLinearBinarySearch(masHelBrrDim, r.r, &br_r0, &br_r1, masDimMin[0], masHelBrrDimMax[0]-1);
-  td = masTriLinearBinarySearch(masHelBrtDim, r.theta, &br_t0, &br_t1, masDimMin[0], masHelBrtDimMax[0]-1);
-  pd = masTriLinearBinarySearch(masHelBrpDim, r.phi, &br_p0, &br_p1, masDimMin[0], masHelBrpDimMax[0]-1);
+  rd = mhdTriLinearBinarySearch(mhdHelBrrDim, r.r, &br_r0, &br_r1, mhdDimMin[0], mhdHelBrrDimMax[0]-1);
+  td = mhdTriLinearBinarySearch(mhdHelBrtDim, r.theta, &br_t0, &br_t1, mhdDimMin[0], mhdHelBrtDimMax[0]-1);
+  pd = mhdTriLinearBinarySearch(mhdHelBrpDim, r.phi, &br_p0, &br_p1, mhdDimMin[0], mhdHelBrpDimMax[0]-1);
 
-  masNode.mhdB.r = ((1.0 - s) * masInterpolate(masBr0,
+  mhdNode.mhdB.r = ((1.0 - s) * mhdInterpolate(mhdBr0,
                                               br_r0, br_r1, br_t0, br_t1, br_p0, br_p1,
                                               rd, td, pd,
-                                              masHelBrrDimMax[0], masHelBrtDimMax[0]) +
-                            s * masInterpolate(masBr1,
+                                              mhdHelBrrDimMax[0], mhdHelBrtDimMax[0]) +
+                            s * mhdInterpolate(mhdBr1,
                                               br_r0, br_r1, br_t0, br_t1, br_p0, br_p1,
                                               rd, td, pd,
-                                              masHelBrrDimMax[0], masHelBrtDimMax[0])) * MAS_B_CONVERT;
+                                              mhdHelBrrDimMax[0], mhdHelBrtDimMax[0])) * config.mhdBConvert;
 
 
   //Vp
-  rd = masTriLinearBinarySearch(masHelVprDim, r.r, &r0, &r1, masDimMin[0], masHelVprDimMax[0]-1);
-  td = masTriLinearBinarySearch(masHelVptDim, r.theta, &t0, &t1, masDimMin[0], masHelVptDimMax[0]-1);
-  pd = masTriLinearBinarySearch(masHelVppDim, r.phi, &p0, &p1, masDimMin[0], masHelVppDimMax[0]-1);
+  rd = mhdTriLinearBinarySearch(mhdHelVprDim, r.r, &r0, &r1, mhdDimMin[0], mhdHelVprDimMax[0]-1);
+  td = mhdTriLinearBinarySearch(mhdHelVptDim, r.theta, &t0, &t1, mhdDimMin[0], mhdHelVptDimMax[0]-1);
+  pd = mhdTriLinearBinarySearch(mhdHelVppDim, r.phi, &p0, &p1, mhdDimMin[0], mhdHelVppDimMax[0]-1);
 
-  masNode.mhdV.phi = ((1.0 - s) * masInterpolate(masVp0,
+  mhdNode.mhdV.phi = ((1.0 - s) * mhdInterpolate(mhdVp0,
                                                 r0, r1, t0, t1, p0, p1,
                                                 rd, td, pd,
-                                                masHelVprDimMax[0], masHelVptDimMax[0]) +
-                              s * masInterpolate(masVp1,
+                                                mhdHelVprDimMax[0], mhdHelVptDimMax[0]) +
+                              s * mhdInterpolate(mhdVp1,
                                                 r0, r1, t0, t1, p0, p1,
                                                 rd, td, pd,
-                                                masHelVprDimMax[0], masHelVptDimMax[0])) * MAS_V_CONVERT;
+                                                mhdHelVprDimMax[0], mhdHelVptDimMax[0])) * config.mhdVConvert;
 
   //Vt
-  rd = masTriLinearBinarySearch(masHelVtrDim, r.r, &r0, &r1, masDimMin[0], masHelVtrDimMax[0]-1);
-  td = masTriLinearBinarySearch(masHelVttDim, r.theta, &t0, &t1, masDimMin[0], masHelVttDimMax[0]-1);
-  pd = masTriLinearBinarySearch(masHelVtpDim, r.phi, &p0, &p1, masDimMin[0], masHelVtpDimMax[0]-1);
+  rd = mhdTriLinearBinarySearch(mhdHelVtrDim, r.r, &r0, &r1, mhdDimMin[0], mhdHelVtrDimMax[0]-1);
+  td = mhdTriLinearBinarySearch(mhdHelVttDim, r.theta, &t0, &t1, mhdDimMin[0], mhdHelVttDimMax[0]-1);
+  pd = mhdTriLinearBinarySearch(mhdHelVtpDim, r.phi, &p0, &p1, mhdDimMin[0], mhdHelVtpDimMax[0]-1);
 
-  masNode.mhdV.theta = ((1.0 - s) * masInterpolate(masVt0,
+  mhdNode.mhdV.theta = ((1.0 - s) * mhdInterpolate(mhdVt0,
                                                   r0, r1, t0, t1, p0, p1,
                                                   rd, td, pd,
-                                                  masHelVtrDimMax[0], masHelVttDimMax[0]) +
-                                s * masInterpolate(masVt1,
+                                                  mhdHelVtrDimMax[0], mhdHelVttDimMax[0]) +
+                                s * mhdInterpolate(mhdVt1,
                                                   r0, r1, t0, t1, p0, p1,
                                                   rd, td, pd,
-                                                  masHelVtrDimMax[0], masHelVttDimMax[0])) * MAS_V_CONVERT;
+                                                  mhdHelVtrDimMax[0], mhdHelVttDimMax[0])) * config.mhdVConvert;
 
   //Vr
-  rd = masTriLinearBinarySearch(masHelVrrDim, r.r, &r0, &r1, masDimMin[0], masHelVrrDimMax[0]-1);
-  td = masTriLinearBinarySearch(masHelVrtDim, r.theta, &t0, &t1, masDimMin[0], masHelVrtDimMax[0]-1);
-  pd = masTriLinearBinarySearch(masHelVrpDim, r.phi, &p0, &p1, masDimMin[0], masHelVrpDimMax[0]-1);
+  rd = mhdTriLinearBinarySearch(mhdHelVrrDim, r.r, &r0, &r1, mhdDimMin[0], mhdHelVrrDimMax[0]-1);
+  td = mhdTriLinearBinarySearch(mhdHelVrtDim, r.theta, &t0, &t1, mhdDimMin[0], mhdHelVrtDimMax[0]-1);
+  pd = mhdTriLinearBinarySearch(mhdHelVrpDim, r.phi, &p0, &p1, mhdDimMin[0], mhdHelVrpDimMax[0]-1);
 
-  masNode.mhdV.r = ((1.0 - s) * masInterpolate(masVr0,
+  mhdNode.mhdV.r = ((1.0 - s) * mhdInterpolate(mhdVr0,
                                               r0, r1, t0, t1, p0, p1,
                                               rd, td, pd,
-                                              masHelVrrDimMax[0], masHelVrtDimMax[0]) +
-                            s * masInterpolate(masVr1,
+                                              mhdHelVrrDimMax[0], mhdHelVrtDimMax[0]) +
+                            s * mhdInterpolate(mhdVr1,
                                               r0, r1, t0, t1, p0, p1,
                                               rd, td, pd,
-                                              masHelVrrDimMax[0], masHelVrtDimMax[0])) * MAS_V_CONVERT;
+                                              mhdHelVrrDimMax[0], mhdHelVrtDimMax[0])) * config.mhdVConvert;
 
   // check for underflows in Vr and set to min acceptable radial flow
-  if ( masNode.mhdV.r < (config.masVmin / C) ) masNode.mhdV.r = (config.masVmin / C);
+  if ( mhdNode.mhdV.r < (config.mhdVmin / C) ) mhdNode.mhdV.r = (config.mhdVmin / C);
 
   //D
-  rd = masTriLinearBinarySearch(masHelDrDim, r.r, &r0, &r1, masDimMin[0], masHelDrDimMax[0]-1);
-  td = masTriLinearBinarySearch(masHelDtDim, r.theta, &t0, &t1, masDimMin[0], masHelDtDimMax[0]-1);
-  pd = masTriLinearBinarySearch(masHelDpDim, r.phi, &p0, &p1, masDimMin[0], masHelDpDimMax[0]-1);
+  rd = mhdTriLinearBinarySearch(mhdHelDrDim, r.r, &r0, &r1, mhdDimMin[0], mhdHelDrDimMax[0]-1);
+  td = mhdTriLinearBinarySearch(mhdHelDtDim, r.theta, &t0, &t1, mhdDimMin[0], mhdHelDtDimMax[0]-1);
+  pd = mhdTriLinearBinarySearch(mhdHelDpDim, r.phi, &p0, &p1, mhdDimMin[0], mhdHelDpDimMax[0]-1);
 
-  masNode.mhdD = ((1.0 - s) * masInterpolate(masD0,
+  mhdNode.mhdD = ((1.0 - s) * mhdInterpolate(mhdD0,
                                             r0, r1, t0, t1, p0, p1,
                                             rd, td, pd,
-                                            masHelDrDimMax[0], masHelDtDimMax[0]) +
-                          s * masInterpolate(masD1,
+                                            mhdHelDrDimMax[0], mhdHelDtDimMax[0]) +
+                          s * mhdInterpolate(mhdD1,
                                             r0, r1, t0, t1, p0, p1,
                                             rd, td, pd,
-                                            masHelDrDimMax[0], masHelDtDimMax[0])) * MAS_RHO_CONVERT;
+                                            mhdHelDrDimMax[0], mhdHelDtDimMax[0])) * config.mhdRhoConvert;
 
   // NOTE!  This needs to be implemented before using this on helio runs!
 
   // calculate the curl of B/B^2 if using shell drift
 //  if (config.useDrift > 0)
-//    masNode.curlBoverB2 = masHelCurlBoverB2(r,
-//                                         masBp0, masBt0, masBr0,
-//                                         masBp1, masBt1, masBr1,
+//    mhdNode.curlBoverB2 = mhdHelCurlBoverB2(r,
+//                                         mhdBp0, mhdBt0, mhdBr0,
+//                                         mhdBp1, mhdBt1, mhdBr1,
 //                                         bp_r0, bp_r1, bp_t0, bp_t1, bp_p0, bp_p1,
 //                                         bt_r0, bt_r1, bt_t0, bt_t1, bt_p0, bt_p1,
 //                                         br_r0, br_r1, br_t0, br_t1, br_p0, br_p1,
 //                                         s);
 
 }
-/*----------- END masHelTriLinear() --------------------------------*/
+/*----------- END mhdHelTriLinear() --------------------------------*/
 
 
 /*------------------------------------------------------------------*/
@@ -864,7 +864,7 @@ Index_t unwindPhiOffset;
 
 /*------------------------------------------------------------------*/
 /*------------------------------------------------------------------*/
-/*--*/ void masWind(Node_t node)                                /*--*/
+/*--*/ void mhdWind(Node_t node)                                /*--*/
 /*--*/                                                          /*--*/
 /*--  Revert to the Parker wind model.                            --*/
 /*------------------------------------------------------------------*/
@@ -889,21 +889,21 @@ Index_t unwindPhiOffset;
   oneOverR = rOldmag / rmag;
 
   // magnetic field
-  masNode.mhdB.r     =  br * oneOverR * oneOverR;
-  masNode.mhdB.theta =  bt * oneOverR;
-  masNode.mhdB.phi   =  bp * oneOverR;
+  mhdNode.mhdB.r     =  br * oneOverR * oneOverR;
+  mhdNode.mhdB.theta =  bt * oneOverR;
+  mhdNode.mhdB.phi   =  bp * oneOverR;
 
   // if we're co-rotating the inner solution then tack on the necessary phi component once outside.
   // If performing a heliospheric coupled run, this is not needed.
   // [RMC] Is this only needed for 'fake' corotation?
   // It seems we should NOT do this for true corotation...
-  if ((config.masCorRotateFake > 0) && (config.masRotateSolution > 0) && (config.masHelCouple == 0))
+  if ((config.mhdCorRotateFake > 0) && (config.mhdRotateSolution > 0) && (config.mhdHelCouple == 0))
   {
     theta = acos(node.r.z / rmag);
     thetaOld = acos(rOld.z / rOldmag);
 
-    masNode.mhdB.phi +=
-    ( (config.rScale * config.omegaSun / vr) * (rOldmag * br * sin(thetaOld) - rmag * masNode.mhdB.r * sin(theta)) );
+    mhdNode.mhdB.phi +=
+    ( (config.rScale * config.omegaSun / vr) * (rOldmag * br * sin(thetaOld) - rmag * mhdNode.mhdB.r * sin(theta)) );
   }
 
   // There is a slight issue when moving across the boundary (hitting a constant velocity) which is causing some
@@ -911,16 +911,16 @@ Index_t unwindPhiOffset;
   // visually is annoying.  Fix when there is nothing critical going on.  Haha. - MG
 
   // velocity field
-  masNode.mhdV.r     = vr;
-  masNode.mhdV.theta = vt * oneOverR;
-  masNode.mhdV.phi   = vp * oneOverR;
+  mhdNode.mhdV.r     = vr;
+  mhdNode.mhdV.theta = vt * oneOverR;
+  mhdNode.mhdV.phi   = vp * oneOverR;
 
   // density
-  masNode.mhdD = rho * oneOverR * oneOverR;
+  mhdNode.mhdD = rho * oneOverR * oneOverR;
 
   // curlBoverB2
   if (config.useDrift > 0)
-    masNode.curlBoverB2 = curlBoverB2(node.r, node.mhdVr, 0);
+    mhdNode.curlBoverB2 = curlBoverB2(node.r, node.mhdVr, 0);
 
 }
 /*------------------------------------------------------------------*/
@@ -946,7 +946,7 @@ Index_t unwindPhiOffset;
   // Set the phi offset for this timestep
   dtPhiOffset = dt * config.omegaSun;
 
-  // Set the phi offset for the MAS solution rotation
+  // Set the phi offset for the MHD solution rotation
   phiOffset += dtPhiOffset;
 
   for (face = 0; face < NUM_FACES; face++)
@@ -961,7 +961,7 @@ Index_t unwindPhiOffset;
           // rmag in units of solar radius
           rmag = grid[idx_frcs(face,row,col,shell)].rmag * config.rScale / RSAU;
 
-          if ( (rmag >= config.masRadialMin) && (rmag <= config.masRadialMax) )
+          if ( (rmag >= config.mhdRadialMin) && (rmag <= config.mhdRadialMax) )
           {
 
             // Apply the phi offset
@@ -1012,7 +1012,7 @@ Index_t unwindPhiOffset;
 
     // are we in the coupled domain?
     // if so, adjust the position through the entire run
-    if ( (rmag > config.masRadialMin) && (rmag <= config.masRadialMax) )
+    if ( (rmag > config.mhdRadialMin) && (rmag <= config.mhdRadialMax) )
     {
 
       config.obsPhi[pObsIndex] += dtPhiOffset;
@@ -1031,7 +1031,7 @@ Index_t unwindPhiOffset;
 
     // are we outside of the coupled domain?
     // if so, adjust the position only during the equilibrium phase.
-    if ( (rmag > config.masRadialMax) && (simStarted == 0) )
+    if ( (rmag > config.mhdRadialMax) && (simStarted == 0) )
     {
 
       config.obsPhi[pObsIndex] += dtPhiOffset;
@@ -1138,7 +1138,7 @@ Index_t unwindPhiOffset;
 /*-----------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------*/
 /*--*/    Vec_t                                                     /*---*/
-/*--*/    vMas(Vec_t r, Node_t node )                               /*---*/
+/*--*/    vMhd(Vec_t r, Node_t node )                               /*---*/
 /*-----------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------*/
@@ -1148,8 +1148,8 @@ Index_t unwindPhiOffset;
   Vec_t velocity;
 
   rSphAu = cartToSphPosAu(r);
-  masGetNode(rSphAu, node);
-  velocity = sphToCartVector(masNode.mhdV, r);
+  mhdGetNode(rSphAu, node);
+  velocity = sphToCartVector(mhdNode.mhdV, r);
 
   return velocity;
 
@@ -1172,17 +1172,17 @@ Index_t unwindPhiOffset;
   Vec_t k1, k2, k3, k4, v1, v2, v3;
   Vec_t r1;
 
-  static Scalar_t sixth = 1.0d / 6.0d;
-  static Scalar_t two = 2.0d;
-  static Scalar_t half = 0.5d;
+  static Scalar_t sixth = (double)1.0 / (double)6.0;
+  static Scalar_t two = (double)2.0;
+  static Scalar_t half = (double)0.5;
 
   // find the forward displacement
-  k1 = vectorScalarMult(vMas(r0, node), dt / config.rScale);
-  v1 = vMas(vectorAddition(r0, vectorScalarMult(k1, half)), node);
+  k1 = vectorScalarMult(vMhd(r0, node), dt / config.rScale);
+  v1 = vMhd(vectorAddition(r0, vectorScalarMult(k1, half)), node);
   k2 = vectorScalarMult(v1, dt / config.rScale);
-  v2 = vMas(vectorAddition(r0, vectorScalarMult(k2, half)), node);
+  v2 = vMhd(vectorAddition(r0, vectorScalarMult(k2, half)), node);
   k3 = vectorScalarMult(v2, dt / config.rScale);
-  v3 = vMas(vectorAddition(r0, k3), node);
+  v3 = vMhd(vectorAddition(r0, k3), node);
   k4 = vectorScalarMult(v3, dt / config.rScale);
 
   r1.x = r0.x + sixth * (k1.x + two*k2.x + two*k3.x + k4.x);
@@ -1201,9 +1201,9 @@ Index_t unwindPhiOffset;
 /*-----------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------*/
 /*--*/    void                                                      /*---*/
-/*--*/    masMoveNodes( Scalar_t dt )                               /*---*/
+/*--*/    mhdMoveNodes( Scalar_t dt )                               /*---*/
 /*-----------------------------------------------------------------------*/
-// The RK4 in here uses masGetNode - the previous step's s factor and file
+// The RK4 in here uses mhdGetNode - the previous step's s factor and file
 // data are correct here since they have not been updated yet.
 /*-----------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------*/

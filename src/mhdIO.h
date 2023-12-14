@@ -10,8 +10,8 @@
 /* Temple Place, Suite 330, Boston MA 02111-1307 USA or by viewing the */
 /* license online at http://www.gnu.org/copyleft/gpl.html. */
 
-#ifndef MASIO_H
-#define MASIO_H
+#ifndef MHDIO_H
+#define MHDIO_H
 #include <hdf5.h>
 #include <hdf5_hl.h>
 #include <mfhdf.h>
@@ -19,8 +19,8 @@
 #include "cubeShellStruct.h"
 
 
-void masReadMeshDimensions( char *fname , char *dsetname, int dsetnumber, int32 *DimMax );
-void masReadMesh( char *fname , char *dsetname, int dsetnumber, float * *Dim );
-void masReadDatafromFile(char *fname, float * *buf );
-void masDatafile_type();
+void mhdReadMeshDimensions( char *fname , char *dsetname, int dsetnumber, int32 *DimMax );
+void mhdReadMesh( char *fname , char *dsetname, int dsetnumber, float * *Dim );
+void mhdReadDatafromFile(char *fname, float * *buf );
+void mhdDatafile_type();
 #endif
