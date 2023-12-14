@@ -286,7 +286,7 @@ success="@!SUCCESS!@"
 cleanup() {
     if [ "$status" != "$success" ]; then
         echo
-        echo "Set up failed. See $setuplog for details."
+        echo "Set up failed. See $buildlog for details."
         exit 1
     else
         print_banner "Done"
