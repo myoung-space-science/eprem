@@ -132,6 +132,11 @@ typedef struct {
 
   Index_t mhdRotateSolution;
 
+  Scalar_t mhdBConvert;
+  Scalar_t mhdVConvert;
+  Scalar_t mhdRhoConvert;
+  Scalar_t mhdTimeConvert;
+
   Index_t useBoundaryFunction;
   Index_t boundaryFunctionInitDomain;
 

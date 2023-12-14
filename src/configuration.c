@@ -169,6 +169,11 @@ getParams( char* configFilename)
 
   config.mhdRotateSolution = readInt("mhdRotateSolution", 1, 0, 1);
 
+  config.mhdBConvert = readDouble("mhdBConvert", 1.0, 0.0, BADVALUE);
+  config.mhdVConvert = readDouble("mhdVConvert", 1.0, 0.0, BADVALUE);
+  config.mhdRhoConvert = readDouble("mhdRhoConvert", 1.0, 0.0, BADVALUE);
+  config.mhdRhoConvert = readDouble("mhdTimeConvert", 1.0, 0.0, BADVALUE);
+
   config.useBoundaryFunction = readInt("useBoundaryFunction", 1, 0, 1);
   config.boundaryFunctionInitDomain = readInt("boundaryFunctionInitDomain", 1, 0, 1);
 
