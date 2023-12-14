@@ -85,6 +85,10 @@ typedef struct {
 
   Index_t fluxLimiter;
 
+  int useManualStreamSpawnLoc;
+  Scalar_t* streamSpawnLocAzi;
+  Scalar_t* streamSpawnLocZen;
+
   int numSpecies;
   Scalar_t*  mass;
   Scalar_t*  charge;

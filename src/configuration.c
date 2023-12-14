@@ -162,6 +162,13 @@ getParams( char* configFilename)
   config.mhdInitRadius = readDouble("mhdInitRadius", 0.0, 0.0, BADVALUE);
   config.mhdInitTimeStep = readDouble("mhdInitTimeStep", 0.000011574074074, 0.0, BADVALUE);
 
+  config.useManualStreamSpawnLoc = readInt("useManualStreamSpawnLoc",0,0,1);
+  Scalar_t defaultPos[1] = {0.0};
+  if (config.useManualStreamSpawnLoc > 0){
+    config.streamSpawnLocAzi = readDoubleArray("streamSpawnLocAzi", 6*config.numRowsPerFace*config.numColumnsPerFace, defaultPos);
+    config.streamSpawnLocZen = readDoubleArray("streamSpawnLocZen", 6*config.numRowsPerFace*config.numColumnsPerFace, defaultPos);
+  }
+
   config.parallelFlow = readDouble("parallelFlow", 0.0, 0.0, BADVALUE);
   config.fieldAligned = readInt("fieldAligned", 0, 0, 1);
 
