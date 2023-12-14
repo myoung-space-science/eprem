@@ -49,6 +49,23 @@ textnm=$(tput sgr0)
 startul=$(tput smul)
 endul=$(tput rmul)
 
+# Store the initial working directory.
+script_dir="$(dirname "$(readlink -f "${0}")")"
+
+# Set option defaults.
+verbose=0
+install_opt=0
+prefix=
+debug=0
+optimize=0
+dry_run=0
+mpi_dir=
+libconfig_dir=
+netcdf_dir=
+default_deps_dir=${script_dir}/deps
+deps_dir=
+download_deps=0
+
 # This is the CLI's main help text.
 show_help()
 {
@@ -83,20 +100,20 @@ ${textbf}DESCRIPTION${textnm}
         ${textbf}--with-mpi-dir=DIR${textnm}
                 Look for MPI header files in DIR/include and look for MPI 
                 libraries in DIR/lib.
-        ${textbf}--with-ext-deps=DIR${textnm}
+        ${textbf}--with-deps-dir=DIR${textnm}
                 Look for external dependencies in DIR/include and DIR/lib.
-        ${textbf}--download-ext-deps${textnm}
+        ${textbf}--download-deps${textnm}
                 Download external dependencies. By default, this will download
-                and build packages inside ./external. However, setting 
-                --with-ext-deps=DIR will cause it to download and build packages 
+                and build packages inside ${default_deps_dir}. However, setting 
+                --with-deps-dir=DIR will cause it to download and build packages 
                 inside DIR. This script will create the necessary path in either
                 case.
         ${textbf}--with-libconfig-dir=DIR${textnm}
                 Look for libconfig header files in DIR/include and look for 
-                libraries in DIR/lib. Supersedes the --with-ext-deps option.
+                libraries in DIR/lib. Supersedes the --with-deps-dir option.
         ${textbf}--with-netcdf-dir=DIR${textnm}
                 Look for netcdf header files in DIR/include and look for 
-                libraries in DIR/lib. Supersedes the --with-ext-deps option.
+                libraries in DIR/lib. Supersedes the --with-deps-dir option.
         ${textbf}--install[=DIR]${textnm}
                 Install the executable. If DIR is included, this will directly 
                 install the executable in DIR; if not, it will install the 
@@ -135,19 +152,6 @@ report_bad_arg()
     printf "\nUnrecognized command: ${1}\n\n"
 }
 
-# Set option defaults.
-verbose=0
-install_opt=0
-prefix=
-debug=0
-optimize=0
-dry_run=0
-mpi_dir=
-libconfig_dir=
-netcdf_dir=
-deps_dir=
-download_deps=0
-
 # Parse command-line options. See
 # `/usr/share/doc/util-linux/examples/getopt-example.bash` and the `getopt`
 # manual page for more information.
@@ -158,8 +162,8 @@ TEMP=$(getopt \
     -l 'install::,prefix:' \
     -l 'debug,optimize,dry-run' \
     -l 'with-mpi-dir:,with-libconfig-dir:,with-netcdf-dir:' \
-    -l 'with-ext-deps:' \
-    -l 'download-ext-deps' \
+    -l 'with-deps-dir:' \
+    -l 'download-deps' \
     -- "$@")
 
 if [ $? -ne 0 ]; then
@@ -228,12 +232,12 @@ while [ $# -gt 0 ]; do
             shift 2
             continue
         ;;
-        '--with-ext-deps')
+        '--with-deps-dir')
             deps_dir="${2}"
             shift 2
             continue
         ;;
-        '--download-ext-deps')
+        '--download-deps')
             download_deps=1
             shift
             continue
@@ -266,24 +270,29 @@ if [ -n "${extra_args}" ]; then
     exit 1
 fi
 
+# Check for --dry-run option.
+if [ ${dry_run} == 1 ]; then
+    DRY_RUN="[DRY RUN] "
+fi
+
 # The function that will download and build external dependencies.
 install_ext_deps() {
     if [ -z "${1}" ]; then
         echo "ERROR: Missing path to external-dependencies directory."
         exit 1
     fi
-    local deps_dir="${1}"
-    local tmp_name=tmp
+    local top_dir="${1}"
+    local tmp_dir=tmp
 
     # Create and enter the top-level directory for external dependencies.
-    mkdir -p ${deps_dir}
-    pushd ${deps_dir} &> /dev/null
+    mkdir -p ${top_dir}
+    pushd ${top_dir} &> /dev/null
 
     # Create and enter the local subdirectory where this script will download
     # and build each package. Isolating the source code allows us to remove it
     # while leaving the build dependencies.
-    mkdir ${tmp_name}
-    pushd ${tmp_name} &> /dev/null
+    mkdir ${tmp_dir}
+    pushd ${tmp_dir} &> /dev/null
 
     # TODO: Refactor into a loop.
 
@@ -291,47 +300,53 @@ install_ext_deps() {
     wget https://src.fedoraproject.org/repo/pkgs/libconfig/libconfig-1.5.tar.gz/a939c4990d74e6fc1ee62be05716f633/libconfig-1.5.tar.gz
     tar -xvzf libconfig-1.5.tar.gz
     pushd libconfig-1.5 &> /dev/null
-    ./configure --prefix="${deps_dir}" && make && make install && make check
+    ./configure --prefix="${top_dir}" && make && make install && make check
     popd &> /dev/null
 
     # --> zlib
     wget https://zlib.net/fossils/zlib-1.2.11.tar.gz
     tar -xvzf zlib-1.2.11.tar.gz
     pushd zlib-1.2.11 &> /dev/null
-    ./configure --prefix="${deps_dir}" && make && make install && make check
+    ./configure --prefix="${top_dir}" && make && make install && make check
     popd &> /dev/null
 
     # --> HDF5
     wget https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8/hdf5-1.8.17/src/hdf5-1.8.17.tar.gz
     tar -xvzf hdf5-1.8.17.tar.gz
     pushd hdf5-1.8.17 &> /dev/null
-    ./configure --prefix="${deps_dir}" && make && make install && make check
+    ./configure --prefix="${top_dir}" && make && make install && make check
     popd &> /dev/null
 
     # --> NetCDF4
     wget https://github.com/Unidata/netcdf-c/archive/refs/tags/v4.4.1.1.tar.gz
     tar -xvzf v4.4.1.1.tar.gz
     pushd netcdf-c-4.4.1.1 &> /dev/null
-    ./configure --prefix="${deps_dir}" --disable-dap-remote-tests && make && make install && make check
+    ./configure --prefix="${top_dir}" --disable-dap-remote-tests && make && make install && make check
     popd &> /dev/null
 
     # Exit and remove the temporary source-code directory.
     popd &> /dev/null
-    /bin/rm -rf ${tmp_name}
+    /bin/rm -rf ${tmp_dir}
 
     # Exit the top-level external-dependencies directory.
     popd &> /dev/null
 }
 
-# Process the --download-ext-deps option.
-if [ "$download_deps" == 1 ]; then
-    if [ -z "$deps_dir" ]; then
-        deps_dir="$(pwd)/ext-deps"
-    fi
-    install_ext_deps "${deps_dir}"
+# Set the target directory for external dependencies.
+if [ -z "$deps_dir" ]; then
+    deps_dir=$default_deps_dir
 fi
 
-# Update flags based on --with-ext-deps option.
+# Process the --download-deps option.
+if [ "$download_deps" == 1 ]; then
+    if [ "$dry_run" == 1 ]; then
+        print_banner "(install external dependencies in $deps_dir)"
+    else
+        install_ext_deps "${deps_dir}"
+    fi
+fi
+
+# Update flags based on --with-deps-dir option.
 if [ -n "$deps_dir" ]; then
     if [ -z "$libconfig_dir" ]; then
         libconfig_dir=${deps_dir}/libconfig
@@ -405,11 +420,6 @@ fi
 SH_LDFLAGS=$(trim "${SH_LDFLAGS} ${LDFLAGS}")
 if [ -n "${SH_LDFLAGS}" ]; then
     CF_FLAGS+="LDFLAGS=\"${SH_LDFLAGS}\" "
-fi
-
-# Check for --dry-run option.
-if [ ${dry_run} == 1 ]; then
-    DRY_RUN="[DRY RUN] "
 fi
 
 # Check for --verbose option.
