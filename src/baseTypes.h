@@ -114,6 +114,7 @@ typedef int               MPI_Flag_t;
 #define MAX_STRING_SIZE 240
 
 #define MHD_DEFAULT 0
+#define MHD_COUPLED 1
 
 /*.............................Vec_t...*/
 typedef struct {
