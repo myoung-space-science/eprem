@@ -232,7 +232,7 @@ install_ext_deps() {
     wget https://support.hdfgroup.org/ftp/HDF/releases/HDF4.2.12/src/hdf-4.2.12.tar.gz
     tar -xvzf hdf-4.2.12.tar.gz
     pushd hdf-4.2.12 &> /dev/null
-    ./configure --disable-netcdf && make && make install && make check
+    ./configure --prefix="${top_dir}" --disable-netcdf && make && make install && make check
     popd &> /dev/null
 
     # --> HDF5
