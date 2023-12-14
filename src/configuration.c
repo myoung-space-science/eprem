@@ -133,13 +133,41 @@ getParams( char* configFilename)
 
   config.idw_p = readDouble("idw_p", 3.0, VERYSMALL, BADVALUE);
 
+  config.mhdTriLinear = readInt("mhdTriLinear", 1, 0, 1);
+  config.mhdCouple = readInt("mhdCouple", 0, 0, 1);
+  config.mhdCorRotateFake = readInt("mhdCorRotateFake", 0, 0, 1);
+  config.mhdHelCouple = readInt("mhdHelCouple", 0, 0, 1);
+  config.mhdNumFiles = readInt("mhdNumFiles", 0, 0, 32767);
+  config.mhdHelNumFiles = readInt("mhdHelNumFiles", 0, 0, 32767);
+  config.useMhdSteadyStateDt = readInt("useMhdSteadyStateDt", 1, 0, 1);
+  config.mhdSteadyState = readInt("mhdSteadyState", 1, 0, 1);
+  config.mhdDirectory = (char*)readString("mhdDirectory"," ");
+  config.mhdHelDirectory = (char*)readString("mhdHelDirectory"," ");
+  config.mhdDigits = readInt("mhdDigits", 3, 0, 32767);
+  config.mhdHelDigits = readInt("mhdHelDigits", 3, 0, 32767);
+
+  config.mhdCoupledTime = readInt("mhdCoupledTime", 1, 0, 1);
+  config.mhdStartTime = readDouble("mhdStartTime", 0.0, 0.0, BADVALUE);
   config.epEquilibriumCalcDuration = readDouble("epEquilibriumCalcDuration", 0.0, 0.0, BADVALUE);
   config.preEruptionDuration = readDouble("preEruptionDuration", 0.0, 0.0, BADVALUE);
+
+  config.mhdRadialMin = readDouble("mhdRadialMin", 0.0, 0.0, BADVALUE);
+  config.mhdRadialMax = readDouble("mhdRadialMax", 0.0, 0.0, BADVALUE);
+  config.mhdHelRadialMin = readDouble("mhdHelRadialMin", 0.0, 0.0, BADVALUE);
+  config.mhdHelRadialMax = readDouble("mhdHelRadialMax", 0.0, 0.0, BADVALUE);
+  config.mhdVmin = readDouble("mhdVmin", 50.0e5, 0.0, BADVALUE);
+
+  config.mhdInitFromOuterBoundary = readInt("mhdInitFromOuterBoundary", 2, 0, 2);
+  config.mhdInitMonteCarlo = readInt("mhdInitMonteCarlo", 0, 0, 1);
+  config.mhdInitRadius = readDouble("mhdInitRadius", 0.0, 0.0, BADVALUE);
+  config.mhdInitTimeStep = readDouble("mhdInitTimeStep", 0.000011574074074, 0.0, BADVALUE);
 
   config.parallelFlow = readDouble("parallelFlow", 0.0, 0.0, BADVALUE);
   config.fieldAligned = readInt("fieldAligned", 0, 0, 1);
 
   config.epCalcStartTime = readDouble("epCalcStartTime", config.simStartTime, 0.0, BADVALUE);
+
+  config.mhdRotateSolution = readInt("mhdRotateSolution", 1, 0, 1);
 
   config.useBoundaryFunction = readInt("useBoundaryFunction", 1, 0, 1);
   config.boundaryFunctionInitDomain = readInt("boundaryFunctionInitDomain", 1, 0, 1);

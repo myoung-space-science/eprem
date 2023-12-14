@@ -89,6 +89,7 @@ double timer_adiabaticchange=0;
 double timer_diffuseshell=0;
 double timer_driftshell=0;
 double timer_eptotal=0;
+double timer_mhd_io=0;
 double timer_eprem_io=0;
 double timer_init=0;
 double timer_other=0;

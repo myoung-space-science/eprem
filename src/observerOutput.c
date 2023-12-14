@@ -48,12 +48,32 @@ time_t start_time;
            TOTAL_NUM_SHELLS,
            N_PROCS);
 
-    printf("Inner boundary: %f\n",
-            config.rScale / RSAU);
+    if (config.mhdCouple) {
 
-    printf("Start: %f JD, EP Calc: %f JD\n",
-            config.simStartTime,
-            config.epCalcStartTime);
+      radMax = config.mhdRadialMax;
+      if (config.mhdHelCouple > 0)
+        radMax = config.mhdHelRadialMax;
+      printf("Inner coupling boundary: %f Rs -- Outer coupling boundary: %f Rs\n",
+             config.rScale / RSAU,
+             radMax);
+
+      printf("Start: %f JD, EP Calc: %f JD, MHD Start: %f JD\n\tEruption: %f JD, Stop: %f JD\n",
+             config.simStartTime,
+             config.epCalcStartTime,
+             config.mhdStartTime,
+             config.mhdStartTime + config.preEruptionDuration,
+             config.simStopTime);
+
+    } else {
+
+      printf("Inner boundary: %f\n",
+             config.rScale / RSAU);
+
+      printf("Start: %f JD, EP Calc: %f JD\n",
+             config.simStartTime,
+             config.epCalcStartTime);
+
+    }
 
     printf("******************************************************************\n\n");
   }
@@ -67,12 +87,32 @@ time_t start_time;
     fprintf(rpout,"*******************  EPREM Version %s  ************************\n",VERSION);
     fprintf(rpout,"******************************************************************\n");
 
-    fprintf(rpout, "Inner coupling boundary: %f Rs\n",
-            config.rScale / RSAU);
+    if (config.mhdCouple > 0) {
 
-    fprintf(rpout,"Start: %f JD, EP Calc: %f JD\n",
-            config.simStartTime,
-            config.epCalcStartTime);
+      radMax = config.mhdRadialMax;
+      if (config.mhdHelCouple > 0)
+        radMax = config.mhdHelRadialMax;
+      fprintf(rpout, "Inner coupling boundary: %f Rs -- Outer coupling boundary: %f Rs\n",
+             config.rScale / RSAU,
+             radMax);
+
+      fprintf(rpout,"Start: %f JD, EP Calc: %f JD, MHD Start: %f JD, Eruption: %f JD, Stop: %f JD\n",
+             config.simStartTime,
+             config.epCalcStartTime,
+             config.mhdStartTime,
+             config.mhdStartTime + config.preEruptionDuration,
+             config.simStopTime);
+
+    } else {
+
+      fprintf(rpout, "Inner coupling boundary: %f Rs\n",
+              config.rScale / RSAU);
+
+      fprintf(rpout,"Start: %f JD, EP Calc: %f JD\n",
+              config.simStartTime,
+              config.epCalcStartTime);
+
+    }
 
     fprintf(rpout,"******************************************************************\n\n");
 
@@ -125,6 +165,7 @@ time_t start_time;
   double* all_timer_diffuseshell;
   double* all_timer_driftshell;
   double* all_timer_eptotal;
+  double* all_timer_mhd_io;
   double* all_timer_eprem_io;
   double* all_timer_init;
   double* all_timer_other;
@@ -143,7 +184,7 @@ time_t start_time;
 //
 // ****** Sum-up top level timers to computer "other" time.
 //
-  timer_sum = timer_eptotal + timer_eprem_io + timer_init;
+  timer_sum = timer_eptotal + timer_mhd_io + timer_eprem_io + timer_init;
 
   timer_other = timer_wall - timer_sum;
 
@@ -153,6 +194,7 @@ time_t start_time;
   all_timer_diffuseshell= malloc(N_PROCS*sizeof(double));
   all_timer_driftshell= malloc(N_PROCS*sizeof(double));
   all_timer_eptotal= malloc(N_PROCS*sizeof(double));
+  all_timer_mhd_io= malloc(N_PROCS*sizeof(double));
   all_timer_eprem_io= malloc(N_PROCS*sizeof(double));
   all_timer_init= malloc(N_PROCS*sizeof(double));
   all_timer_other= malloc(N_PROCS*sizeof(double));
@@ -168,6 +210,7 @@ time_t start_time;
   MPI_Allgather (&timer_diffuseshell,    1,MPI_DOUBLE,all_timer_diffuseshell,   1,MPI_DOUBLE,MPI_COMM_WORLD);
   MPI_Allgather (&timer_driftshell,      1,MPI_DOUBLE,all_timer_driftshell,     1,MPI_DOUBLE,MPI_COMM_WORLD);
   MPI_Allgather (&timer_eptotal,         1,MPI_DOUBLE,all_timer_eptotal,        1,MPI_DOUBLE,MPI_COMM_WORLD);
+  MPI_Allgather (&timer_mhd_io,          1,MPI_DOUBLE,all_timer_mhd_io,         1,MPI_DOUBLE,MPI_COMM_WORLD);
   MPI_Allgather (&timer_eprem_io,        1,MPI_DOUBLE,all_timer_eprem_io,       1,MPI_DOUBLE,MPI_COMM_WORLD);
   MPI_Allgather (&timer_init,            1,MPI_DOUBLE,all_timer_init,           1,MPI_DOUBLE,MPI_COMM_WORLD);
   MPI_Allgather (&timer_other,           1,MPI_DOUBLE,all_timer_other,          1,MPI_DOUBLE,MPI_COMM_WORLD);
@@ -254,6 +297,17 @@ time_t start_time;
     }
     mean = mean/N_PROCS;
     fprintf(rpout,"%-24s  %9.2f  %9.2f  %9.2f\n","IO (EPREM)",mean,max_tmp,min_tmp);
+
+    max_tmp=0.0;
+    min_tmp=1.0e200;
+    mean=0.0;
+    for (i=0;i<N_PROCS;i++){
+      if(all_timer_mhd_io[i]>max_tmp) max_tmp=all_timer_mhd_io[i];
+      if(all_timer_mhd_io[i]<min_tmp) min_tmp=all_timer_mhd_io[i];
+      mean = mean + all_timer_mhd_io[i];
+    }
+    mean = mean/N_PROCS;
+    fprintf(rpout,"%-24s  %9.2f  %9.2f  %9.2f\n","IO (MHD)",mean,max_tmp,min_tmp);
 
     max_tmp=0.0;
     min_tmp=1.0e200;
@@ -354,6 +408,7 @@ time_t start_time;
   free(all_timer_diffuseshell);
   free(all_timer_driftshell);
   free(all_timer_eptotal);
+  free(all_timer_mhd_io);
   free(all_timer_eprem_io);
   free(all_timer_init);
   free(all_timer_other);

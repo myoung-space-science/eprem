@@ -4,6 +4,7 @@ extern double timer_adiabaticchange;
 extern double timer_diffuseshell;
 extern double timer_driftshell;
 extern double timer_eptotal;
+extern double timer_mhd_io;
 extern double timer_eprem_io;
 extern double timer_init;
 extern double timer_other;

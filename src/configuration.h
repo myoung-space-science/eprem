@@ -96,13 +96,41 @@ typedef struct {
 
   Scalar_t idw_p;
 
+  Index_t mhdTriLinear;
+  Index_t mhdCouple;
+  Index_t mhdCorRotateFake;
+  Index_t mhdHelCouple;
+  Index_t mhdNumFiles;
+  Index_t mhdHelNumFiles;
+  Index_t useMhdSteadyStateDt;
+  Index_t mhdSteadyState;
+  char* mhdDirectory;
+  char* mhdHelDirectory;
+  Index_t mhdDigits;
+  Index_t mhdHelDigits;
+
+  Index_t mhdCoupledTime;
+  Scalar_t mhdStartTime;
   Scalar_t epEquilibriumCalcDuration;
+
   Scalar_t preEruptionDuration;
+  Index_t mhdInitMonteCarlo;
+  Index_t mhdInitFromOuterBoundary;
+  Scalar_t mhdInitRadius;
+  Scalar_t mhdInitTimeStep;
+
+  Scalar_t mhdRadialMin;
+  Scalar_t mhdRadialMax;
+  Scalar_t mhdHelRadialMin;
+  Scalar_t mhdHelRadialMax;
+  Scalar_t mhdVmin;
 
   Scalar_t parallelFlow;
   Index_t  fieldAligned;
 
   Scalar_t epCalcStartTime;
+
+  Index_t mhdRotateSolution;
 
   Index_t useBoundaryFunction;
   Index_t boundaryFunctionInitDomain;

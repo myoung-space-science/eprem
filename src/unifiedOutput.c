@@ -849,11 +849,18 @@ int * po_distObs_varid;
 
       if (rSph.phi < 0.0) rSph.phi += 2.0 * PI;
       if ( rSph.phi > (2.0 * PI) ) rSph.phi -= 2.0 * PI;
-      /* 
-        NOTE: This is where the MAS-coupled code copies MHD data to the point
-        observer. After removing MAS-related logic, I'm not sure that this
-        function outputs any point-observer MHD variables.
-      */
+
+      mhdGetNode(rSph, pointObsNode[0]);
+
+      pointObsNode[0].mhdBr = mhdNode.mhdB.r;
+      pointObsNode[0].mhdBtheta = mhdNode.mhdB.theta;
+      pointObsNode[0].mhdBphi = mhdNode.mhdB.phi;
+
+      pointObsNode[0].mhdVr = mhdNode.mhdV.r;
+      pointObsNode[0].mhdVtheta = mhdNode.mhdV.theta;
+      pointObsNode[0].mhdVphi = mhdNode.mhdV.phi;
+
+      pointObsNode[0].mhdDensity = mhdNode.mhdD;
 
       // zero out distribution
       for (species = 0; species < NUM_SPECIES; species++)
