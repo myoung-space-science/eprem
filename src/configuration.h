@@ -100,7 +100,6 @@ typedef struct {
 
   Scalar_t idw_p;
 
-  Index_t mhdTriLinear;
   Index_t mhdCouple;
   Index_t mhdCorRotateFake;
   Index_t mhdHelCouple;

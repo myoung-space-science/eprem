@@ -133,7 +133,6 @@ getParams( char* configFilename)
 
   config.idw_p = readDouble("idw_p", 3.0, VERYSMALL, BADVALUE);
 
-  config.mhdTriLinear = readInt("mhdTriLinear", 1, 0, 1);
   config.mhdCouple = readInt("mhdCouple", 0, 0, 1);
   config.mhdCorRotateFake = readInt("mhdCorRotateFake", 0, 0, 1);
   config.mhdHelCouple = readInt("mhdHelCouple", 0, 0, 1);
