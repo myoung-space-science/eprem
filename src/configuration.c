@@ -134,7 +134,6 @@ getParams( char* configFilename)
   config.idw_p = readDouble("idw_p", 3.0, VERYSMALL, BADVALUE);
 
   config.mhdCouple = readInt("mhdCouple", 0, 0, 1);
-  config.mhdCorRotateFake = readInt("mhdCorRotateFake", 0, 0, 1);
   config.mhdHelCouple = readInt("mhdHelCouple", 0, 0, 1);
   config.mhdNumFiles = readInt("mhdNumFiles", 0, 0, 32767);
   config.mhdHelNumFiles = readInt("mhdHelNumFiles", 0, 0, 32767);

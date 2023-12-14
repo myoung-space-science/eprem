@@ -897,7 +897,7 @@ Index_t unwindPhiOffset;
   // If performing a heliospheric coupled run, this is not needed.
   // [RMC] Is this only needed for 'fake' corotation?
   // It seems we should NOT do this for true corotation...
-  if ((config.mhdCorRotateFake > 0) && (config.mhdRotateSolution > 0) && (config.mhdHelCouple == 0))
+  if ((config.mhdRotateSolution > 0) && (config.mhdHelCouple == 0))
   {
     theta = acos(node.r.z / rmag);
     thetaOld = acos(rOld.z / rOldmag);
