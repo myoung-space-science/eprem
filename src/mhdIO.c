@@ -32,7 +32,7 @@
 /*--*/ void                                                        /*--*/
                                                                    /*--*/
 mhdReadMeshDimensions(char *fname, char *dsetname, int dsetnumber, /*--*/
-                    int32 *DimMax)                                 /*--*/
+                    int32_t *DimMax)                                 /*--*/
 /*--*/                                                             /*--*/
 /*--                                                                 --*/
 /*--This function reads MHD mesh dimensions.                         --*/
@@ -59,9 +59,9 @@ mhdReadMeshDimensions(char *fname, char *dsetname, int dsetnumber, /*--*/
     }
     else
     { // Read HDF4 files
-        int32 sd_id, sds_id;
-        int32 rank, data_type, n_attrs;
-        int32 dim_sizes[H4_MAX_VAR_DIMS];
+        int32_t sd_id, sds_id;
+        int32_t rank, data_type, n_attrs;
+        int32_t dim_sizes[H4_MAX_VAR_DIMS];
         intn status;
         char name[H4_MAX_NC_NAME];
 
@@ -111,10 +111,10 @@ mhdReadMesh(char *fname, char *dsetname, int dsetnumber,           /*--*/
     }
     else
     { // Read HDF4 file
-        int32 sd_id, sds_id;
-        int32 rank, data_type, n_attrs;
-        int32 dim_sizes[H4_MAX_VAR_DIMS];
-        int32 start[1] = {0};
+        int32_t sd_id, sds_id;
+        int32_t rank, data_type, n_attrs;
+        int32_t dim_sizes[H4_MAX_VAR_DIMS];
+        int32_t start[1] = {0};
         char name[H4_MAX_NC_NAME];
         intn status;
 
@@ -165,10 +165,10 @@ mhdReadDatafromFile(char *fname, float *buf[])                     /*--*/
     }
     else
     { // Read from HDF4 file
-        int32 sd_id, sds_id;
-        int32 rank, data_type, n_attrs;
-        int32 dim_sizes[H4_MAX_VAR_DIMS];
-        int32 start[3] = {0, 0, 0};
+        int32_t sd_id, sds_id;
+        int32_t rank, data_type, n_attrs;
+        int32_t dim_sizes[H4_MAX_VAR_DIMS];
+        int32_t start[3] = {0, 0, 0};
         intn status;
         char name[H4_MAX_NC_NAME];
 
