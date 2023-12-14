@@ -101,15 +101,11 @@ typedef struct {
   Scalar_t idw_p;
 
   Index_t mhdCouple;
-  Index_t mhdHelCouple;
   Index_t mhdNumFiles;
-  Index_t mhdHelNumFiles;
   Index_t useMhdSteadyStateDt;
   Index_t mhdSteadyState;
   char* mhdDirectory;
-  char* mhdHelDirectory;
   Index_t mhdDigits;
-  Index_t mhdHelDigits;
 
   Index_t mhdCoupledTime;
   Scalar_t mhdStartTime;
@@ -123,8 +119,6 @@ typedef struct {
 
   Scalar_t mhdRadialMin;
   Scalar_t mhdRadialMax;
-  Scalar_t mhdHelRadialMin;
-  Scalar_t mhdHelRadialMax;
   Scalar_t mhdVmin;
 
   Scalar_t parallelFlow;

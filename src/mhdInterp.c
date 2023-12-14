@@ -50,15 +50,6 @@ Index_t unwindPhiOffset;
                             mhdVp_1, mhdVt_1, mhdVr_1,
                             mhdD_1,  s_cor);
 
-  } else if ( (config.mhdHelCouple > 0) && (position.r <= (config.mhdHelRadialMax * RSAU)) ) {
-
-    mhdHelTriLinear(position, mhdHelBp_0, mhdHelBt_0, mhdHelBr_0,
-                              mhdHelVp_0, mhdHelVt_0, mhdHelVr_0,
-                              mhdHelD_0,
-                              mhdHelBp_1, mhdHelBt_1, mhdHelBr_1,
-                              mhdHelVp_1, mhdHelVt_1, mhdHelVr_1,
-                              mhdHelD_1,  s_hel);
-
   } else {
 
     mhdWind(node);
@@ -633,184 +624,6 @@ Index_t unwindPhiOffset;
 /*----------- END mhdTriLinear() --------------------------------*/
 
 
-/*------------------------------------------------------------------------------*/
-/*------------------------------------------------------------------------------*/
-/*--*/ void mhdHelTriLinear( SphVec_t position,                             /*--*/
-/*--*/                      float mhdBp0[], float mhdBt0[], float mhdBr0[], /*--*/
-/*--*/                      float mhdVp0[], float mhdVt0[], float mhdVr0[], /*--*/
-/*--*/                      float mhdD0[],                                  /*--*/
-/*--*/                      float mhdBp1[], float mhdBt1[], float mhdBr1[], /*--*/
-/*--*/                      float mhdVp1[], float mhdVt1[], float mhdVr1[], /*--*/
-/*--*/                      float mhdD1[],                                  /*--*/
-/*--*/                      Scalar_t s)                                     /*--*/
-/*--*/                                                                      /*--*/
-/*--*/                                                                      /*--*/
-/*--  Get the data from the nearest mhd node and interpolate                  --*/
-/*--  in time.                                                                --*/
-/*------------------------------------------------------------------------------*/
-/*------------------------------------------------------------------------------*/
-{
-
-  SphVec_t r;
-
-  int r0, r1, t0, t1, p0, p1;
-  int bp_r0, bp_r1, bp_t0, bp_t1, bp_p0, bp_p1;
-  int bt_r0, bt_r1, bt_t0, bt_t1, bt_p0, bt_p1;
-  int br_r0, br_r1, br_t0, br_t1, br_p0, br_p1;
-
-  Scalar_t rd, td, pd, phiHelSeedOffset;
-
-  // If we are seeding nodes, the heliosphere is treated as
-  // a co-rotating frame.  Thus, we need to shift back at
-  // the corona's phiOffset.  Once the simulation starts,
-  // the heliosphere is in the intertial frame so we no longer
-  // need an additional offset.
-  if (simStarted == 0){
-    phiHelSeedOffset = phiOffset;
-  } else {
-    phiHelSeedOffset = 0.0;
-  }
-
-  // convert from units of AU to Solar Radius and leave the
-  //   angles alone
-  r.r = position.r / RSAU;
-  r.theta = position.theta;
-
-  // Set phi offset for getting data in heliosphere.
-  // This is typically a fixed value, read from the metadata of the hel mhd data.
-  // During seeding of nodes, an additional shift is applied to keep the heliosphere
-  // aligned with the rotating coronal data.
-  r.phi = position.phi - phiHelOffset - phiHelSeedOffset;
-
-  if (r.phi < 0.0)
-    while (r.phi < 0.0) r.phi += (2.0 * PI);
-
-  if ( r.phi > (2.0 * PI) )
-    while ( r.phi > (2.0 * PI) ) r.phi -= (2.0 * PI);
-
-  //Set position:
-  mhdNode.r.r = position.r; // keep in units of AU
-  mhdNode.r.theta = position.theta;
-  mhdNode.r.phi = position.phi;
-
-  //Bp
-  rd = mhdTriLinearBinarySearch(mhdHelBprDim, r.r, &bp_r0, &bp_r1, mhdDimMin[0], mhdHelBprDimMax[0]-1);
-  td = mhdTriLinearBinarySearch(mhdHelBptDim, r.theta, &bp_t0, &bp_t1, mhdDimMin[0], mhdHelBptDimMax[0]-1);
-  pd = mhdTriLinearBinarySearch(mhdHelBppDim, r.phi, &bp_p0, &bp_p1, mhdDimMin[0], mhdHelBppDimMax[0]-1);
-
-  mhdNode.mhdB.phi = ((1.0 - s) * mhdInterpolate(mhdBp0,
-                                                bp_r0, bp_r1, bp_t0, bp_t1, bp_p0, bp_p1,
-                                                rd, td, pd,
-                                                mhdHelBprDimMax[0], mhdHelBptDimMax[0]) +
-                              s * mhdInterpolate(mhdBp1,
-                                                bp_r0, bp_r1, bp_t0, bp_t1, bp_p0, bp_p1,
-                                                rd, td, pd,
-                                                mhdHelBprDimMax[0], mhdHelBptDimMax[0])) * config.mhdBConvert;
-
-  //Bt
-  rd = mhdTriLinearBinarySearch(mhdHelBtrDim, r.r, &bt_r0, &bt_r1, mhdDimMin[0], mhdHelBtrDimMax[0]-1);
-  td = mhdTriLinearBinarySearch(mhdHelBttDim, r.theta, &bt_t0, &bt_t1, mhdDimMin[0], mhdHelBttDimMax[0]-1);
-  pd = mhdTriLinearBinarySearch(mhdHelBtpDim, r.phi, &bt_p0, &bt_p1, mhdDimMin[0], mhdHelBtpDimMax[0]-1);
-
-  mhdNode.mhdB.theta = ((1.0 - s) * mhdInterpolate(mhdBt0,
-                                                  bt_r0, bt_r1, bt_t0, bt_t1, bt_p0, bt_p1,
-                                                  rd, td, pd,
-                                                  mhdHelBtrDimMax[0], mhdHelBttDimMax[0]) +
-                                s * mhdInterpolate(mhdBt1,
-                                                  bt_r0, bt_r1, bt_t0, bt_t1, bt_p0, bt_p1,
-                                                  rd, td, pd,
-                                                  mhdHelBtrDimMax[0], mhdHelBttDimMax[0])) * config.mhdBConvert;
-
-  //Br
-  rd = mhdTriLinearBinarySearch(mhdHelBrrDim, r.r, &br_r0, &br_r1, mhdDimMin[0], mhdHelBrrDimMax[0]-1);
-  td = mhdTriLinearBinarySearch(mhdHelBrtDim, r.theta, &br_t0, &br_t1, mhdDimMin[0], mhdHelBrtDimMax[0]-1);
-  pd = mhdTriLinearBinarySearch(mhdHelBrpDim, r.phi, &br_p0, &br_p1, mhdDimMin[0], mhdHelBrpDimMax[0]-1);
-
-  mhdNode.mhdB.r = ((1.0 - s) * mhdInterpolate(mhdBr0,
-                                              br_r0, br_r1, br_t0, br_t1, br_p0, br_p1,
-                                              rd, td, pd,
-                                              mhdHelBrrDimMax[0], mhdHelBrtDimMax[0]) +
-                            s * mhdInterpolate(mhdBr1,
-                                              br_r0, br_r1, br_t0, br_t1, br_p0, br_p1,
-                                              rd, td, pd,
-                                              mhdHelBrrDimMax[0], mhdHelBrtDimMax[0])) * config.mhdBConvert;
-
-
-  //Vp
-  rd = mhdTriLinearBinarySearch(mhdHelVprDim, r.r, &r0, &r1, mhdDimMin[0], mhdHelVprDimMax[0]-1);
-  td = mhdTriLinearBinarySearch(mhdHelVptDim, r.theta, &t0, &t1, mhdDimMin[0], mhdHelVptDimMax[0]-1);
-  pd = mhdTriLinearBinarySearch(mhdHelVppDim, r.phi, &p0, &p1, mhdDimMin[0], mhdHelVppDimMax[0]-1);
-
-  mhdNode.mhdV.phi = ((1.0 - s) * mhdInterpolate(mhdVp0,
-                                                r0, r1, t0, t1, p0, p1,
-                                                rd, td, pd,
-                                                mhdHelVprDimMax[0], mhdHelVptDimMax[0]) +
-                              s * mhdInterpolate(mhdVp1,
-                                                r0, r1, t0, t1, p0, p1,
-                                                rd, td, pd,
-                                                mhdHelVprDimMax[0], mhdHelVptDimMax[0])) * config.mhdVConvert;
-
-  //Vt
-  rd = mhdTriLinearBinarySearch(mhdHelVtrDim, r.r, &r0, &r1, mhdDimMin[0], mhdHelVtrDimMax[0]-1);
-  td = mhdTriLinearBinarySearch(mhdHelVttDim, r.theta, &t0, &t1, mhdDimMin[0], mhdHelVttDimMax[0]-1);
-  pd = mhdTriLinearBinarySearch(mhdHelVtpDim, r.phi, &p0, &p1, mhdDimMin[0], mhdHelVtpDimMax[0]-1);
-
-  mhdNode.mhdV.theta = ((1.0 - s) * mhdInterpolate(mhdVt0,
-                                                  r0, r1, t0, t1, p0, p1,
-                                                  rd, td, pd,
-                                                  mhdHelVtrDimMax[0], mhdHelVttDimMax[0]) +
-                                s * mhdInterpolate(mhdVt1,
-                                                  r0, r1, t0, t1, p0, p1,
-                                                  rd, td, pd,
-                                                  mhdHelVtrDimMax[0], mhdHelVttDimMax[0])) * config.mhdVConvert;
-
-  //Vr
-  rd = mhdTriLinearBinarySearch(mhdHelVrrDim, r.r, &r0, &r1, mhdDimMin[0], mhdHelVrrDimMax[0]-1);
-  td = mhdTriLinearBinarySearch(mhdHelVrtDim, r.theta, &t0, &t1, mhdDimMin[0], mhdHelVrtDimMax[0]-1);
-  pd = mhdTriLinearBinarySearch(mhdHelVrpDim, r.phi, &p0, &p1, mhdDimMin[0], mhdHelVrpDimMax[0]-1);
-
-  mhdNode.mhdV.r = ((1.0 - s) * mhdInterpolate(mhdVr0,
-                                              r0, r1, t0, t1, p0, p1,
-                                              rd, td, pd,
-                                              mhdHelVrrDimMax[0], mhdHelVrtDimMax[0]) +
-                            s * mhdInterpolate(mhdVr1,
-                                              r0, r1, t0, t1, p0, p1,
-                                              rd, td, pd,
-                                              mhdHelVrrDimMax[0], mhdHelVrtDimMax[0])) * config.mhdVConvert;
-
-  // check for underflows in Vr and set to min acceptable radial flow
-  if ( mhdNode.mhdV.r < (config.mhdVmin / C) ) mhdNode.mhdV.r = (config.mhdVmin / C);
-
-  //D
-  rd = mhdTriLinearBinarySearch(mhdHelDrDim, r.r, &r0, &r1, mhdDimMin[0], mhdHelDrDimMax[0]-1);
-  td = mhdTriLinearBinarySearch(mhdHelDtDim, r.theta, &t0, &t1, mhdDimMin[0], mhdHelDtDimMax[0]-1);
-  pd = mhdTriLinearBinarySearch(mhdHelDpDim, r.phi, &p0, &p1, mhdDimMin[0], mhdHelDpDimMax[0]-1);
-
-  mhdNode.mhdD = ((1.0 - s) * mhdInterpolate(mhdD0,
-                                            r0, r1, t0, t1, p0, p1,
-                                            rd, td, pd,
-                                            mhdHelDrDimMax[0], mhdHelDtDimMax[0]) +
-                          s * mhdInterpolate(mhdD1,
-                                            r0, r1, t0, t1, p0, p1,
-                                            rd, td, pd,
-                                            mhdHelDrDimMax[0], mhdHelDtDimMax[0])) * config.mhdRhoConvert;
-
-  // NOTE!  This needs to be implemented before using this on helio runs!
-
-  // calculate the curl of B/B^2 if using shell drift
-//  if (config.useDrift > 0)
-//    mhdNode.curlBoverB2 = mhdHelCurlBoverB2(r,
-//                                         mhdBp0, mhdBt0, mhdBr0,
-//                                         mhdBp1, mhdBt1, mhdBr1,
-//                                         bp_r0, bp_r1, bp_t0, bp_t1, bp_p0, bp_p1,
-//                                         bt_r0, bt_r1, bt_t0, bt_t1, bt_p0, bt_p1,
-//                                         br_r0, br_r1, br_t0, br_t1, br_p0, br_p1,
-//                                         s);
-
-}
-/*----------- END mhdHelTriLinear() --------------------------------*/
-
-
 /*------------------------------------------------------------------*/
 /*------------------------------------------------------------------*/
 /*--*/ SphVec_t fieldAlignedFlow(SphVec_t B)                    /*--*/
@@ -897,7 +710,7 @@ Index_t unwindPhiOffset;
   // If performing a heliospheric coupled run, this is not needed.
   // [RMC] Is this only needed for 'fake' corotation?
   // It seems we should NOT do this for true corotation...
-  if ((config.mhdRotateSolution > 0) && (config.mhdHelCouple == 0))
+  if (config.mhdRotateSolution > 0)
   {
     theta = acos(node.r.z / rmag);
     thetaOld = acos(rOld.z / rOldmag);

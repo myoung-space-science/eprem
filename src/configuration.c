@@ -134,15 +134,11 @@ getParams( char* configFilename)
   config.idw_p = readDouble("idw_p", 3.0, VERYSMALL, BADVALUE);
 
   config.mhdCouple = readInt("mhdCouple", 0, 0, 1);
-  config.mhdHelCouple = readInt("mhdHelCouple", 0, 0, 1);
   config.mhdNumFiles = readInt("mhdNumFiles", 0, 0, 32767);
-  config.mhdHelNumFiles = readInt("mhdHelNumFiles", 0, 0, 32767);
   config.useMhdSteadyStateDt = readInt("useMhdSteadyStateDt", 1, 0, 1);
   config.mhdSteadyState = readInt("mhdSteadyState", 1, 0, 1);
   config.mhdDirectory = (char*)readString("mhdDirectory"," ");
-  config.mhdHelDirectory = (char*)readString("mhdHelDirectory"," ");
   config.mhdDigits = readInt("mhdDigits", 3, 0, 32767);
-  config.mhdHelDigits = readInt("mhdHelDigits", 3, 0, 32767);
 
   config.mhdCoupledTime = readInt("mhdCoupledTime", 1, 0, 1);
   config.mhdStartTime = readDouble("mhdStartTime", 0.0, 0.0, BADVALUE);
@@ -151,8 +147,6 @@ getParams( char* configFilename)
 
   config.mhdRadialMin = readDouble("mhdRadialMin", 0.0, 0.0, BADVALUE);
   config.mhdRadialMax = readDouble("mhdRadialMax", 0.0, 0.0, BADVALUE);
-  config.mhdHelRadialMin = readDouble("mhdHelRadialMin", 0.0, 0.0, BADVALUE);
-  config.mhdHelRadialMax = readDouble("mhdHelRadialMax", 0.0, 0.0, BADVALUE);
   config.mhdVmin = readDouble("mhdVmin", 50.0e5, 0.0, BADVALUE);
 
   config.mhdInitFromOuterBoundary = readInt("mhdInitFromOuterBoundary", 2, 0, 2);

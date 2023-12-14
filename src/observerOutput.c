@@ -51,8 +51,6 @@ time_t start_time;
     if (config.mhdCouple) {
 
       radMax = config.mhdRadialMax;
-      if (config.mhdHelCouple > 0)
-        radMax = config.mhdHelRadialMax;
       printf("Inner coupling boundary: %f Rs -- Outer coupling boundary: %f Rs\n",
              config.rScale / RSAU,
              radMax);
@@ -90,8 +88,6 @@ time_t start_time;
     if (config.mhdCouple > 0) {
 
       radMax = config.mhdRadialMax;
-      if (config.mhdHelCouple > 0)
-        radMax = config.mhdHelRadialMax;
       fprintf(rpout, "Inner coupling boundary: %f Rs -- Outer coupling boundary: %f Rs\n",
              config.rScale / RSAU,
              radMax);

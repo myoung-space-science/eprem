@@ -96,8 +96,6 @@ Index_t hdf5_input=0;              // Set=1 if hdf5 input files (RMC move this)
 
   mhdFileIndex0 = 0;
   mhdFileIndex1 = 0;
-  mhdHelFileIndex0 = 0;
-  mhdHelFileIndex1 = 0;
   mhdEqFileFlag = 0;
   mhdMallocFlag = 0;
 
@@ -132,13 +130,6 @@ Index_t hdf5_input=0;              // Set=1 if hdf5 input files (RMC move this)
   if (config.mhdCouple) {
 
     mhdRunDuration = (mhdTime[config.mhdNumFiles - 1] - mhdTime[0])*DAY;
-    if (config.mhdHelCouple > 0) {
-
-      if ( (mhdHelTime[config.mhdHelNumFiles - 1] - mhdHelTime[0])*DAY > mhdRunDuration )
-        mhdRunDuration = (mhdHelTime[config.mhdHelNumFiles - 1] - mhdHelTime[0])*DAY;
-
-    }
-
     mhdDt = mhdTime[1] - mhdTime[0];
 
     if (config.useMhdSteadyStateDt > 0)
@@ -846,56 +837,6 @@ Index_t hdf5_input=0;              // Set=1 if hdf5 input files (RMC move this)
       config.tDel = mhdTime[idx+1] - mhdTime[idx];
      // if(mpi_rank==0) printf("SetDT:   DT:  %8.2e\n",config.tDel);
     }
-//
-// If helio is active, and we are past the coronal times, update the DT.
-//
-    if ((config.mhdHelCouple > 0) && (t_global > mhdTime[config.mhdNumFiles-1])) {
-
-      if (t_global <= mhdHelTime[0]){
-        //NOTE:  This should NEVER happen since we require mhdTime[0]==mhdHelTime[0].
-        if (config.useMhdSteadyStateDt > 0){
-          config.tDel = (mhdHelTime[1] - mhdHelTime[0]);
-        }
-      } else if (t_global >= mhdHelTime[config.mhdHelNumFiles-1]){
-          config.tDel = (mhdHelTime[config.mhdHelNumFiles-1]
-                       - mhdHelTime[config.mhdHelNumFiles-2]);
-      } else {
-//
-// Find the time index in mhdHelTimes to the right or equal to current t_global time.
-//
-        for (i=1; i<config.mhdHelNumFiles; i++){
-          if (mhdHelTime[i] >= t_global ){
-             idx = i;
-             break;
-          }
-        }
-
-        // Special case is when corona ends in the middle of a helio step.
-        // Want to find helio indices surrounding the time, compute the dt
-        // needed to get to the next helio step in mhdTimesHel,
-        // and then after taking that step, continue as normal.
-        // This way the DT and hel times are synced.
-
-        if (sync_hel == 0){
-         sync_hel = 1;
-         if (mhdHelTime[idx] != t_global){
-           config.tDel = (mhdHelTime[idx] - t_global);
-           return;
-         }
-        }
-//
-//  Find the closest time index in mhdHelTimes to the current t_global time.
-//  Then set the time step to be the next step in mhdHelTimes.
-//
-        if ((idx == config.mhdHelNumFiles-1) ||
-            (fabs(t_global - mhdHelTime[idx-1]) < fabs(t_global - mhdHelTime[idx]))){
-         idx=idx-1;
-        }
-
-        config.tDel = mhdHelTime[idx+1] - mhdHelTime[idx];
-
-      }
-    } // if(helio)
   } // if(mhdCoupleTime)
 
 }
