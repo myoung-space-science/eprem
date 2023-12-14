@@ -310,6 +310,13 @@ install_ext_deps() {
     ./configure --prefix="${top_dir}" && make && make install && make check
     popd &> /dev/null
 
+    # --> HDF4
+    wget https://support.hdfgroup.org/ftp/HDF/releases/HDF4.2.12/src/hdf-4.2.12.tar.gz
+    tar -xvzf hdf-4.2.12.tar.gz
+    pushd hdf-4.2.12 &> /dev/null
+    ./configure --disable-netcdf && make && make install && make check
+    popd &> /dev/null
+
     # --> HDF5
     wget https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8/hdf5-1.8.17/src/hdf5-1.8.17.tar.gz
     tar -xvzf hdf5-1.8.17.tar.gz
