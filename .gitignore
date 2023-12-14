@@ -7,7 +7,7 @@
 *.diff
 
 # Default directory for external dependencies
-ext-deps
+deps
 
 # Python files
 __pycache__
