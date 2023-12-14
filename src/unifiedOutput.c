@@ -31,6 +31,7 @@
 #include "configuration.h"
 #include "unifiedOutput.h"
 #include "geometry.h"
+#include "mhdInterp.h"
 #include "safeNetcdf.h"
 #include "cubeShellStruct.h"
 #include "searchTypes.h"

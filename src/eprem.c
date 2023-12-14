@@ -74,6 +74,8 @@
 #include "energeticParticlesInit.h"
 #include "energeticParticles.h"
 #include "cubeShellInit.h"
+#include "readMHD.h"
+#include "mhdInterp.h"
 #include "searchTypes.h"
 #include "unifiedOutput.h"
 #include "observerOutput.h"
@@ -133,6 +135,12 @@ int main(int argc, char *argv[]) {
   // Initialize flags
   flagParamInit();
 
+  // Get the MHD coupling info and file lists
+  if (config.mhdCouple > 0){
+    mhdFetchCouplingInfo();
+    mhdFetchFileList();
+  }
+
   // Initialize time variables
   timeInitialization();
 
@@ -146,6 +154,7 @@ int main(int argc, char *argv[]) {
   initEnergeticParticlesGrids();
 
  // Initialize MHD.
+  if (config.mhdCouple > 0) mhdGetInterpData(0.0);
   updateMhd();
 
   // Initialize the cube / shell structure
@@ -229,6 +238,12 @@ int main(int argc, char *argv[]) {
       }
     }
 
+    //
+    // Set the time step.
+    //
+
+    setDt();
+
     // -------------------------------------------------------------------------
     // -------------------------------------------------------------------------
     // ------ DISPLAY CURRENT TIME INFO TO SCREEN. -----------------------------
@@ -242,9 +257,29 @@ int main(int argc, char *argv[]) {
 
     // -------------------------------------------------------------------------
     // -------------------------------------------------------------------------
+    // ------------------- After seeding nodes, reset phi offsets and
+    // ------------------- rotate nodes back in phi.
+    // -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
+
+    if ((config.mhdRotateSolution > 0) && (config.mhdCouple > 0) && (simStarted > 0) && (unwindPhiOffset == 0)) {
+      unwindPhiOffset = 1;
+      resetDomainOffset();
+    // Since we have just moved the nodes to a new position,
+    // need to re-interpolate MHD values to current positions.
+      updateMhd();
+    }
+
+    // -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // -------------------  I/O OF CURRENT TIME MHD AND EPART ------------------
     // -------------------------------------------------------------------------
     // -------------------------------------------------------------------------
+
+    // NOTE!  This MUST be here and not below mhdGetInterpData.
+    //        This is because the I/O (and moveNodes()) use getMhdNode()
+    //        which uses "s_xxx" and the MHD files from the previous step,
+    //        which makes this work right because it makes it at the right time.
 
     if ( (num_loops % config.dumpFreq) == 0 )
     {
@@ -259,7 +294,17 @@ int main(int argc, char *argv[]) {
 
     // Rotate the node seed positions and ripple the shells out
     rotSunAndSpawnShell( config.tDel );
-    moveNodes( config.tDel );
+
+    if (config.mhdCouple > 0)
+      mhdMoveNodes( config.tDel );
+    else
+      moveNodes( config.tDel );
+
+    // Phi-shift nodes in co-rotating coronal frame
+    // (equivalent to converting corotating frame to inertial with a +Vphi?)
+    // During node seeding, this also phi-shifts nodes in helio-coupled domain.
+    if ( (config.mhdRotateSolution > 0) && (config.mhdCouple > 0) )
+      rotateCoupledDomain( config.tDel );
 
     // -------------------------------------------------------------------------
     // -------------------------------------------------------------------------
@@ -267,6 +312,8 @@ int main(int argc, char *argv[]) {
     // -------------------------------------------------------------------------
     // -------------------------------------------------------------------------
 
+    // Load MHD data from files needed to get MHD quantities at time=time+dt.
+    if (config.mhdCouple > 0) mhdGetInterpData( config.tDel );
     updateMhd();
 
     // -------------------------------------------------------------------------
@@ -367,6 +414,7 @@ int main(int argc, char *argv[]) {
 
   DumpRunTimes();
   config_destroy(&cfg);
+  cleanupMPIWindows();
   MPI_Finalize();
 
   return(0);

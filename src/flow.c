@@ -26,6 +26,9 @@
 #include "flow.h"
 #include "simCore.h"
 #include "geometry.h"
+#include "readMHD.h"
+#include "mhdInterp.h"
+
 
 /*-----------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------*/
@@ -62,6 +65,18 @@
           grid[idx].dsOld            = grid[idx].ds;
           grid[idx].rOlder           = grid[idx].r;
 
+          // Check for coupling to MHD
+          if (mhdGridStatus == MHD_COUPLED) {
+
+            // Get spherical position.
+            radpos = cartToSphPosAu(grid[idx].r);
+
+            // Interpolate coupled MHD values to current position at desired time (tGlobal+dt in main loop).
+            // NOTE: This does NOT set values in grid, only in temp global mhdNode.
+            mhdGetNode(radpos, grid[idx]);
+
+          }
+
           // Check to see if node is in ideal shock domain
           idealShockNode = 0;
           if (config.idealShock > 0) {
@@ -71,7 +86,7 @@
                 idealShockNode = 1;
               else {
                 if ((fmin((2 * PI) - fabs(radpos.phi - config.idealShockPhi), fabs(radpos.phi - config.idealShockPhi)) <
-                    (config.idealShockWidth / 2.0)) &&
+                    (config.idealShockWidth / (double)2.0)) &&
                     (fabs(radpos.theta - config.idealShockTheta) < (config.idealShockWidth / 2.0)) )
                   idealShockNode = 1;
               }
@@ -85,7 +100,7 @@
           if (grid[idx].mhdDensity <= 0.0){
             grid[idx].mhdDivV = 0.0;
           } else {
-            grid[idx].mhdDivV = -1.0 * log(grid[idx].mhdDensity/grid[idx].mhdDensityOld)/config.tDel;
+            grid[idx].mhdDivV = (double)(-1.0) * log(grid[idx].mhdDensity/grid[idx].mhdDensityOld)/config.tDel;
           }
 
           //update V
@@ -162,6 +177,12 @@
     delR.y   = dt * node.mhdVvec.y / config.rScale ;
     delR.z   = dt * node.mhdVvec.z / config.rScale ;
 
+  } else if (mhdGridStatus == MHD_COUPLED) {
+
+    delR.x   = dt * node.mhdVvec.x / config.rScale ;
+    delR.y   = dt * node.mhdVvec.y / config.rScale ;
+    delR.z   = dt * node.mhdVvec.z / config.rScale ;
+
   } else {
 
     scale = ( config.mhdUs / ( rmag * config.rScale ) );
@@ -201,6 +222,11 @@
       div *= idealShockFactor(rmag * config.rScale);
 
   }
+  else if (mhdGridStatus == MHD_COUPLED) {
+    V = mhdNode.mhdV;;
+    mhdUs=sqrt(V.r*V.r+V.theta*V.theta+V.phi*V.phi);
+    div = 2.0 * mhdUs/ ( rmag * config.rScale );
+  }
   else {
     div = 2.0 * config.mhdUs / ( rmag * config.rScale );
   }
@@ -232,6 +258,11 @@
     // ideal shock test
     if ( (config.idealShock > 0) && (idealShockNode > 0) )
       dens *= idealShockFactor(rr);
+
+  }
+  else if (mhdGridStatus == MHD_COUPLED) {
+
+    dens = mhdNode.mhdD;
 
   }
   else {
@@ -285,6 +316,12 @@
     }
 
   }
+  else if (mhdGridStatus == MHD_COUPLED) {
+    B = mhdNode.mhdB;
+    *Br = B.r;
+    *Btheta = B.theta;
+    *Bphi = B.phi;
+  }
 
   *Bmag = sqrt( (*Br) * (*Br) + (*Btheta) * (*Btheta) + (*Bphi) * (*Bphi) );
 
@@ -333,6 +370,11 @@
 
     *Vphi = 0.0;
 
+  } else if (mhdGridStatus == MHD_COUPLED) {
+    V = mhdNode.mhdV;
+    *Vr = V.r;
+    *Vtheta = V.theta;
+    *Vphi = V.phi;
   }
 
   *Vmag = sqrt( (*Vr) * (*Vr) + (*Vtheta) * (*Vtheta) + (*Vphi) * (*Vphi) );
@@ -367,7 +409,18 @@
 /*-----------------------------------------------------------------------*/
 {
 
-  *curl = curlBoverB2(r, Vr, idealShockNode);
+  if (mhdGridStatus == MHD_COUPLED)
+  {
+
+    *curl = mhdNode.curlBoverB2;
+
+  }
+  else
+  {
+
+    *curl = curlBoverB2(r, Vr, idealShockNode);
+
+  }
 
 }
 /*---------------- END  mhdV ( ) ----------------------------------------*/

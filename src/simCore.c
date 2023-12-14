@@ -30,6 +30,9 @@
 #include "geometry.h"
 #include "energeticParticles.h"
 #include "flow.h"
+#include "readMHD.h"
+#include "mhdInterp.h"
+#include "readMHD.h"
 #include "unifiedOutput.h"
 #include "searchTypes.h"
 #include "cubeShellStruct.h"
@@ -44,7 +47,6 @@ Time_t        t_counter;            /*-- Time since last counter time update -- 
 Radian_t      azi_sun;              /*-- Sun's current azimuth/longitude. --*/
 Time_t        t_init;
 Index_t       num_loops;
-Scalar_t      phiOffset;
 
 // flags
 Index_t weInitializedEPs;
@@ -85,10 +87,19 @@ Index_t hdf5_input=0;              // Set=1 if hdf5 input files (RMC move this)
 {
 
   phiOffset = 0.0;
+  phiHelOffset = 0.0;
 
   weInitializedEPs = 0;
+  unwindPhiOffset = 0;
 
   mhdGridStatus = MHD_DEFAULT;
+
+  mhdFileIndex0 = 0;
+  mhdFileIndex1 = 0;
+  mhdHelFileIndex0 = 0;
+  mhdHelFileIndex1 = 0;
+  mhdEqFileFlag = 0;
+  mhdMallocFlag = 0;
 
   unifiedOutputInit = 0;
   pointObserverOutputInit = 0;
@@ -115,9 +126,48 @@ Index_t hdf5_input=0;              // Set=1 if hdf5 input files (RMC move this)
 /*-----------------------------------------------------------------------*/
 {
 
-  config.pointObserverOutputTime = config.simStartTime + 0.5 * config.tDel * DAY;
-  config.unifiedOutputTime = config.simStartTime + 0.5 * config.tDel * DAY;
-  config.epremDomainOutputTime = config.simStartTime + 0.5 * config.tDel * DAY;
+  Scalar_t mhdDt;
+  Scalar_t mhdRunDuration;
+
+  if (config.mhdCouple) {
+
+    mhdRunDuration = (mhdTime[config.mhdNumFiles - 1] - mhdTime[0])*DAY;
+    if (config.mhdHelCouple > 0) {
+
+      if ( (mhdHelTime[config.mhdHelNumFiles - 1] - mhdHelTime[0])*DAY > mhdRunDuration )
+        mhdRunDuration = (mhdHelTime[config.mhdHelNumFiles - 1] - mhdHelTime[0])*DAY;
+
+    }
+
+    mhdDt = mhdTime[1] - mhdTime[0];
+
+    if (config.useMhdSteadyStateDt > 0)
+      config.tDel = mhdDt;
+
+    if (config.mhdInitTimeStep == 0.0)
+      config.mhdInitTimeStep = config.tDel;
+
+    // NOTE! For now, do not allow particle equalibrium.
+
+    config.simStartTime = config.mhdStartTime;
+    // Do not do any particle calculations until CME is about to erupt.
+    config.epCalcStartTime = config.mhdStartTime + config.preEruptionDuration;
+
+    config.unifiedOutputTime = config.mhdStartTime + 0.5 * mhdDt * DAY;
+    config.pointObserverOutputTime = config.mhdStartTime + 0.5 * mhdDt * DAY;
+    config.streamFluxOutputTime = config.mhdStartTime + 0.5 * mhdDt * DAY;
+    config.epremDomainOutputTime = config.mhdStartTime + 0.5 * mhdDt * DAY;
+
+    config.simStopTime = config.mhdStartTime + mhdRunDuration;
+
+  } else {
+
+    config.pointObserverOutputTime = config.simStartTime + 0.5 * config.tDel * DAY;
+    config.unifiedOutputTime = config.simStartTime + 0.5 * config.tDel * DAY;
+    config.epremDomainOutputTime = config.simStartTime + 0.5 * config.tDel * DAY;
+
+  }
+
   config.simStartTimeDay = config.simStartTime / DAY;
   config.simStopTimeDay  = config.simStopTime / DAY;
 
@@ -738,4 +788,116 @@ Index_t hdf5_input=0;              // Set=1 if hdf5 input files (RMC move this)
 
 }
 /*------------------ END  moveNodes ( ) ---------------------------------*/
+/*-----------------------------------------------------------------------*/
+
+
+/*-----------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------*/
+/*--*/   void setDt ()                                              /*---*/
+/*--*                                                                *---*/
+/*--* Set the time step.                                             *---*/
+/*--*                                                                *---*/
+/*-----------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------*/
+{
+
+  Index_t i, idx;
+
+  if ((config.mhdCouple > 0) && (config.mhdCoupledTime > 0)){
+
+    idx = 0;
+//
+// First get the coronal DT.
+//
+    if (t_global < mhdTime[0]){
+      if (config.useMhdSteadyStateDt > 0){
+        config.tDel = mhdTime[1] - mhdTime[0];
+      //  if(mpi_rank==0) printf("SetDT0:   DT:  %8.2e\n",config.tDel);
+      }
+    } else if (t_global >= mhdTime[config.mhdNumFiles-1]){
+
+      config.tDel = mhdTime[config.mhdNumFiles-1] - mhdTime[config.mhdNumFiles-2];
+     // if(mpi_rank==0) printf("SetDT1:   DT:  %8.2e\n",config.tDel);
+    } else {
+//
+// Find the closest time index in mhdTimes to the current t_global time.
+// Then set the time step to be the next step in mhdTimes.
+//
+      for (i=1; i<config.mhdNumFiles; i++){
+        if (mhdTime[i] >= t_global ){
+           idx = i;
+           break;
+        }
+      }
+   /*   if(mpi_rank==0) printf("SetDT:  first idx: %d\n",idx);
+      if(mpi_rank==0) printf("SetDT:  t_global: %8.2e\n",t_global);
+      if(mpi_rank==0) printf("SetDT:  mhdTime[%03d]: %8.2e\n",idx-1,mhdTime[idx-1]);
+      if(mpi_rank==0) printf("SetDT:  mhdTime[%03d]: %8.2e\n",idx,mhdTime[idx]);
+      if(mpi_rank==0) printf("SetDT:  |t-mhd[idx-1]|: %8.2e\n",fabs(t_global - mhdTime[idx-1]));
+      if(mpi_rank==0) printf("SetDT:  |t-mhd[idx]|: %8.2e\n",fabs(t_global - mhdTime[idx]));*/
+
+      if ((idx == config.mhdNumFiles-1) ||
+          (fabs(t_global - mhdTime[idx-1]) < fabs(t_global - mhdTime[idx]))){
+        idx=idx-1;
+      }
+     //  if(mpi_rank==0) printf("SetDT:  revised idx: %d\n",idx);
+
+     // if(mpi_rank==0) printf("SetDT:   mhdTime[%03d]: %8.2e  mhdTime[%03d]: %8.2e \n",idx,mhdTime[idx],idx+1,mhdTime[idx+1]);
+      config.tDel = mhdTime[idx+1] - mhdTime[idx];
+     // if(mpi_rank==0) printf("SetDT:   DT:  %8.2e\n",config.tDel);
+    }
+//
+// If helio is active, and we are past the coronal times, update the DT.
+//
+    if ((config.mhdHelCouple > 0) && (t_global > mhdTime[config.mhdNumFiles-1])) {
+
+      if (t_global <= mhdHelTime[0]){
+        //NOTE:  This should NEVER happen since we require mhdTime[0]==mhdHelTime[0].
+        if (config.useMhdSteadyStateDt > 0){
+          config.tDel = (mhdHelTime[1] - mhdHelTime[0]);
+        }
+      } else if (t_global >= mhdHelTime[config.mhdHelNumFiles-1]){
+          config.tDel = (mhdHelTime[config.mhdHelNumFiles-1]
+                       - mhdHelTime[config.mhdHelNumFiles-2]);
+      } else {
+//
+// Find the time index in mhdHelTimes to the right or equal to current t_global time.
+//
+        for (i=1; i<config.mhdHelNumFiles; i++){
+          if (mhdHelTime[i] >= t_global ){
+             idx = i;
+             break;
+          }
+        }
+
+        // Special case is when corona ends in the middle of a helio step.
+        // Want to find helio indices surrounding the time, compute the dt
+        // needed to get to the next helio step in mhdTimesHel,
+        // and then after taking that step, continue as normal.
+        // This way the DT and hel times are synced.
+
+        if (sync_hel == 0){
+         sync_hel = 1;
+         if (mhdHelTime[idx] != t_global){
+           config.tDel = (mhdHelTime[idx] - t_global);
+           return;
+         }
+        }
+//
+//  Find the closest time index in mhdHelTimes to the current t_global time.
+//  Then set the time step to be the next step in mhdHelTimes.
+//
+        if ((idx == config.mhdHelNumFiles-1) ||
+            (fabs(t_global - mhdHelTime[idx-1]) < fabs(t_global - mhdHelTime[idx]))){
+         idx=idx-1;
+        }
+
+        config.tDel = mhdHelTime[idx+1] - mhdHelTime[idx];
+
+      }
+    } // if(helio)
+  } // if(mhdCoupleTime)
+
+}
+/*------------------ END  setDt ( ) ---------------------------------*/
 /*-----------------------------------------------------------------------*/

@@ -31,6 +31,8 @@
 #include "global.h"
 #include "cubeShellInit.h"
 #include "cubeShellStruct.h"
+#include "readMHD.h"
+#include "mhdInterp.h"
 #include "observerOutput.h"
 #include "searchTypes.h"
 #include "configuration.h"
@@ -72,7 +74,12 @@
   /*-- unit sphere coordinates in both (x,y,z) cartesian and     --*/
   /*-- (r, azimuth, zenith) polar coordinates.                   --*/
 
-  initSphereCoords( INNER_SHELL );
+  if (config.mhdCouple == 0 || config.mhdInitFromOuterBoundary == 0){
+    initSphereCoords( INNER_SHELL );
+  }
+  else if (config.mhdInitFromOuterBoundary > 1){
+    initSphereCoordsFromOuterBoundary( INNER_SHELL );
+  }
 
   initCopyAll();
   initStreamNeighbors();
@@ -753,6 +760,7 @@
   Scalar_t  rmag;
   Radian_t  zen;
   Radian_t  azi;
+  Index_t count;
 
   /*---- Loop over cube surface, rescale each node's r  --*/
   /*---- to unit by scaling (x,y,z) by ||r|| ( -> 1!).  --*/
@@ -760,6 +768,7 @@
   /*---- azi to be in [-pi, pi].                        --*/
   /*---- Assign zen = acos(r.z / ||r||). We take        --*/
   /*---- zen to be in [0, pi].                          --*/
+  count = 0;
   for (face = 0; face < NUM_FACES; face++)
   {
     for (row  = 0; row  < FACE_ROWS; row++ )
@@ -774,8 +783,15 @@
         r.z   = r.z / rmag;
         rmag  = 1.0;
 
-        azi = atan2(r.y, r.x);
-        zen = acos(r.z/rmag);
+        /* Set azi and zen based on theta phi values specified in
+        input file if requested */
+        if (config.useManualStreamSpawnLoc == 1){
+          azi = config.streamSpawnLocAzi[count] - PI;
+          zen = config.streamSpawnLocZen[count];
+        } else {
+          azi = atan2(r.y, r.x);
+          zen = acos(r.z/rmag);
+        }
 
         grid[idx_frcs(face,row,col,shell)].rmag = 1.0;
 
@@ -791,6 +807,8 @@
         grid[idx_frcs(face,row,col,shell)].r.y =
         grid[idx_frcs(face,row,col,shell)].rmag * sin(zen)*sin(azi) ;
 
+        count++;
+
       }
     }
   }
@@ -800,6 +818,292 @@
 /*-----------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------*/
 
+/*-----------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------*/
+/*--*/          void                                                /*---*/
+/*--*/    initSphereCoordsFromOuterBoundary ( Index_t shell )       /*---*/
+/*--*                                                                *---*/
+/*--*  Scale each node's position vector, r, to the unit sphere.     *---*/
+/*--*  Only the inner shell is done, other shells get copied later.  *---*/
+/*--*  Scaling is r = ( r / ||r|| ) for sphere of radius 1.          *---*/
+/*--*  Assign rmag = ||r||. Also "azi" and "zen", the azimuth and    *---*/
+/*--*  zenith/co-latitude of each node, get initialized.             *---*/
+/*--*                                                                *---*/
+/*-----------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------*/
+{
+  Index_t face, row, col, loopFlag, crossCount;
+  Scalar_t dt;
+  Vec_t r;
+  Scalar_t  rmag;
+  Radian_t  zen;
+  Radian_t  azi;
+  Index_t count;
+
+  Index_t i; //, n, N, cnt;
+  Scalar_t diff0; //tol, diff, diffMin, dThetaMax, dPhiMax;
+  //SphVec_t rSph;
+  //Vec_t rWalk, rWalkMin;
+
+  Node_t node;
+
+  Vec_t * nodePosition0;
+  Vec_t * nodePosition1;
+  Vec_t * originalNodePositions;
+  Index_t * nodeFlag;
+  Index_t * counter;
+
+  // array to store position of nodes as they move
+  nodePosition0 = (Vec_t *) malloc(sizeof(Vec_t)*(int)NUM_FACES*(int)FACE_ROWS*(int)FACE_COLS);
+  nodePosition1 = (Vec_t *) malloc(sizeof(Vec_t)*(int)NUM_FACES*(int)FACE_ROWS*(int)FACE_COLS);
+  originalNodePositions = (Vec_t *) malloc(sizeof(Vec_t)*(int)NUM_FACES*(int)FACE_ROWS*(int)FACE_COLS);
+  nodeFlag = (Index_t *) malloc(sizeof(Index_t)*(int)NUM_FACES*(int)FACE_ROWS*(int)FACE_COLS);
+  counter = (Index_t *) malloc(sizeof(Index_t)*(int)NUM_FACES*(int)FACE_ROWS*(int)FACE_COLS);
+
+  // set flag and counters
+  loopFlag = 0;
+  crossCount = 0;
+  count = 0;
+
+  // set the timestep
+  dt = config.mhdInitTimeStep;
+
+  // populate the initial nodePosition array
+  for (face = 0; face < NUM_FACES; face++) {
+    for (row = 0; row < FACE_ROWS; row++) {
+      for (col  = 0; col < FACE_COLS; col++) {
+
+        r = grid[idx_frcs(face,row,col,shell)].r;
+        rmag  = sqrt( (r.x * r.x) + (r.y * r.y) + (r.z * r.z) );
+        r.x   = r.x / rmag;
+        r.y   = r.y / rmag;
+        r.z   = r.z / rmag;
+
+        /* Set azi and zen based on theta phi values specified in
+        input file if requested */
+        if (config.useManualStreamSpawnLoc == 1){
+          azi = config.streamSpawnLocAzi[count] - PI;
+          zen = config.streamSpawnLocZen[count];
+        } else {
+          azi = atan2(r.y, r.x);
+          zen = acos(r.z / (double)1.0);
+        }
+
+        // new rmag based on the projected radius set in config file
+        if (config.mhdInitRadius > 0.0)
+          rmag = config.mhdInitRadius / config.rScale;
+        else {
+          rmag = (double)0.99 * config.mhdRadialMax * RSAU / config.rScale;
+          config.mhdInitRadius = rmag * config.rScale;
+        }
+
+        nodePosition1[idx_frc(face,row,col)].x = rmag * sin(zen) * cos(azi);
+        nodePosition1[idx_frc(face,row,col)].y = rmag * sin(zen) * sin(azi);
+        nodePosition1[idx_frc(face,row,col)].z = rmag * cos(zen);
+
+        // save initial positions
+        originalNodePositions[idx_frc(face,row,col)].x = rmag * sin(zen) * cos(azi);
+        originalNodePositions[idx_frc(face,row,col)].y = rmag * sin(zen) * sin(azi);
+        originalNodePositions[idx_frc(face,row,col)].z = rmag * cos(zen);
+
+        // initialize nodeFlag
+        nodeFlag[idx_frc(face,row,col)] = 0;
+        counter[idx_frc(face,row,col)] = 0;
+
+        count++;
+
+      }
+    }
+  }
+
+  // continue projecting node locations inward until one or all crosses the inner boundary
+  // 1 - one node cross, const time, 2 - all nodes cross, const time
+  do {
+
+    // new positions become original positions
+    memcpy(&nodePosition0[0], &nodePosition1[0], sizeof(Vec_t)*(int)NUM_FACES*(int)FACE_ROWS*(int)FACE_COLS);
+
+    for (face = 0; face < NUM_FACES; face++) {
+      for (row = 0; row < FACE_ROWS; row++) {
+        for (col = 0; col < FACE_COLS; col++) {
+
+          // if this node hasn't already crossed the inner boundary
+          if (nodeFlag[idx_frc(face,row,col)] == 0) {
+
+            node = grid[idx_frcs(face,row,col,shell)];
+
+            // get the backward projected position
+            r = rungeKuttaFlow(nodePosition0[idx_frc(face,row,col)], -1.0*dt, node);
+            rmag = sqrt(r.x * r.x + r.y * r.y + r.z * r.z);
+
+            // check condition for crossing
+            if ( rmag > (config.mhdRadialMin * RSAU / config.rScale) ) {
+
+              // save position if inner coupling boundary crossed
+              nodePosition1[idx_frc(face,row,col)] = r;
+              counter[idx_frc(face,row,col)] += 1;
+
+            } else {
+
+              crossCount += 1;
+              nodeFlag[idx_frc(face,row,col)] = 1;
+
+              node = grid[idx_frcs(face,row,col,shell)];
+
+              // Find the distance from the original position:
+              r = nodePosition0[idx_frc(face,row,col)];
+              for (i = 0; i < counter[idx_frc(face,row,col)]; i++)
+                r = rungeKuttaFlow(r, dt, node);
+              diff0 = vectorMag(vectorDifference(r, originalNodePositions[idx_frc(face,row,col)]));
+
+              // display number of nodes crossed
+              if (mpi_rank == 0)
+                printf("Cross count: %i / %i  DistFromOrigPos: %16.8e\n", crossCount, FRC, diff0);
+
+            }
+
+          }
+
+        }
+      }
+    }
+
+    // evaluate condition for completion
+    if ( (config.mhdInitFromOuterBoundary == 1) && (crossCount > 0) )
+        loopFlag = 1;
+    if ( (config.mhdInitFromOuterBoundary == 2) && (crossCount == FRC) )
+        loopFlag = 1;
+
+  } while (loopFlag == 0);
+
+  // This section checks to see if the stream originating from the backward projection lands
+  // close to the initialized location when projected forward again.  If it is further away
+  // than the tolerance it wiggles the footpoint using a monte carlo method and keeps the
+  // footpoint that gives the closest projection, iterates 10000 times, or is within tolerance.
+  /*
+  // 0.01 Rs tolerance
+  tol = 0.000465047 / config.rScale;
+
+  // two degree maximum search diameter
+  dThetaMax = PI / 90.0;
+  dPhiMax = PI / 90.0;
+
+  cnt = 0;
+  srand(time(0));
+  for (face = 0; face < NUM_FACES; face++) {
+    for (row = 0; row < FACE_ROWS; row++) {
+      for (col = 0; col < FACE_COLS; col++) {
+
+        node = grid[idx_frcs(face,row,col,shell)];
+
+        // find the distance from the original position
+        r = nodePosition0[idx_frc(face,row,col)];
+        for (i = 0; i < counter[idx_frc(face,row,col)]; i++)
+          r = rungeKuttaFlow(r, dt, node);
+        diff0 = vectorMag(vectorDifference(r, originalNodePositions[idx_frc(face,row,col)]));
+
+        // initialize the monte carlo footpoint wiggle
+        n = 0;
+        if (config.mhdInitMonteCarlo > 0)
+          N = 10000;
+        else
+          N = 1;
+
+        while ( (n < N) && (diff0 > tol) ) {
+
+          // set footpoint with wiggle
+          r = nodePosition0[idx_frc(face,row,col)];
+          rSph = cartToSphPos(r);
+
+          rSph.theta += ( (2.0 * rand() - 1.0) * dThetaMax / RAND_MAX );
+          if (rSph.theta < 0.0)
+            rSph.theta = 0.0;
+          if (rSph.theta > PI)
+            rSph.theta = PI;
+
+          rSph.phi += ( (2.0 * rand() - 1.0) * dPhiMax / RAND_MAX );
+          if (rSph.theta < 0.0)
+            rSph.theta += (2.0 * PI);
+          if (rSph.theta > (2.0 * PI))
+            rSph.theta -= (2.0 * PI);
+
+          rWalk = sphToCartPos(rSph);
+          diffMin = BADVALUE;
+
+          // project forward until we cross the init radius
+          // this isn't necessarily the counter used above as it can change if the footpoint changes
+          do {
+
+            rWalk = rungeKuttaFlow(rWalk, dt, node);
+            diff = vectorMag(vectorDifference(rWalk, originalNodePositions[idx_frc(face,row,col)]));
+
+            if (diff < diffMin) {
+
+              diffMin = diff;
+              rWalkMin = rWalk;
+
+            }
+
+          } while (cartToSphPos(rWalk).r * config.rScale < config.mhdInitRadius);
+
+          // if new forward walk is closer than orginial, set it as the new footpoint and reset the search
+          if (diffMin < diff0) {
+
+            if (mpi_rank == 0)
+              printf("Closer! Old:%0.6f\t New:%0.6f\n",diff0 * config.rScale, diffMin * config.rScale);
+            diff0 = diffMin;
+            nodePosition0[idx_frc(face,row,col)] = rWalkMin;
+            n = 0;
+
+          }
+
+          // increase counter
+          n += 1;
+
+        }
+
+        cnt += 1;
+        if (mpi_rank == 0)
+          printf("Walks Completed: %i\t %0.6f\n", cnt, diff0 / tol);
+
+      }
+    }
+  }
+  */
+  // now, set the inner positions of the nodes
+  for (face = 0; face < NUM_FACES; face++) {
+    for (row = 0; row < FACE_ROWS; row++) {
+      for (col = 0; col < FACE_COLS; col++) {
+
+        r = nodePosition0[idx_frc(face,row,col)];
+        rmag  = sqrt( (r.x * r.x) + (r.y * r.y) + (r.z * r.z) );
+
+        azi = atan2(r.y, r.x);
+        zen = acos(r.z/rmag);
+
+        grid[idx_frcs(face,row,col,shell)].rmag = rmag;
+
+        grid[idx_frcs(face,row,col,shell)].azi  = azi;
+        grid[idx_frcs(face,row,col,shell)].zen  = zen;
+
+        grid[idx_frcs(face,row,col,shell)].r.x = r.x;
+        grid[idx_frcs(face,row,col,shell)].r.y = r.y;
+        grid[idx_frcs(face,row,col,shell)].r.z = r.z;
+
+      }
+    }
+  }
+
+  // free the allocated memory
+  free(nodePosition0);
+  free(nodePosition1);
+  free(originalNodePositions);
+  free(nodeFlag);
+  free(counter);
+
+} /*------ END  initSphereCoordsFromOuterBoundary ( ) -------------------*/
+/*-----------------------------------------------------------------------*/
 
 /*-----------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------*/
