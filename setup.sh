@@ -218,7 +218,8 @@ install_package() {
         pushd $pkg_alias &> /dev/null
         ./configure $pkg_args &>> $setuplog && \
         make &>> $setuplog && \
-        make check &>> $setuplog
+        make check &>> $setuplog && \
+        /bin/rm -f $pkg_tar
         popd &> /dev/null
     fi
 }
