@@ -24,7 +24,7 @@
 
 
 void mhdReadMeshDimensions( char *fname , char *dsetname, int dsetnumber, int32_t *DimMax );
-void mhdReadMesh( char *fname , char *dsetname, int dsetnumber, float * *Dim );
-void mhdReadDatafromFile(char *fname, float * *buf );
+void mhdReadMesh( char *fname , char *dsetname, int dsetnumber, float *Dim[] );
+void mhdReadDatafromFile(char *fname, float *buf[] );
 void mhdDatafile_type();
 #endif
