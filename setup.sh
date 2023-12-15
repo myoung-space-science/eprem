@@ -59,6 +59,7 @@ dry_run=0
 default_deps_dir=${script_dir}/deps
 deps_dir=
 download_deps=0
+requested_deps=
 
 # This is the CLI's main help text.
 show_help()
@@ -80,12 +81,14 @@ ${textbf}DESCRIPTION${textnm}
                 Print runtime messages.
         ${textbf}--with-deps-dir=DIR${textnm}
                 Install dependencies in DIR when --download-deps is present.
-        ${textbf}--download-deps${textnm}
+        ${textbf}--download-deps[=A[,B,...]]${textnm}
                 Download external dependencies. By default, this will download
-                and build packages inside ${default_deps_dir}. However, setting 
-                --with-deps-dir=DIR will cause it to download and build packages 
-                inside DIR. This script will create the necessary path in either
-                case.
+                all required packages and build them inside 
+                ${default_deps_dir}. 
+                Setting --with-deps-dir=DIR will cause it to download and build 
+                packages inside DIR. This script will create the necessary path in 
+                either case. You may also pass a comma-separated list of packages 
+                to install. Note that whitespace between names will cause an error.
         ${textbf}--dry-run${textnm}
                 Display the sequence of commands but don't run anything.
 "
@@ -106,7 +109,7 @@ TEMP=$(getopt \
     -l 'help,verbose,' \
     -l 'dry-run' \
     -l 'with-deps-dir:' \
-    -l 'download-deps' \
+    -l 'download-deps::' \
     -- "$@")
 
 if [ $? -ne 0 ]; then
@@ -140,7 +143,12 @@ while [ $# -gt 0 ]; do
         ;;
         '--download-deps')
             download_deps=1
-            shift
+            if [ -z "$2" ]; then
+                requested_deps=('libconfig' 'zlib' 'hdf4' 'hdf5' 'netcdf')
+            else
+                IFS=',' requested_deps=($2)
+            fi
+            shift 2
             continue
         ;;
         '--')
@@ -238,6 +246,9 @@ link_package() {
 
     print_banner "Creating symbolic link $pkg_alias -> $pkg_dir"
     if [ "$dry_run" == 0 ]; then
+        if [ -L "$pkg_alias" ]; then
+            /bin/rm -f $pkg_alias
+        fi
         ln -s $pkg_dir $pkg_alias
     fi
 }
@@ -307,42 +318,47 @@ install_netcdf() {
 }
 
 # The function that will download and build external dependencies.
-install_ext_deps() {
-    if [ -z "${1}" ]; then
-        echo "ERROR: Missing path to external-dependencies directory."
-        exit 1
-    fi
-    local top_dir="${1}"
-    local src_dir=src
+install_dep() {
+    local dep_name="${1}"
 
     # Create and enter the top-level directory for external dependencies.
-    mkdir -p ${top_dir}
-    pushd ${top_dir} 1> /dev/null 2>> $setuplog
+    mkdir -p ${deps_dir}
+    pushd ${deps_dir} 1> /dev/null 2>> $setuplog
     mkdir -p $src_dir
 
     # --> libconfig
-    install_libconfig
+    if [ "$dep_name" == "libconfig" ]; then
+        install_libconfig
+    fi
 
     # --> zlib
-    install_zlib
+    if [ "$dep_name" == "zlib" ]; then
+        install_zlib
+    fi
 
     # --> HDF4
-    install_hdf4
+    if [ "$dep_name" == "hdf4" ]; then
+        install_hdf4
+    fi
 
     # --> HDF5
-    install_hdf5
+    if [ "$dep_name" == "hdf5" ]; then
+        install_hdf5
+    fi
 
     # --> NetCDF4
-    install_netcdf
+    if [ "$dep_name" == "netcdf" ]; then
+        install_netcdf
+    fi
 
     # Exit the top-level external-dependencies directory.
     popd &> /dev/null
 }
 
 # Process the --download-deps option.
-if [ "$download_deps" == 1 ]; then
-    install_ext_deps "${deps_dir}"
-fi
+for dep in ${requested_deps[@]}; do
+    install_dep "$dep"
+done
 
 # Set the status flag to indicate success.
 status=$success
