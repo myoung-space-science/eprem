@@ -52,7 +52,7 @@ Scalar_t mhdInterpolate(float *,
 
 /*----------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------*/
-/*--*/ SphVec_t mhdCurlBoverB2( SphVec_t r,                               /*--*/
+/*--*/ SphVec_t mhdNodeCurlBoverB2( SphVec_t r,                           /*--*/
 /*--*/                    float Bp0[], float Bt0[], float Br0[],          /*--*/
 /*--*/                    float Bp1[], float Bt1[], float Br1[],          /*--*/
 /*--*/                    int bp_r0, int bp_r1,                           /*--*/

@@ -277,7 +277,7 @@ Index_t unwindPhiOffset;
 
 /*----------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------*/
-/*--*/ SphVec_t mhdCurlBoverB2( SphVec_t r,                               /*--*/
+/*--*/ SphVec_t mhdNodeCurlBoverB2( SphVec_t r,                           /*--*/
 /*--*/                    float Bp0[], float Bt0[], float Br0[],          /*--*/
 /*--*/                    float Bp1[], float Bt1[], float Br1[],          /*--*/
 /*--*/                    int bp_r0, int bp_r1,                           /*--*/
@@ -612,13 +612,13 @@ Index_t unwindPhiOffset;
 
   // calculate the curl of B/B^2 if using shell drift
   if (config.useDrift > 0)
-    mhdNode.curlBoverB2 = mhdCurlBoverB2(r,
-                                         mhdBp0, mhdBt0, mhdBr0,
-                                         mhdBp1, mhdBt1, mhdBr1,
-                                         bp_r0, bp_r1, bp_t0, bp_t1, bp_p0, bp_p1,
-                                         bt_r0, bt_r1, bt_t0, bt_t1, bt_p0, bt_p1,
-                                         br_r0, br_r1, br_t0, br_t1, br_p0, br_p1,
-                                         s);
+    mhdNode.curlBoverB2 = mhdNodeCurlBoverB2(r,
+                                             mhdBp0, mhdBt0, mhdBr0,
+                                             mhdBp1, mhdBt1, mhdBr1,
+                                             bp_r0, bp_r1, bp_t0, bp_t1, bp_p0, bp_p1,
+                                             bt_r0, bt_r1, bt_t0, bt_t1, bt_p0, bt_p1,
+                                             br_r0, br_r1, br_t0, br_t1, br_p0, br_p1,
+                                             s);
 
 }
 /*----------- END mhdTriLinear() --------------------------------*/
