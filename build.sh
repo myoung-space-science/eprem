@@ -67,6 +67,7 @@ hdf4_dir=
 hdf5_dir=
 deps_dir=
 from_clean=0
+enable_hdf4=0
 
 # This is the CLI's main help text.
 show_help()
@@ -147,6 +148,10 @@ ${textbf}DESCRIPTION${textnm}
         ${textbf}--with-hdf5-dir=DIR${textnm}
                 Look for HDF5 header files in DIR/include and look for 
                 libraries in DIR/lib. Supersedes the --with-deps-dir option.
+        ${textbf}--enable-hdf4${textnm}
+                Attempt to build with HDF4 input functionality. Requires running 
+                make clean. Note that the ability to read HDF4 MHD files may 
+                be deprecated in future versions.
 "
 }
 
@@ -169,6 +174,7 @@ TEMP=$(getopt \
     -l 'with-mpi-dir:,with-libconfig-dir:,with-netcdf-dir:' \
     -l 'with-hdf4-dir:,with-hdf5-dir:' \
     -l 'with-deps-dir:' \
+    -l 'enable-hdf4' \
     -- "$@")
 
 if [ $? -ne 0 ]; then
@@ -257,6 +263,11 @@ while [ $# -gt 0 ]; do
             shift 2
             continue
         ;;
+        '--enable-hdf4')
+            enable_hdf4=1
+            shift
+            continue
+        ;;
         '--')
             shift
             break
@@ -337,7 +348,6 @@ SH_LDFLAGS=
 SH_LIBS=
 
 # Update flags based on --with-<package>-dir options.
-SH_LIBS="-lhdf5 -lhdf5_hl -lmfhdf -ldf -ljpeg -lz -lm"
 if [ -n "$mpi_dir" ]; then
     SH_CFLAGS="  -I${mpi_dir}/include $SH_CFLAGS"
     SH_CXXFLAGS="-I${mpi_dir}/include $SH_CXXFLAGS"
@@ -380,6 +390,15 @@ else
         SH_CXXFLAGS="-O3 ${SH_CXXFLAGS}"
         SH_CPPFLAGS="-DNDEBUG ${SH_CPPFLAGS}"
     fi
+fi
+
+# Check for --enable-hdf4 option.
+if [ $enable_hdf4 == 1 ]; then
+    SH_LIBS="-lhdf5 -lhdf5_hl -lmfhdf -ldf -ljpeg -lz -lm"
+    SH_CPPFLAGS="-DHAVE_HDF4 ${SH_CPPFLAGS}"
+    from_clean=1
+else
+    SH_LIBS="-lhdf5 -lhdf5_hl -ljpeg -lz -lm"
 fi
 
 # Set any unset environment variables to null.
