@@ -14,9 +14,12 @@ src/error.c \
 src/flow.c \
 src/geometry.c \
 src/global.c \
+src/mhdInterp.c \
+src/mhdIO.c \
 src/mpiInit.c \
 src/nearestGridNode.c \
 src/observerOutput.c \
+src/readMHD.c \
 src/search.c \
 src/simCore.c \
 src/unifiedOutput.c \
@@ -32,9 +35,12 @@ src/error.h \
 src/flow.h \
 src/geometry.h \
 src/global.h \
+src/mhdInterp.h \
+src/mhdIO.h \
 src/mpiInit.h \
 src/nearestGridNode.h \
 src/observerOutput.h \
+src/readMHD.h \
 src/safeNetcdf.h \
 src/searchTypes.h \
 src/simCore.h \
