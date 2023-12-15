@@ -13,12 +13,12 @@ trim() {
 }
 
 # Set up the function that prints a section header.
-DRY_RUN=
+dry_run_string=
 print_banner() {
     if [ $verbose == 1 ]; then
         printf "
 =======================================================================
-    ${DRY_RUN}$@
+    ${dry_run_string}$@
 =======================================================================
 "
     fi
@@ -190,7 +190,7 @@ trap cleanup EXIT
 
 # Check for --dry-run option.
 if [ ${dry_run} == 1 ]; then
-    DRY_RUN="[DRY RUN] "
+    dry_run_string="[DRY RUN] "
 fi
 
 install_libconfig() {
