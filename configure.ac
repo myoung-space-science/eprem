@@ -162,6 +162,21 @@ AC_CHECK_HEADERS(
 )
 
 #-----------------------------------------------------------------------------#
+# Search for the HDF5 library, which we require for loading MHD data.
+#-----------------------------------------------------------------------------#
+AC_SEARCH_LIBS(
+    [H5check_version],
+    [hdf5],
+    [],
+    AC_MSG_ERROR([Can't find a suitable version of the HDF5 library.])
+)
+AC_CHECK_HEADERS(
+    [hdf5.h],
+    [],
+    AC_MSG_ERROR([Can't find HDF5 headers. Try using --with-hdf5-dir.])
+)
+
+#-----------------------------------------------------------------------------#
 # Check for library functions.
   AS_BOX([Required Library Functions])
 #-----------------------------------------------------------------------------#
