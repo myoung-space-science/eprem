@@ -193,6 +193,36 @@ if [ ${dry_run} == 1 ]; then
     dry_run_string="[DRY RUN] "
 fi
 
+# Download a named package.
+download_package() {
+    local pkg_alias="${1}"
+    local pkg_url="${2}"
+
+    print_banner "Downloading $pkg_alias"
+    if [ "$dry_run" == 0 ]; then
+        wget $pkg_url
+    fi
+}
+
+# Install a named package.
+install_package() {
+    local pkg_alias="${1}"
+    local pkg_tar="${2}"
+    local pkg_dir="${3}"
+    local pkg_args="${4-}"
+
+    print_banner "Installing $pkg_alias"
+    if [ "$dry_run" == 0 ]; then
+        tar -xvzf $pkg_tar &>> $setuplog
+        ln -s $pkg_dir $pkg_alias
+        pushd $pkg_alias &> /dev/null
+        ./configure $pkg_args &>> $setuplog && \
+        make &>> $setuplog && \
+        make check &>> $setuplog
+        popd &> /dev/null
+    fi
+}
+
 install_libconfig() {
     local pkg_alias=libconfig
     local pkg_name=$pkg_alias-1.5
@@ -200,20 +230,8 @@ install_libconfig() {
     local pkg_url=https://src.fedoraproject.org/repo/pkgs/libconfig/$pkg_tar/a939c4990d74e6fc1ee62be05716f633/$pkg_tar
     local pkg_args=""
 
-    print_banner "Downloading $pkg_alias"
-    if [ "$dry_run" == 0 ]; then
-        wget $pkg_url
-    fi
-    print_banner "Installing $pkg_alias"
-    if [ "$dry_run" == 0 ]; then
-        tar -xvzf $pkg_tar &>> $setuplog
-        ln -s $pkg_name $pkg_alias
-        pushd $pkg_alias &> /dev/null
-        ./configure $pkg_args &>> $setuplog && \
-        make &>> $setuplog && \
-        make check &>> $setuplog
-        popd &> /dev/null
-    fi
+    download_package $pkg_alias $pkg_url
+    install_package $pkg_alias $pkg_tar $pkg_name $pkg_args
 }
 
 install_zlib() {
@@ -223,20 +241,8 @@ install_zlib() {
     local pkg_url=https://zlib.net/fossils/$pkg_tar
     local pkg_args=""
 
-    print_banner "Downloading $pkg_alias"
-    if [ "$dry_run" == 0 ]; then
-        wget $pkg_url
-    fi
-    print_banner "Installing $pkg_alias"
-    if [ "$dry_run" == 0 ]; then
-        tar -xvzf $pkg_tar &>> $setuplog
-        ln -s $pkg_name $pkg_alias
-        pushd $pkg_alias &> /dev/null
-        ./configure $pkg_args &>> $setuplog && \
-        make &>> $setuplog && \
-        make check &>> $setuplog
-        popd &> /dev/null
-    fi
+    download_package $pkg_alias $pkg_url
+    install_package $pkg_alias $pkg_tar $pkg_name $pkg_args
 }
 
 install_hdf4() {
@@ -246,20 +252,8 @@ install_hdf4() {
     local pkg_url=https://support.hdfgroup.org/ftp/HDF/releases/HDF4.2.16/src/$pkg_tar
     local pkg_args="--disable-netcdf"
 
-    print_banner "Downloading $pkg_alias"
-    if [ "$dry_run" == 0 ]; then
-        wget $pkg_url
-    fi
-    print_banner "Installing $pkg_alias"
-    if [ "$dry_run" == 0 ]; then
-        tar -xvzf $pkg_tar &>> $setuplog
-        ln -s $pkg_name $pkg_alias
-        pushd $pkg_alias &> /dev/null
-        ./configure $pkg_args &>> $setuplog && \
-        make &>> $setuplog && \
-        make check &>> $setuplog
-        popd &> /dev/null
-    fi
+    download_package $pkg_alias $pkg_url
+    install_package $pkg_alias $pkg_tar $pkg_name $pkg_args
 }
 
 install_hdf5() {
@@ -269,20 +263,8 @@ install_hdf5() {
     local pkg_url=https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8/hdf5-1.8.17/src/$pkg_tar
     local pkg_args=""
 
-    print_banner "Downloading $pkg_alias"
-    if [ "$dry_run" == 0 ]; then
-        wget $pkg_url
-    fi
-    print_banner "Installing $pkg_alias"
-    if [ "$dry_run" == 0 ]; then
-        tar -xvzf $pkg_tar &>> $setuplog
-        ln -s $pkg_name $pkg_alias
-        pushd $pkg_alias &> /dev/null
-        ./configure $pkg_args &>> $setuplog && \
-        make &>> $setuplog && \
-        make check &>> $setuplog
-        popd &> /dev/null
-    fi
+    download_package $pkg_alias $pkg_url
+    install_package $pkg_alias $pkg_tar $pkg_name $pkg_args
 }
 
 install_netcdf() {
@@ -292,20 +274,8 @@ install_netcdf() {
     local pkg_url=https://github.com/Unidata/netcdf-c/archive/refs/tags/$pkg_tar
     local pkg_args="--disable-dap-remote-tests"
 
-    print_banner "Downloading $pkg_alias"
-    if [ "$dry_run" == 0 ]; then
-        wget $pkg_url
-    fi
-    print_banner "Installing $pkg_alias"
-    if [ "$dry_run" == 0 ]; then
-        tar -xvzf $pkg_tar &>> $setuplog
-        ln -s $pkg_name $pkg_alias
-        pushd $pkg_alias &> /dev/null
-        ./configure $pkg_args &>> $setuplog && \
-        make &>> $setuplog && \
-        make check &>> $setuplog
-        popd &> /dev/null
-    fi
+    download_package $pkg_alias $pkg_url
+    install_package $pkg_alias $pkg_tar $pkg_name $pkg_args
 }
 
 # The function that will download and build external dependencies.
