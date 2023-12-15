@@ -64,6 +64,7 @@ mpi_dir=
 libconfig_dir=
 netcdf_dir=
 hdf4_dir=
+hdf5_dir=
 deps_dir=
 from_clean=0
 
@@ -143,6 +144,9 @@ ${textbf}DESCRIPTION${textnm}
         ${textbf}--with-hdf4-dir=DIR${textnm}
                 Look for HDF4 header files in DIR/include and look for 
                 libraries in DIR/lib. Supersedes the --with-deps-dir option.
+        ${textbf}--with-hdf5-dir=DIR${textnm}
+                Look for HDF5 header files in DIR/include and look for 
+                libraries in DIR/lib. Supersedes the --with-deps-dir option.
 "
 }
 
@@ -162,7 +166,8 @@ TEMP=$(getopt \
     -l 'install::,prefix:' \
     -l 'debug,optimize,dry-run' \
     -l 'from-clean' \
-    -l 'with-mpi-dir:,with-libconfig-dir:,with-netcdf-dir:,with-hdf4-dir:' \
+    -l 'with-mpi-dir:,with-libconfig-dir:,with-netcdf-dir:' \
+    -l 'with-hdf4-dir:,with-hdf5-dir:' \
     -l 'with-deps-dir:' \
     -- "$@")
 
@@ -242,6 +247,11 @@ while [ $# -gt 0 ]; do
             shift 2
             continue
         ;;
+        '--with-hdf5-dir')
+            hdf5_dir="$(readlink -e "${2}")"
+            shift 2
+            continue
+        ;;
         '--with-deps-dir')
             deps_dir="$(readlink -e "${2}")"
             shift 2
@@ -314,6 +324,9 @@ if [ -n "$deps_dir" ]; then
     if [ -z "$hdf4_dir" ]; then
         hdf4_dir=${deps_dir}/hdf4
     fi
+    if [ -z "$hdf5_dir" ]; then
+        hdf5_dir=${deps_dir}/hdf5
+    fi
 fi
 
 # Initialize temporary variables for --with-<package>-dir options.
@@ -321,8 +334,10 @@ SH_CFLAGS=
 SH_CXXFLAGS=
 SH_CPPFLAGS=
 SH_LDFLAGS=
+SH_LIBS=
 
 # Update flags based on --with-<package>-dir options.
+SH_LIBS="-lhdf5 -lhdf5_hl -lmfhdf -ldf -ljpeg -lz -lm"
 if [ -n "$mpi_dir" ]; then
     SH_CFLAGS="  -I${mpi_dir}/include $SH_CFLAGS"
     SH_CXXFLAGS="-I${mpi_dir}/include $SH_CXXFLAGS"
@@ -335,17 +350,23 @@ if [ -n "$libconfig_dir" ]; then
     SH_CPPFLAGS="-I${libconfig_dir}/include $SH_CPPFLAGS"
     SH_LDFLAGS=" -L${libconfig_dir}/lib -Wl,-rpath,${libconfig_dir}/lib $SH_LDFLAGS"
 fi
-if [ -n "${netcdf_dir}" ]; then
+if [ -n "$netcdf_dir" ]; then
     SH_CFLAGS="  -I${netcdf_dir}/include $SH_CFLAGS"
     SH_CXXFLAGS="-I${netcdf_dir}/include $SH_CXXFLAGS"
     SH_CPPFLAGS="-I${netcdf_dir}/include $SH_CPPFLAGS"
     SH_LDFLAGS=" -L${netcdf_dir}/lib -Wl,-rpath,${netcdf_dir}/lib $SH_LDFLAGS"
 fi
-if [ -n "${hdf4_dir}" ]; then
+if [ -n "$hdf4_dir" ]; then
     SH_CFLAGS="  -I${hdf4_dir}/include $SH_CFLAGS"
     SH_CXXFLAGS="-I${hdf4_dir}/include $SH_CXXFLAGS"
     SH_CPPFLAGS="-I${hdf4_dir}/include $SH_CPPFLAGS"
     SH_LDFLAGS=" -L${hdf4_dir}/lib -Wl,-rpath,${hdf4_dir}/lib $SH_LDFLAGS"
+fi
+if [ -n "$hdf5_dir" ]; then
+    SH_CFLAGS="  -I${hdf5_dir}/include $SH_CFLAGS"
+    SH_CXXFLAGS="-I${hdf5_dir}/include $SH_CXXFLAGS"
+    SH_CPPFLAGS="-I${hdf5_dir}/include $SH_CPPFLAGS"
+    SH_LDFLAGS=" -L${hdf5_dir}/lib -Wl,-rpath,${hdf5_dir}/lib $SH_LDFLAGS"
 fi
 
 # Update flags based on --debug or --optimize options.
@@ -366,6 +387,7 @@ ${CFLAGS:=}
 ${CXXFLAGS:=}
 ${CPPFLAGS:=}
 ${LDFLAGS:=}
+${LIBS:=}
 
 # Initialize a temporary variable for ./configure options.
 CF_FLAGS=
@@ -386,6 +408,10 @@ fi
 SH_LDFLAGS=$(trim "${SH_LDFLAGS} ${LDFLAGS}")
 if [ -n "${SH_LDFLAGS}" ]; then
     CF_FLAGS+="LDFLAGS=\"${SH_LDFLAGS}\" "
+fi
+SH_LIBS=$(trim "${SH_LIBS} ${LIBS}")
+if [ -n "${SH_LIBS}" ]; then
+    CF_FLAGS+="LIBS=\"${SH_LIBS}\" "
 fi
 
 # Check for --verbose option.
