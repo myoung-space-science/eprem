@@ -193,6 +193,14 @@ if [ ${dry_run} == 1 ]; then
     dry_run_string="[DRY RUN] "
 fi
 
+# Set the target directory for external dependencies.
+if [ -z "$deps_dir" ]; then
+    deps_dir=$default_deps_dir
+fi
+
+# Declare the directory for downloaded source code.
+src_dir="$deps_dir"/src
+
 # Download a named package.
 download_package() {
     local pkg_alias="${1}"
@@ -204,79 +212,98 @@ download_package() {
     fi
 }
 
-# Install a named package.
-install_package() {
+# Configure and make a named package.
+build_package() {
     local pkg_alias="${1}"
     local pkg_tar="${2}"
     local pkg_dir="${3}"
     local pkg_args="${4-}"
 
-    print_banner "Installing $pkg_alias"
+    print_banner "Installing $pkg_alias ($pkg_dir)"
     if [ "$dry_run" == 0 ]; then
         tar -xvzf $pkg_tar &>> $setuplog
-        ln -s $pkg_dir $pkg_alias
-        pushd $pkg_alias &> /dev/null
-        ./configure $pkg_args &>> $setuplog && \
+        pushd $pkg_dir &> /dev/null
+        ./configure --prefix="$deps_dir"/"$pkg_dir" $pkg_args &>> $setuplog && \
         make &>> $setuplog && \
+        make install &>> $setuplog && \
         make check &>> $setuplog && \
-        /bin/rm -f $pkg_tar
         popd &> /dev/null
+        /bin/rm -rf $pkg_dir
     fi
+}
+
+link_package() {
+    local pkg_alias="${1}"
+    local pkg_dir="${2}"
+
+    print_banner "Creating symbolic link $pkg_alias -> $pkg_dir"
+    if [ "$dry_run" == 0 ]; then
+        ln -s $pkg_dir $pkg_alias
+    fi
+}
+
+install_package() {
+    local pkg_alias="${1}"
+    local pkg_url="${2}"
+    local pkg_tar="${3}"
+    local pkg_dir="${4}"
+    local pkg_args="${5-}"
+
+    pushd $src_dir 1> /dev/null 2>> $setuplog
+    download_package $pkg_alias $pkg_url
+    build_package $pkg_alias $pkg_tar $pkg_dir $pkg_args
+    popd &> /dev/null
+    link_package $pkg_alias $pkg_dir
 }
 
 install_libconfig() {
     local pkg_alias=libconfig
-    local pkg_name=$pkg_alias-1.5
-    local pkg_tar=$pkg_name.tar.gz
+    local pkg_dir=$pkg_alias-1.5
+    local pkg_tar=$pkg_dir.tar.gz
     local pkg_url=https://src.fedoraproject.org/repo/pkgs/libconfig/$pkg_tar/a939c4990d74e6fc1ee62be05716f633/$pkg_tar
     local pkg_args=""
 
-    download_package $pkg_alias $pkg_url
-    install_package $pkg_alias $pkg_tar $pkg_name $pkg_args
+    install_package $pkg_alias $pkg_url $pkg_tar $pkg_dir $pkg_args
 }
 
 install_zlib() {
     local pkg_alias=zlib
-    local pkg_name=$pkg_alias-1.2.11
-    local pkg_tar=$pkg_name.tar.gz
+    local pkg_dir=$pkg_alias-1.2.11
+    local pkg_tar=$pkg_dir.tar.gz
     local pkg_url=https://zlib.net/fossils/$pkg_tar
     local pkg_args=""
 
-    download_package $pkg_alias $pkg_url
-    install_package $pkg_alias $pkg_tar $pkg_name $pkg_args
+    install_package $pkg_alias $pkg_url $pkg_tar $pkg_dir $pkg_args
 }
 
 install_hdf4() {
     local pkg_alias=hdf4
-    local pkg_name=hdf-4.2.16
-    local pkg_tar=$pkg_name.tar.gz
+    local pkg_dir=hdf-4.2.16
+    local pkg_tar=$pkg_dir.tar.gz
     local pkg_url=https://support.hdfgroup.org/ftp/HDF/releases/HDF4.2.16/src/$pkg_tar
     local pkg_args="--disable-netcdf"
 
-    download_package $pkg_alias $pkg_url
-    install_package $pkg_alias $pkg_tar $pkg_name $pkg_args
+    install_package $pkg_alias $pkg_url $pkg_tar $pkg_dir $pkg_args
 }
 
 install_hdf5() {
     local pkg_alias=hdf5
-    local pkg_name=$pkg_alias-1.8.17
-    local pkg_tar=$pkg_name.tar.gz
+    local pkg_dir=$pkg_alias-1.8.17
+    local pkg_tar=$pkg_dir.tar.gz
     local pkg_url=https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8/hdf5-1.8.17/src/$pkg_tar
     local pkg_args=""
 
-    download_package $pkg_alias $pkg_url
-    install_package $pkg_alias $pkg_tar $pkg_name $pkg_args
+    install_package $pkg_alias $pkg_url $pkg_tar $pkg_dir $pkg_args
 }
 
 install_netcdf() {
     local pkg_alias=netcdf
-    local pkg_name=netcdf-c-4.4.1.1
+    local pkg_dir=netcdf-c-4.4.1.1
     local pkg_tar=v4.4.1.1.tar.gz
     local pkg_url=https://github.com/Unidata/netcdf-c/archive/refs/tags/$pkg_tar
     local pkg_args="--disable-dap-remote-tests"
 
-    download_package $pkg_alias $pkg_url
-    install_package $pkg_alias $pkg_tar $pkg_name $pkg_args
+    install_package $pkg_alias $pkg_url $pkg_tar $pkg_dir $pkg_args
 }
 
 # The function that will download and build external dependencies.
@@ -286,16 +313,12 @@ install_ext_deps() {
         exit 1
     fi
     local top_dir="${1}"
-    local tmp_dir=tmp
+    local src_dir=src
 
     # Create and enter the top-level directory for external dependencies.
     mkdir -p ${top_dir}
-    pushd ${top_dir} &> /dev/null
-
-    # Create and enter the local subdirectory where this script will download
-    # and build each package. Isolating the source code allows us to remove it
-    # while leaving the build dependencies.
-    mkdir -p ${tmp_dir}
+    pushd ${top_dir} 1> /dev/null 2>> $setuplog
+    mkdir -p $src_dir
 
     # --> libconfig
     install_libconfig
@@ -312,17 +335,9 @@ install_ext_deps() {
     # --> NetCDF4
     install_netcdf
 
-    # Exit and remove the temporary source-code directory.
-    /bin/rm -rf ${tmp_dir}
-
     # Exit the top-level external-dependencies directory.
     popd &> /dev/null
 }
-
-# Set the target directory for external dependencies.
-if [ -z "$deps_dir" ]; then
-    deps_dir=$default_deps_dir
-fi
 
 # Process the --download-deps option.
 if [ "$download_deps" == 1 ]; then
