@@ -193,6 +193,121 @@ if [ ${dry_run} == 1 ]; then
     DRY_RUN="[DRY RUN] "
 fi
 
+install_libconfig() {
+    local pkg_alias=libconfig
+    local pkg_name=$pkg_alias-1.5
+    local pkg_tar=$pkg_name.tar.gz
+    local pkg_url=https://src.fedoraproject.org/repo/pkgs/libconfig/$pkg_tar/a939c4990d74e6fc1ee62be05716f633/$pkg_tar
+    local pkg_args=""
+
+    print_banner "Downloading $pkg_alias"
+    if [ "$dry_run" == 0 ]; then
+        wget $pkg_url
+    fi
+    print_banner "Installing $pkg_alias"
+    if [ "$dry_run" == 0 ]; then
+        tar -xvzf $pkg_tar &>> $setuplog
+        ln -s $pkg_name $pkg_alias
+        pushd $pkg_alias &> /dev/null
+        ./configure $pkg_args &>> $setuplog && \
+        make &>> $setuplog && \
+        make check &>> $setuplog
+        popd &> /dev/null
+    fi
+}
+
+install_zlib() {
+    local pkg_alias=zlib
+    local pkg_name=$pkg_alias-1.2.11
+    local pkg_tar=$pkg_name.tar.gz
+    local pkg_url=https://zlib.net/fossils/$pkg_tar
+    local pkg_args=""
+
+    print_banner "Downloading $pkg_alias"
+    if [ "$dry_run" == 0 ]; then
+        wget $pkg_url
+    fi
+    print_banner "Installing $pkg_alias"
+    if [ "$dry_run" == 0 ]; then
+        tar -xvzf $pkg_tar &>> $setuplog
+        ln -s $pkg_name $pkg_alias
+        pushd $pkg_alias &> /dev/null
+        ./configure $pkg_args &>> $setuplog && \
+        make &>> $setuplog && \
+        make check &>> $setuplog
+        popd &> /dev/null
+    fi
+}
+
+install_hdf4() {
+    local pkg_alias=hdf4
+    local pkg_name=hdf-4.2.16
+    local pkg_tar=$pkg_name.tar.gz
+    local pkg_url=https://support.hdfgroup.org/ftp/HDF/releases/HDF4.2.16/src/$pkg_tar
+    local pkg_args="--disable-netcdf"
+
+    print_banner "Downloading $pkg_alias"
+    if [ "$dry_run" == 0 ]; then
+        wget $pkg_url
+    fi
+    print_banner "Installing $pkg_alias"
+    if [ "$dry_run" == 0 ]; then
+        tar -xvzf $pkg_tar &>> $setuplog
+        ln -s $pkg_name $pkg_alias
+        pushd $pkg_alias &> /dev/null
+        ./configure $pkg_args &>> $setuplog && \
+        make &>> $setuplog && \
+        make check &>> $setuplog
+        popd &> /dev/null
+    fi
+}
+
+install_hdf5() {
+    local pkg_alias=hdf5
+    local pkg_name=$pkg_alias-1.8.17
+    local pkg_tar=$pkg_name.tar.gz
+    local pkg_url=https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8/hdf5-1.8.17/src/$pkg_tar
+    local pkg_args=""
+
+    print_banner "Downloading $pkg_alias"
+    if [ "$dry_run" == 0 ]; then
+        wget $pkg_url
+    fi
+    print_banner "Installing $pkg_alias"
+    if [ "$dry_run" == 0 ]; then
+        tar -xvzf $pkg_tar &>> $setuplog
+        ln -s $pkg_name $pkg_alias
+        pushd $pkg_alias &> /dev/null
+        ./configure $pkg_args &>> $setuplog && \
+        make &>> $setuplog && \
+        make check &>> $setuplog
+        popd &> /dev/null
+    fi
+}
+
+install_netcdf() {
+    local pkg_alias=netcdf
+    local pkg_name=netcdf-c-4.4.1.1
+    local pkg_tar=v4.4.1.1.tar.gz
+    local pkg_url=https://github.com/Unidata/netcdf-c/archive/refs/tags/$pkg_tar
+    local pkg_args="--disable-dap-remote-tests"
+
+    print_banner "Downloading $pkg_alias"
+    if [ "$dry_run" == 0 ]; then
+        wget $pkg_url
+    fi
+    print_banner "Installing $pkg_alias"
+    if [ "$dry_run" == 0 ]; then
+        tar -xvzf $pkg_tar &>> $setuplog
+        ln -s $pkg_name $pkg_alias
+        pushd $pkg_alias &> /dev/null
+        ./configure $pkg_args &>> $setuplog && \
+        make &>> $setuplog && \
+        make check &>> $setuplog
+        popd &> /dev/null
+    fi
+}
+
 # The function that will download and build external dependencies.
 install_ext_deps() {
     if [ -z "${1}" ]; then
@@ -209,48 +324,24 @@ install_ext_deps() {
     # Create and enter the local subdirectory where this script will download
     # and build each package. Isolating the source code allows us to remove it
     # while leaving the build dependencies.
-    mkdir ${tmp_dir}
-    pushd ${tmp_dir} &> /dev/null
-
-    # TODO: Refactor into a loop.
+    mkdir -p ${tmp_dir}
 
     # --> libconfig
-    wget https://src.fedoraproject.org/repo/pkgs/libconfig/libconfig-1.5.tar.gz/a939c4990d74e6fc1ee62be05716f633/libconfig-1.5.tar.gz
-    tar -xvzf libconfig-1.5.tar.gz
-    pushd libconfig-1.5 &> /dev/null
-    ./configure --prefix="${top_dir}" && make && make install && make check
-    popd &> /dev/null
+    install_libconfig
 
     # --> zlib
-    wget https://zlib.net/fossils/zlib-1.2.11.tar.gz
-    tar -xvzf zlib-1.2.11.tar.gz
-    pushd zlib-1.2.11 &> /dev/null
-    ./configure --prefix="${top_dir}" && make && make install && make check
-    popd &> /dev/null
+    install_zlib
 
     # --> HDF4
-    wget https://support.hdfgroup.org/ftp/HDF/releases/HDF4.2.12/src/hdf-4.2.12.tar.gz
-    tar -xvzf hdf-4.2.12.tar.gz
-    pushd hdf-4.2.12 &> /dev/null
-    ./configure --prefix="${top_dir}" --disable-netcdf && make && make install && make check
-    popd &> /dev/null
+    install_hdf4
 
     # --> HDF5
-    wget https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8/hdf5-1.8.17/src/hdf5-1.8.17.tar.gz
-    tar -xvzf hdf5-1.8.17.tar.gz
-    pushd hdf5-1.8.17 &> /dev/null
-    ./configure --prefix="${top_dir}" && make && make install && make check
-    popd &> /dev/null
+    install_hdf5
 
     # --> NetCDF4
-    wget https://github.com/Unidata/netcdf-c/archive/refs/tags/v4.4.1.1.tar.gz
-    tar -xvzf v4.4.1.1.tar.gz
-    pushd netcdf-c-4.4.1.1 &> /dev/null
-    ./configure --prefix="${top_dir}" --disable-dap-remote-tests && make && make install && make check
-    popd &> /dev/null
+    install_netcdf
 
     # Exit and remove the temporary source-code directory.
-    popd &> /dev/null
     /bin/rm -rf ${tmp_dir}
 
     # Exit the top-level external-dependencies directory.
@@ -264,11 +355,7 @@ fi
 
 # Process the --download-deps option.
 if [ "$download_deps" == 1 ]; then
-    if [ "$dry_run" == 1 ]; then
-        print_banner "Installing external dependencies in $deps_dir"
-    else
-        install_ext_deps "${deps_dir}" &>> $setuplog
-    fi
+    install_ext_deps "${deps_dir}"
 fi
 
 # Set the status flag to indicate success.
