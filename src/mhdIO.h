@@ -14,7 +14,11 @@
 #define MHDIO_H
 #include <hdf5.h>
 #include <hdf5_hl.h>
+
+#ifdef HAVE_HDF4
 #include <mfhdf.h>
+#endif
+
 #include <unistd.h>
 #include "cubeShellStruct.h"
 

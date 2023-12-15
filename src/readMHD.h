@@ -14,7 +14,11 @@
 #define READMHD_H
 #include <hdf5.h>
 #include <hdf5_hl.h>
+
+#ifdef HAVE_HDF4
 #include <mfhdf.h>
+#endif
+
 #include "cubeShellStruct.h"
 
 extern Scalar_t *mhdTime;
@@ -120,7 +124,7 @@ extern MPI_Win mhdVr_1_win;
 extern MPI_Win mhdD_1_win;
 extern char file_extension[5];
 
-void ERR(intn);
+void ERR(int);
 
 void mhdFetchCouplingInfo(void);
 

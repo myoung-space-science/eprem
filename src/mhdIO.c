@@ -13,7 +13,11 @@
 #include <math.h>
 #include <hdf5.h>
 #include <hdf5_hl.h>
+
+#ifdef HAVE_HDF4
 #include <mfhdf.h>
+#endif
+
 #include <unistd.h>
 #include "readMHD.h"
 #include "mpiInit.h"
@@ -25,6 +29,10 @@
 #include "observerOutput.h"
 #include "timers.h"
 
+#ifndef HAVE_HDF4
+#define H4_MAX_VAR_DIMS 32
+typedef void *VOIDP;
+#endif
 
 /*--------------------------------------------------------------------*/
 /*--------------------------------------------------------------------*/
@@ -59,6 +67,7 @@ mhdReadMeshDimensions(char *fname, char *dsetname, int dsetnumber, /*--*/
     }
     else
     { // Read HDF4 files
+#ifdef HAVE_HDF4
         int32_t sd_id, sds_id;
         int32_t rank, data_type, n_attrs;
         int32_t dim_sizes[H4_MAX_VAR_DIMS];
@@ -74,6 +83,7 @@ mhdReadMeshDimensions(char *fname, char *dsetname, int dsetnumber, /*--*/
         ERR(status);
         status = SDend(sd_id);
         ERR(status);
+#endif
     }
 }
 /*----------------- END mhdReadMeshDimensions() ------------------------*/
@@ -111,6 +121,7 @@ mhdReadMesh(char *fname, char *dsetname, int dsetnumber,           /*--*/
     }
     else
     { // Read HDF4 file
+#ifdef HAVE_HDF4
         int32_t sd_id, sds_id;
         int32_t rank, data_type, n_attrs;
         int32_t dim_sizes[H4_MAX_VAR_DIMS];
@@ -126,6 +137,7 @@ mhdReadMesh(char *fname, char *dsetname, int dsetnumber,           /*--*/
         ERR(status);
         status = SDend(sd_id); // Close the file
         ERR(status);
+#endif
     }
 }
 /*----------------- END mhdReadMesh() ----------------------------------*/
@@ -165,6 +177,7 @@ mhdReadDatafromFile(char *fname, float *buf[])                     /*--*/
     }
     else
     { // Read from HDF4 file
+#ifdef HAVE_HDF4
         int32_t sd_id, sds_id;
         int32_t rank, data_type, n_attrs;
         int32_t dim_sizes[H4_MAX_VAR_DIMS];
@@ -181,6 +194,7 @@ mhdReadDatafromFile(char *fname, float *buf[])                     /*--*/
         ERR(status);
         status = SDend(sd_id); // Close the file
         ERR(status);
+#endif
     }
 }
 /*----------------- END mhdReadDatafromfile() ----------------------------------*/

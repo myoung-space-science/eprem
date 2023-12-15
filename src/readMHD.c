@@ -13,7 +13,11 @@
 #include <math.h>
 #include <hdf5.h>
 #include <hdf5_hl.h>
+
+#ifdef HAVE_HDF4
 #include <mfhdf.h>
+#endif
+
 #include "readMHD.h"
 #include "mpiInit.h"
 #include "global.h"
@@ -135,7 +139,7 @@ char file_extension[5];
 /*------------------------------------------------------------------*/
 /*------------------------------------------------------------------*/
 /*--*/     void                                                 /*--*/
-/*--*/     ERR(intn status)                                     /*--*/
+/*--*/     ERR(int status)                                     /*--*/
 /*--                                                              --*/
 /*--  This function checks for an error when loading an SD        --*/
 /*--  element.                                                    --*/
