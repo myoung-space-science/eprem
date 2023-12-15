@@ -133,9 +133,9 @@ void mhdFetchFileList(void);
 void mhdGetInterpData( Scalar_t dt );
 
 void mhdReadData(Index_t fileIndex,
-                 float * *mhdBp, float * *mhdBt, float * *mhdBr,
-                 float * *mhdVp, float * *mhdVt, float * *mhdVr,
-                 float * *mhdD);
+                 float *mhdBp[], float *mhdBt[], float *mhdBr[],
+                 float *mhdVp[], float *mhdVt[], float *mhdVr[],
+                 float *mhdD[]);
 
 void mhdReadFieldIndex(void);
 
