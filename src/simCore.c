@@ -30,7 +30,6 @@
 #include "geometry.h"
 #include "energeticParticles.h"
 #include "flow.h"
-#include "readMHD.h"
 #include "mhdInterp.h"
 #include "readMHD.h"
 #include "unifiedOutput.h"
