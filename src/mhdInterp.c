@@ -40,7 +40,7 @@ Index_t unwindPhiOffset;
 /*-----------------------------------------------------------------------*/
 {
 
-  if (position.r <= (config.mhdRadialMax * RSAU))
+  if ((mhdGridStatus == MHD_COUPLED) && (position.r <= (config.mhdRadialMax * RSAU)))
   {
 
     mhdTriLinear(position,  mhdBp_0, mhdBt_0, mhdBr_0,
