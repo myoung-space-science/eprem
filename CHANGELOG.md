@@ -1,5 +1,12 @@
 # Changelog
 
+## NEXT
+
+## v0.3.0 (18Dec2023)
+
+- Implement point-observer output
+- Refactor and add features to build-process tools
+
 ## v0.2.6 (03Aug2023)
 
 - Add `--download-ext-deps` to `setup.sh` CLI.
