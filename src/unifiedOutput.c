@@ -38,6 +38,7 @@
 #include "simCore.h"
 #include "error.h"
 #include "timers.h"
+#include "flow.h"
 
 Index_t** computeLines;
 
@@ -843,7 +844,7 @@ int * po_distObs_varid;
       if (pointObsNode[0].azi < 0.0) pointObsNode[0].azi += 2.0 * PI;
       if ( pointObsNode[0].azi > (2.0 * PI) ) pointObsNode[0].azi -= 2.0 * PI;
 
-      // stays in AU
+      // assign and normalize observer spherical position (stays in AU)
       rSph.r     = config.obsR[pointObserverIndex];
       rSph.theta = config.obsTheta[pointObserverIndex];
       rSph.phi   = config.obsPhi[pointObserverIndex];
@@ -851,16 +852,28 @@ int * po_distObs_varid;
       if (rSph.phi < 0.0) rSph.phi += 2.0 * PI;
       if ( rSph.phi > (2.0 * PI) ) rSph.phi -= 2.0 * PI;
 
-      mhdGetNode(rSph, pointObsNode[0]);
+      // compute observer Cartesian position (also used later)
+      rCart = sphToCartPos(rSph);
+      pointObsNode[0].r = rCart;
+      pointObsNode[0].rOld = rCart;
 
+      // initialize observer node MHD data
+      pointObsNode[0].mhdDensity = config.mhdNsAu;
+      pointObsNode[0].mhdBr = config.mhdBsAu;
+      pointObsNode[0].mhdBtheta = 0.0;
+      pointObsNode[0].mhdBphi = -1.0 * config.mhdBsAu * (config.omegaSun / (config.mhdUs + VERYSMALL)) * sin(config.obsTheta[pointObserverIndex]);
+      pointObsNode[0].mhdVr = config.mhdUs;
+      pointObsNode[0].mhdVtheta = 0.0;
+      pointObsNode[0].mhdVphi = 0.0;
+
+      // update observer node MHD data
+      mhdGetNode(rSph, pointObsNode[0]);
       pointObsNode[0].mhdBr = mhdNode.mhdB.r;
       pointObsNode[0].mhdBtheta = mhdNode.mhdB.theta;
       pointObsNode[0].mhdBphi = mhdNode.mhdB.phi;
-
       pointObsNode[0].mhdVr = mhdNode.mhdV.r;
       pointObsNode[0].mhdVtheta = mhdNode.mhdV.theta;
       pointObsNode[0].mhdVphi = mhdNode.mhdV.phi;
-
       pointObsNode[0].mhdDensity = mhdNode.mhdD;
 
       // zero out distribution
@@ -882,7 +895,6 @@ int * po_distObs_varid;
       weightSum = 0.0;
 
       rSph.r /= config.rScale;
-      rCart = sphToCartPos(rSph);
 
       // calculate coefficients and interpolate the distribution
       for (face = 0; face < NUM_FACES; face++)
