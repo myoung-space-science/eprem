@@ -65,19 +65,15 @@
           grid[idx].dsOld            = grid[idx].ds;
           grid[idx].rOlder           = grid[idx].r;
 
-          // Check for coupling to MHD
-          if (mhdGridStatus == MHD_COUPLED) {
+          // Get spherical position.
+          radpos = cartToSphPosAu(grid[idx].r);
 
-            // Get spherical position.
-            radpos = cartToSphPosAu(grid[idx].r);
-
-            // Interpolate coupled MHD values to current position at desired
-            // time (tGlobal+dt in main loop). NOTE: This does NOT set values on
-            // the `grid[idx]` struct, only in the global `mhdNode` struct,
-            // which subsequent routines use to update MHD quantities.
-            mhdGetNode(radpos, grid[idx]);
-
-          }
+          // Interpolate coupled MHD values to, or compute theoretical values
+          // at, the current position and desired time (tGlobal+dt in main
+          // loop). NOTE: This does NOT set values on the `grid[idx]` struct,
+          // only in the global `mhdNode` struct, which subsequent routines use
+          // to update MHD quantities.
+          mhdGetNode(radpos, grid[idx]);
 
           // Check to see if node is in ideal shock domain
           idealShockNode = 0;
