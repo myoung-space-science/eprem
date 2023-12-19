@@ -295,12 +295,16 @@ cleanup() {
     else
         echo &>> $logfile
         echo "Installation succeeded." &>> $logfile
-        echo &>> $logfile
         print_banner "Done"
     fi
 }
 
 trap cleanup EXIT
+
+if [ -d "${alias}" ]; then
+    echo "Refusing to overwrite existing directory ${alias}" &>> $logfile
+    exit 1
+fi
 
 # Check for --dry-run option.
 if [ ${dry_run} == 1 ]; then
