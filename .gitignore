@@ -4,8 +4,7 @@
 # (https://github.com/github/gitignore/blob/main/Autotools.gitignore).
 
 # Log files
-setup.log
-build.log
+*.log
 
 # Diff-like files
 *.diff
@@ -26,7 +25,7 @@ bin
 dev
 
 # Source-code object files
-src/*.o
+*.o
 
 # Visual Studio Code
 **/.vscode/*
