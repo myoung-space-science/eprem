@@ -2,6 +2,8 @@
 
 ## NEXT
 
+- Create `install.sh` to replace `setup.sh` with some features moved from `build.sh`
+
 ## v0.3.0 (18Dec2023)
 
 - Implement point-observer output
