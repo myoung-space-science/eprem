@@ -1,35 +1,18 @@
 #!/bin/bash
 
-# Adapted from https://stackoverflow.com/a/3352015. This will trim leading and
-# trailing whitespace from a given string. For example: `trim "  a b  "` yields
-# `"a b"`.
-trim() {
-    local var="$*"
-    # leading whitespace
-    var="${var#"${var%%[![:space:]]*}"}"
-    # trailing whitespace
-    var="${var%"${var##*[![:space:]]}"}"
-    printf '%s' "$var"
-}
+# Import functions.
+if [ -f tools.sh ]; then
+    . tools.sh
+else
+    echo "Cannot source necessary functions."
+    exit 1
+fi
 
 # Set up the function that prints a section header.
 dry_run_string=
 print_banner() {
     if [ $verbose == 1 ]; then
-        printf "
-=======================================================================
-    ${dry_run_string}$@
-=======================================================================
-"
-    fi
-}
-
-run_stage() {
-    print_banner "$@"
-    if [ $dry_run != 1 ]; then
-        eval "$@"
-        print_banner "Done"
-        return $?
+        print_header "${dry_run_string}$@"
     fi
 }
 
@@ -38,16 +21,6 @@ run_stage() {
 # - u => Treat unset variables and parameters (with certain exceptions) as
 #   errors when performing parameter expansion.
 set -eu
-
-# Define text formatting commands.
-# - textbf: Use bold-face.
-# - textnm: Reset to normal.
-# - startul: Start underlined text.
-# - endul: End underlined text.
-textbf=$(tput bold)
-textnm=$(tput sgr0)
-startul=$(tput smul)
-endul=$(tput rmul)
 
 # Store the initial working directory.
 top_dir="$(dirname "$(readlink -f "${0}")")"
