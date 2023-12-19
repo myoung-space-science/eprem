@@ -41,8 +41,8 @@ startul=$(tput smul)
 endul=$(tput rmul)
 
 # Store the initial working directory.
-script_dir="$(dirname "$(readlink -f "${0}")")"
-buildlog=${script_dir}/build.log
+top_dir="$(dirname "$(readlink -f "${0}")")"
+logfile=${top_dir}/build.log
 
 # Set option defaults.
 verbose=0
@@ -151,7 +151,7 @@ fi
 
 # Create a fresh build log. We do this after reading and checking command-like
 # arguments because in order to avoid unnecessarily creating a new log.
-> $buildlog
+> $logfile
 
 # Declare a status flag.
 status=
@@ -163,7 +163,7 @@ success="@!SUCCESS!@"
 cleanup() {
     if [ "$status" != "$success" ]; then
         echo
-        echo "Build failed. See $buildlog for details."
+        echo "Build failed. See $logfile for details."
         exit 1
     else
         print_banner "Done"
@@ -173,21 +173,21 @@ cleanup() {
 trap cleanup EXIT
 
 # Move to the target directory.
-pushd $script_dir/$alias 1> /dev/null 2>> $buildlog
+pushd $top_dir/$alias 1> /dev/null 2>> $logfile
 
 # Run the clean stage, if requested.
 if [ ${from_clean} == 1 ]; then
-    make clean &>> $buildlog
+    make clean &>> $logfile
 fi
 
 # Run the make stage.
-make &>> $buildlog
+make &>> $logfile
 
 # Run the install stage.
-make install &>> $buildlog
+make install &>> $logfile
 
 # Exit the target directory.
-popd 1> /dev/null 2>> $buildlog
+popd 1> /dev/null 2>> $logfile
 
 # Set the status flag to indicate success.
 status=$success
