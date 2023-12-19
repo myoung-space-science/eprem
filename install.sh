@@ -199,7 +199,7 @@ while [ $# -gt 0 ]; do
             continue
         ;;
         '--with-mpi-dir')
-            mpi_dir="$(readlink -e "{2}")"
+            mpi_dir="$(readlink -e "${2}")"
             shift 2
             continue
         ;;
