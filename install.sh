@@ -316,6 +316,29 @@ if [ -z "$deps_dir" ]; then
     deps_dir=$default_deps_dir
 fi
 
+if [ -z "${zlib_dir}" ]; then
+    zlib_dir=${deps_dir}/zlib
+fi
+if [ -z "${libconfig_dir}" ]; then
+    libconfig_dir=${deps_dir}/libconfig
+fi
+if [ -z "${hdf4_dir}" ]; then
+    hdf4_dir=${deps_dir}/hdf4
+fi
+if [ -z "${hdf5_dir}" ]; then
+    hdf5_dir=${deps_dir}/hdf5
+fi
+if [ -z "${netcdf_dir}" ]; then
+    netcdf_dir=${deps_dir}/netcdf
+fi
+
+# Set any unset environment variables to null.
+${CFLAGS:=}
+${CXXFLAGS:=}
+${CPPFLAGS:=}
+${LDFLAGS:=}
+${LIBS:=}
+
 # Declare the directory for downloaded source code.
 src_dir="$deps_dir"/src
 
@@ -370,11 +393,17 @@ install_package() {
     local pkg_dir="${4}"
     local pkg_args="${5-}"
 
-    pushd $src_dir 1> /dev/null 2>> $logfile
-    download_package $pkg_alias $pkg_url
-    build_package $pkg_alias $pkg_tar $pkg_dir $pkg_args
-    popd &> /dev/null
-    link_package $pkg_alias $pkg_dir
+    if printf '%s\0' "${requested_deps[@]}" | grep -F -x -z -q -- "${pkg_alias}"; then
+        pushd $src_dir 1> /dev/null 2>> $logfile
+        download_package $pkg_alias $pkg_url
+        popd &> /dev/null
+    fi
+    if [ ! -d "${deps_dir}/${pkg_dir}" ]; then
+        pushd $src_dir 1> /dev/null 2>> $logfile
+        build_package $pkg_alias $pkg_tar $pkg_dir $pkg_args
+        popd &> /dev/null
+        link_package $pkg_alias $pkg_dir
+    fi
 }
 
 install_zlib() {
@@ -424,6 +453,18 @@ install_netcdf() {
     local pkg_url=https://github.com/Unidata/netcdf-c/archive/refs/tags/$pkg_tar
     local pkg_args="--disable-dap-remote-tests"
 
+    if [ -z "${zlib_dir}" ]; then
+        echo "Cannot install NetCDF4 without zlib support." &>> $logfile
+        exit 1
+    fi
+    export CPPFLAGS="${CPPFLAGS} -I${zlib_dir}/include"
+    export LDFLAGS="${LDFLAGS} -L${zlib_dir}/lib"
+    if [ -z "${hdf5_dir}" ]; then
+        echo "Cannot install NetCDF4 without HDF5 support." &>> $logfile
+        exit 1
+    fi
+    export CPPFLAGS="${CPPFLAGS} -I${hdf5_dir}/include"
+    export LDFLAGS="${LDFLAGS} -L${hdf5_dir}/lib"
     install_package $pkg_alias $pkg_url $pkg_tar $pkg_dir $pkg_args
 }
 
@@ -437,27 +478,27 @@ install_dep() {
     mkdir -p $src_dir
 
     # --> zlib
-    if [ "$dep_name" == "zlib" ]; then
+    if [ "${dep_name}" == "zlib" ]; then
         install_zlib
     fi
 
     # --> libconfig
-    if [ "$dep_name" == "libconfig" ]; then
+    if [ "${dep_name}" == "libconfig" ]; then
         install_libconfig
     fi
 
     # --> HDF4
-    if [ "$dep_name" == "hdf4" ]; then
+    if [ "${dep_name}" == "hdf4" ]; then
         install_hdf4
     fi
 
     # --> HDF5
-    if [ "$dep_name" == "hdf5" ]; then
+    if [ "${dep_name}" == "hdf5" ] || [ "${dep_name}" == "netcdf" ]; then
         install_hdf5
     fi
 
     # --> NetCDF4
-    if [ "$dep_name" == "netcdf" ]; then
+    if [ "${dep_name}" == "netcdf" ]; then
         install_netcdf
     fi
 
@@ -469,25 +510,6 @@ install_dep() {
 for dep in ${requested_deps[@]}; do
     install_dep "$dep"
 done
-
-# Update flags based on --with-deps-dir option.
-if [ -n "$deps_dir" ]; then
-    if [ -z "$zlib_dir" ]; then
-        zlib_dir=${deps_dir}/zlib
-    fi
-    if [ -z "$libconfig_dir" ]; then
-        libconfig_dir=${deps_dir}/libconfig
-    fi
-    if [ -z "$netcdf_dir" ]; then
-        netcdf_dir=${deps_dir}/netcdf
-    fi
-    if [ -z "$hdf4_dir" ]; then
-        hdf4_dir=${deps_dir}/hdf4
-    fi
-    if [ -z "$hdf5_dir" ]; then
-        hdf5_dir=${deps_dir}/hdf5
-    fi
-fi
 
 # Initialize temporary variables for --with-<package>-dir options.
 SH_CFLAGS=
@@ -554,13 +576,6 @@ if [ $enable_hdf4 == 1 ]; then
 else
     SH_LIBS="-lhdf5 -lhdf5_hl -ljpeg -lz -lm"
 fi
-
-# Set any unset environment variables to null.
-${CFLAGS:=}
-${CXXFLAGS:=}
-${CPPFLAGS:=}
-${LDFLAGS:=}
-${LIBS:=}
 
 # Initialize a temporary variable for ./configure options.
 CF_FLAGS=
