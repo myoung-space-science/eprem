@@ -29,14 +29,20 @@ c_red="\033[0;31m"
 c_none="\033[0m"
 
 # Print a character enough times to fill the screen width.
+# - first argument: the character to print
+# - second argument: the number of columns to pad on both sides (default=0)
 print_break() {
     local c=${1}
-    local pad=2
-    let "length=$(tput cols)-(2*$pad)"
-
-    printf " %.0s" $(seq 1 $pad)
-    printf "$c%.0s" $(seq 1 $length)
-    printf " %.0s" $(seq 1 $pad)
+    local pad=${2:-0}
+    if [ $pad == 0 ]; then
+        let "length=$(tput cols)"
+        printf "$c%.0s" $(seq 1 $length)
+    else
+        let "length=$(tput cols)-(2*$pad)"
+        printf " %.0s" $(seq 1 $pad)
+        printf "$c%.0s" $(seq 1 $length)
+        printf " %.0s" $(seq 1 $pad)
+    fi
     echo 
 }
 
