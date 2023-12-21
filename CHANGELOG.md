@@ -3,6 +3,7 @@
 ## NEXT
 
 - Create `install.sh` to replace `setup.sh` with some features moved from `build.sh`
+- Add reference radius and reference energy to runtime options
 
 ## v0.3.0 (18Dec2023)
 
