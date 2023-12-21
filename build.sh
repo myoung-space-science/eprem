@@ -1,26 +1,18 @@
 #!/bin/bash
 
-# Adapted from https://stackoverflow.com/a/3352015. This will trim leading and
-# trailing whitespace from a given string. For example: `trim "  a b  "` yields
-# `"a b"`.
-trim() {
-    local var="$*"
-    # leading whitespace
-    var="${var#"${var%%[![:space:]]*}"}"
-    # trailing whitespace
-    var="${var%"${var##*[![:space:]]}"}"
-    printf '%s' "$var"
-}
+# Import functions.
+if [ -f tools.sh ]; then
+    . tools.sh
+else
+    echo "Cannot source necessary functions."
+    exit 1
+fi
 
 # Set up the function that prints a section header.
-DRY_RUN=
+dry_run_string=
 print_banner() {
     if [ $verbose == 1 ]; then
-        printf "
-=======================================================================
-    ${DRY_RUN}$@
-=======================================================================
-"
+        print_header "${dry_run_string}$@"
     fi
 }
 
@@ -46,6 +38,7 @@ logfile=${top_dir}/build.log
 
 # Set option defaults.
 verbose=0
+dry_run=0
 alias=
 from_clean=0
 
@@ -68,6 +61,8 @@ ${textbf}DESCRIPTION${textnm}
                 Display help and exit.
         ${textbf}-v${textnm}, ${textbf}--verbose${textnm}
                 Print runtime messages.
+        ${textbf}--dry-run${textnm}
+                Display the sequence of commands but don't run anything.
         ${textbf}--alias=ALIAS${textnm}
                 The alias of the configuration to build.
         ${textbf}--from-clean${textnm}
@@ -88,6 +83,7 @@ TEMP=$(getopt \
     -n 'setup.sh' \
     -o 'hv' \
     -l 'help,verbose,' \
+    -l 'dry-run' \
     -l 'alias:' \
     -l 'from-clean' \
     -- "$@")
@@ -108,6 +104,11 @@ while [ $# -gt 0 ]; do
         ;;
         '-v'|'--verbose')
             verbose=1
+            shift
+            continue
+        ;;
+        '--dry-run')
+            dry_run=1
             shift
             continue
         ;;
@@ -172,19 +173,33 @@ cleanup() {
 
 trap cleanup EXIT
 
+# Check for --dry-run option.
+if [ ${dry_run} == 1 ]; then
+    dry_run_string="[DRY RUN] "
+fi
+
 # Move to the target directory.
 pushd $top_dir/$alias 1> /dev/null 2>> $logfile
 
 # Run the clean stage, if requested.
 if [ ${from_clean} == 1 ]; then
-    make clean &>> $logfile
+    print_banner "Running make clean"
+    if [ $dry_run == 0 ]; then
+        make clean &>> $logfile
+    fi
 fi
 
 # Run the make stage.
-make &>> $logfile
+print_banner "Running make"
+if [ $dry_run == 0 ]; then
+    make &>> $logfile
+fi
 
 # Run the install stage.
-make install &>> $logfile
+print_banner "Running make install"
+if [ $dry_run == 0 ]; then
+    make install &>> $logfile
+fi
 
 # Exit the target directory.
 popd 1> /dev/null 2>> $logfile
