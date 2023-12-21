@@ -102,34 +102,34 @@
   Scalar_t normJXi, normJ;
   Scalar_t normJ0;
   Scalar_t normRadius, radialTerm;
-  Scalar_t normE1, powerLawTerm;
-  Scalar_t normE0, expTerm;
+  Scalar_t normEr, powerLawTerm;
+  Scalar_t normEc, expTerm;
   Scalar_t normf;
 
   const double one   = 1.0;                // 1.0 with appropriate precision
   const double two   = 2.0;                // 2.0 with appropriate precision
-  const double r1    = 1.0;                // Reference radius = 1 au
-  const double E1    = 1.0;                // Reference energy = 1 MeV/nuc
   const double Enorm = MEV / (MP * C * C); // Energy-normalization factor
 
   /* Define local variables corresponding to runtime options. */
   Scalar_t J0     = config.boundaryFunctAmplitude;
   Scalar_t Xi     = config.boundaryFunctXi;
-  Scalar_t gamma  = config.boundaryFunctGamma;
   Scalar_t beta   = config.boundaryFunctBeta;
-  Scalar_t E0     = config.boundaryFunctEcutoff;
+  Scalar_t r0     = config.boundaryFunctR0;
+  Scalar_t gamma  = config.boundaryFunctGamma;
+  Scalar_t Er     = config.boundaryFunctEr;
+  Scalar_t Ec     = config.boundaryFunctEcutoff;
   Scalar_t rScale = config.rScale;
 
   /* Define normalized variables. */
   normJ0     = J0 * (MP * C) / (MHD_DENSITY_NORM * MEV);
-  normRadius = r1 / config.rScale;
-  normE1     = E1 * Enorm;
-  normE0     = E0 * Enorm;
+  normRadius = r0 / config.rScale;
+  normEr     = Er * Enorm;
+  normEc     = Ec * Enorm;
 
   /* Define terms in the analytic spectrum. */
   radialTerm   = pow( (r / normRadius), -beta );  // radial power-law dependence
-  powerLawTerm = pow( (energy / normE1), -gamma); // energetic power-law below E0
-  expTerm      = exp( -(energy / normE0) );       // exponential fall-off above E0
+  powerLawTerm = pow( (energy / normEr), -gamma); // energetic power-law below Ec
+  expTerm      = exp( -(energy / normEc) );       // exponential fall-off above Ec
 
   /* Compute the flux spectrum. */
   normJXi = normJ0 * radialTerm * powerLawTerm * expTerm;

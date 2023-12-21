@@ -138,8 +138,10 @@ typedef struct {
 
   Scalar_t boundaryFunctAmplitude;
   Scalar_t boundaryFunctXi;
-  Scalar_t boundaryFunctGamma;
   Scalar_t boundaryFunctBeta;
+  Scalar_t boundaryFunctR0;
+  Scalar_t boundaryFunctGamma;
+  Scalar_t boundaryFunctEr;
   Scalar_t boundaryFunctEcutoff;
 
   Index_t   shockSolver;
