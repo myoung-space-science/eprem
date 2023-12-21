@@ -113,18 +113,18 @@
   const double Enorm = MEV / (MP * C * C); // Energy-normalization factor
 
   /* Define local variables corresponding to runtime options. */
-  Scalar_t J0 = config.boundaryFunctAmplitude;
-  Scalar_t Xi = config.boundaryFunctXi;
-  Scalar_t gamma = config.boundaryFunctGamma;
-  Scalar_t beta = config.boundaryFunctBeta;
-  Scalar_t E0 = config.boundaryFunctEcutoff;
+  Scalar_t J0     = config.boundaryFunctAmplitude;
+  Scalar_t Xi     = config.boundaryFunctXi;
+  Scalar_t gamma  = config.boundaryFunctGamma;
+  Scalar_t beta   = config.boundaryFunctBeta;
+  Scalar_t E0     = config.boundaryFunctEcutoff;
   Scalar_t rScale = config.rScale;
 
   /* Define normalized variables. */
-  normJ0 = J0 * (MP * C) / (MHD_DENSITY_NORM * MEV);
+  normJ0     = J0 * (MP * C) / (MHD_DENSITY_NORM * MEV);
   normRadius = r1 / config.rScale;
-  normE1 = E1 * Enorm;
-  normE0 = E0 * Enorm;
+  normE1     = E1 * Enorm;
+  normE0     = E0 * Enorm;
 
   /* Define terms in the analytic spectrum. */
   radialTerm   = pow( (r / normRadius), -beta );  // radial power-law dependence
@@ -133,7 +133,7 @@
 
   /* Compute the flux spectrum. */
   normJXi = normJ0 * radialTerm * powerLawTerm * expTerm;
-  normJ  = normJXi / Xi;
+  normJ   = normJXi / Xi;
 
   /* Convert flux to a distribution function. */
   normf = normJ / (two * energy);
