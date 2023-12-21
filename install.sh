@@ -296,6 +296,12 @@ cleanup() {
         echo &>> $logfile
         echo "Installation succeeded." &>> $logfile
         print_banner "Done"
+        echo
+        echo "You may now run make && make install in $top_dir/$alias"
+        echo "or run ./build.sh --alias=$alias"
+        echo
+        echo "See ./build.sh -h for all available options."
+        echo
     fi
 }
 
