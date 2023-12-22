@@ -8,6 +8,7 @@
 - Allow user to pass observer angles (i.e., theta and phi) in degrees
 - Change value of `VERSION` to be consistent with this and configure files
 - Refactor parameter-related constants
+- Improve config-file read and echo
 
 ## v0.3.0 (18Dec2023)
 
