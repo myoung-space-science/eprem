@@ -6,6 +6,7 @@
 - Add reference radius and reference energy to runtime options
 - Allow user to pass ideal shock angles (i.e., theta, phi, and width) in degrees
 - Allow user to pass observer angles (i.e., theta and phi) in degrees
+- Change value of `VERSION` to be consistent with this and configure files
 
 ## v0.3.0 (18Dec2023)
 
