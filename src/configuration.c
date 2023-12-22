@@ -123,7 +123,7 @@ getParams( char* configFilename)
   config.useParallelDiffusion = readInt("useParallelDiffusion", 1, 0, 1);
   config.useDrift = readInt("useDrift", 0, 0, 1);
 
-  config.numSpecies = readInt("numSpecies", 1, 0, 100);
+  config.numSpecies = readInt("numSpecies", 1, 1, 100);
   Scalar_t defaultMass[1] = {1.0};
   Scalar_t defaultEnergy[1] = {1.0};
   config.mass = readDoubleArray("mass", config.numSpecies, defaultMass);
