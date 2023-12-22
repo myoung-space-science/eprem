@@ -160,6 +160,8 @@ typedef struct {
   Scalar_t  idealShockTheta;
   Scalar_t  idealShockPhi;
   Scalar_t  idealShockWidth;
+  Scalar_t  idealShockThetaWidth;
+  Scalar_t  idealShockPhiWidth;
   Bool_t    idealShockUseDegrees;
 
   int dumpFreq;

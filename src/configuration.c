@@ -29,6 +29,7 @@ config_t cfg;
 
 const double third = 1.0/3.0;
 const double deg2rad = PI/180.0;
+const double rad2deg = 180.0/PI;
 
 void
 initGlobalParameters( char* configFilename )
@@ -224,10 +225,14 @@ getParams( char* configFilename)
     config.idealShockTheta = deg2rad * readDouble("idealShockTheta", 90.0, 0.0, 180.0);
     config.idealShockPhi = deg2rad *readDouble("idealShockPhi", 0.0, 0.0, 360.0);
     config.idealShockWidth = deg2rad *readDouble("idealShockWidth", 0.0, 0.0, 180.0);
+    config.idealShockThetaWidth = deg2rad *readDouble("idealShockThetaWidth", rad2deg * config.idealShockWidth, 0.0, 180.0);
+    config.idealShockPhiWidth = deg2rad *readDouble("idealShockPhiWidth", rad2deg * config.idealShockWidth, 0.0, 180.0);
   } else {
     config.idealShockTheta = readDouble("idealShockTheta", HALF_PI, 0.0, PI);
     config.idealShockPhi = readDouble("idealShockPhi", 0.0, 0.0, TWO_PI);
     config.idealShockWidth = readDouble("idealShockWidth", 0.0, 0.0, PI);
+    config.idealShockThetaWidth = readDouble("idealShockThetaWidth", config.idealShockWidth, 0.0, PI);
+    config.idealShockPhiWidth = readDouble("idealShockPhiWidth", config.idealShockWidth, 0.0, PI);
   }
 
   config.dumpFreq = readInt("dumpFreq",1, 0, 1000000);
