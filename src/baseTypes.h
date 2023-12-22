@@ -46,6 +46,7 @@ typedef int               MPI_Flag_t;
 /*-- [see numpy.pi] --*/
 #define PI  3.1415926535897932
 #define TWO_PI 6.283185307179586
+#define HALF_PI 1.570796327
 
 #define SMALLFLOAT 1.0e-33
 #define LARGEFLOAT 1.0e33
