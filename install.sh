@@ -24,6 +24,8 @@ set -eu
 
 # Store the initial working directory.
 top_dir="$(dirname "$(readlink -f "${0}")")"
+
+# Declare the name of the log file.
 logfile=${top_dir}/install.log
 
 # Set option defaults.
@@ -286,6 +288,9 @@ status=
 # Define special flag to indicate success.
 success="@!SUCCESS!@"
 
+# Declare the build-specific directory.
+build_dir=${top_dir}/${alias}
+
 # Define a clean-up function.
 cleanup() {
     if [ "$status" != "$success" ]; then
@@ -297,8 +302,8 @@ cleanup() {
         echo "Installation succeeded." &>> $logfile
         print_banner "Done"
         echo
-        echo "You may now run make && make install in $top_dir/$alias"
-        echo "or run ./build.sh --alias=$alias"
+        echo "You may now run make && make install in ${build_dir}"
+        echo "or run ./build.sh --alias=${alias}"
         echo
         echo "See ./build.sh -h for all available options."
         echo
@@ -307,10 +312,12 @@ cleanup() {
 
 trap cleanup EXIT
 
-if [ -d "${alias}" ]; then
-    echo "Refusing to overwrite existing directory ${alias}" &>> $logfile
+# Create the build-specific directory if it doesn't already exist.
+if [ -d "${build_dir}" ]; then
+    echo "Refusing to overwrite existing directory ${build_dir}" &>> $logfile
     exit 1
 fi
+mkdir ${build_dir}
 
 # Check for --dry-run option.
 if [ ${dry_run} == 1 ]; then
@@ -624,14 +631,11 @@ else
     autoreconf ${AR_FLAGS}
 fi
 
-# Create the build-specific subdirectory.
-mkdir $top_dir/$alias
-
 # Move to the build-specific subdirectory.
-pushd $top_dir/$alias 1> /dev/null 2>> $logfile
+pushd ${build_dir} 1> /dev/null 2>> $logfile
 
 # Update configure flags based on the build alias.
-CF_FLAGS="${CF_FLAGS} --prefix=$top_dir/$alias"
+CF_FLAGS="${CF_FLAGS} --prefix=${build_dir}"
 
 # Configure the build.
 print_banner "Configuring"
