@@ -127,7 +127,11 @@ getParams( char* configFilename)
   config.pointObserverOutput = readInt("pointObserverOutput", 0, 0, 1);
   config.pointObserverOutputTime = readDouble("pointObserverOutputTime", 0.0, 0.0, LARGEFLOAT);
 
-  config.numObservers = readInt("numObservers", 0, 0, 1000);
+  if (config.pointObserverOutput == 1) {
+    config.numObservers = readInt("numObservers", 1, 0, 1000);
+  } else {
+    config.numObservers = readInt("numObservers", 0, 0, 1000);
+  }
   if (config.numObservers > 0) {
     Scalar_t defaultObsR[1] = {config.rScale};
     Scalar_t defaultObsTheta[1] = {0.0};
@@ -294,34 +298,47 @@ Scalar_t *readDoubleArray(char *key, int defaultSize, int size, Scalar_t *defaul
   Scalar_t *val;
   const config_setting_t *Arr;
 
-  val = (Scalar_t *)malloc(sizeof(double) * size);
-
-  if (mpi_rank == 0)
+  if (mpi_rank == 0) {
     printf("%s: ", key);
+  }
 
   if (size > 0) {
 
+    val = (Scalar_t *)malloc(sizeof(double) * size);
     Arr = config_lookup(&cfg, key);
 
     for (i = 0; i < size; i++) {
       val[i] = config_setting_get_float_elem(Arr, i);
       checkDoubleBounds(key, val[i], minVal, maxVal);
-      if (mpi_rank == 0) printf("%.4e ", val[i]);
     }
 
-    if (mpi_rank == 0) printf("\n");
+    if (mpi_rank == 0) {
+      printf("[");
+      if (size == 1) {
+        printf("%.4e]\n", val[0]);
+      } else {
+        for (i = 0; i < size-1; i++) {
+          printf("%.4e, ", val[i]);
+        }
+        printf("%.4e]\n", val[i]);
+      }
+    }
 
     return val;
 
   } else {
 
     if (mpi_rank == 0){
-      for (i = 0; i < defaultSize; i++) {
-        printf("%.4e", defaultVal[i]);
+      printf("[");
+      if (defaultSize == 1) {
+        printf("%.4e]\n", defaultVal[0]);
+      } else {
+        for (i = 0; i < defaultSize-1; i++) {
+          printf("%.4e, ", defaultVal[i]);
+        }
+        printf("%.4e]\n", defaultVal[i]);
       }
     }
-
-    if (mpi_rank == 0) printf("\n");
 
     return defaultVal;
 
