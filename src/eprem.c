@@ -283,7 +283,7 @@ int main(int argc, char *argv[]) {
 
     if ( (num_loops % config.dumpFreq) == 0 )
     {
-       dataDumpIO();
+      dataDumpIO();
     }
 
     // -------------------------------------------------------------------------
