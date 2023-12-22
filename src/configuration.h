@@ -97,6 +97,7 @@ typedef struct {
   Scalar_t*  obsR;
   Scalar_t*  obsTheta;
   Scalar_t*  obsPhi;
+  Bool_t     obsUseDegrees;
 
   Scalar_t idw_p;
 

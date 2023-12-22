@@ -56,6 +56,8 @@ getParams( char* configFilename)
     panic("Unable to read configuration file.");
 
   }
+  Scalar_t  theta, phi, width;
+  Scalar_t *thetaArr, *phiArr;
 
   config.numNodesPerStream = readInt("numNodesPerStream",N_PROCS,N_PROCS,BADINT);
   config.numRowsPerFace = readInt("numRowsPerFace", 2, 1, BADINT);
@@ -130,8 +132,20 @@ getParams( char* configFilename)
   config.numObservers = readInt("numObservers", 0, 0, 1000);
   Scalar_t defaultObserver[1] = {0};
   config.obsR = readDoubleArray("obsR", config.numObservers, defaultObserver);
-  config.obsTheta = readDoubleArray("obsTheta", config.numObservers, defaultObserver);
-  config.obsPhi = readDoubleArray("obsPhi", config.numObservers, defaultObserver);
+  thetaArr = readDoubleArray("obsTheta", config.numObservers, defaultObserver);
+  phiArr = readDoubleArray("obsPhi", config.numObservers, defaultObserver);
+  config.obsUseDegrees = readInt("obsUseDegrees", 0, 0, 1);
+  if (config.obsUseDegrees == 1) {
+    config.obsTheta = (Scalar_t *)malloc(sizeof(double) * config.numObservers);
+    config.obsPhi = (Scalar_t *)malloc(sizeof(double) * config.numObservers);
+    for (int i=0; i<config.numObservers; i++) {
+      config.obsTheta[i] = deg2rad*thetaArr[i];
+      config.obsPhi[i]   = deg2rad*phiArr[i];
+    }
+  } else {
+    config.obsTheta = thetaArr;
+    config.obsPhi   = phiArr;
+  }
 
   config.idw_p = readDouble("idw_p", 3.0, VERYSMALL, BADVALUE);
 
@@ -198,7 +212,6 @@ getParams( char* configFilename)
   config.idealShockFalloff = readDouble("idealShockFalloff", 0.0, 0.0, BADVALUE);
   config.idealShockSpeed = readDouble("idealShockSpeed", 1500e5, VERYSMALL, BADVALUE);
   config.idealShockInitTime = readDouble("idealShockInitTime", config.simStartTime, config.simStartTime, BADVALUE);
-  Scalar_t theta, phi, width;
   theta = readDouble("idealShockTheta", 90.0, 0.0, 180.0);
   phi = readDouble("idealShockPhi", 0.0, 0.0, 360.0);
   width = readDouble("idealShockWidth", 0.0, 0.0, 180.0);
@@ -331,10 +344,15 @@ Scalar_t *readDoubleArray(char *key, int size, Scalar_t *defaultVal) {
 void
 checkParams( void )
 {
-  // Enforce bounds on angles in radians.
+  // Enforce bounds on shock angles in radians.
   checkDoubleBounds("idealShockTheta", config.idealShockTheta, 0.0, PI);
   checkDoubleBounds("idealShockPhi", config.idealShockTheta, 0.0, 2.0 * PI);
   checkDoubleBounds("idealShockWidth", config.idealShockTheta, 0.0, PI);
+  // Enforce bounds on observer angles in radians.
+  for (int i=0; i<config.numObservers; i++) {
+    checkDoubleBounds("obsTheta", config.obsTheta[i], 0.0, PI);
+    checkDoubleBounds("obsPhi", config.obsTheta[i], 0.0, 2.0 * PI);
+  }
 }
 
 
