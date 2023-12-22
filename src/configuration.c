@@ -212,18 +212,15 @@ getParams( char* configFilename)
   config.idealShockFalloff = readDouble("idealShockFalloff", 0.0, 0.0, LARGEFLOAT);
   config.idealShockSpeed = readDouble("idealShockSpeed", 1500e5, SMALLFLOAT, LARGEFLOAT);
   config.idealShockInitTime = readDouble("idealShockInitTime", config.simStartTime, config.simStartTime, LARGEFLOAT);
-  theta = readDouble("idealShockTheta", 90.0, 0.0, 180.0);
-  phi = readDouble("idealShockPhi", 0.0, 0.0, 360.0);
-  width = readDouble("idealShockWidth", 0.0, 0.0, 180.0);
   config.idealShockUseDegrees = readInt("idealShockUseDegrees", 0, 0, 1);
   if (config.idealShockUseDegrees == 1) {
-    config.idealShockTheta = deg2rad*theta;
-    config.idealShockPhi   = deg2rad*phi;
-    config.idealShockWidth = deg2rad*width;
+    config.idealShockTheta = deg2rad * readDouble("idealShockTheta", 90.0, 0.0, 180.0);
+    config.idealShockPhi = deg2rad *readDouble("idealShockPhi", 0.0, 0.0, 360.0);
+    config.idealShockWidth = deg2rad *readDouble("idealShockWidth", 0.0, 0.0, 180.0);
   } else {
-    config.idealShockTheta = theta;
-    config.idealShockPhi   = phi;
-    config.idealShockWidth = width;
+    config.idealShockTheta = readDouble("idealShockTheta", HALF_PI, 0.0, PI);
+    config.idealShockPhi = readDouble("idealShockPhi", 0.0, 0.0, TWO_PI);
+    config.idealShockWidth = readDouble("idealShockWidth", 0.0, 0.0, PI);
   }
 
   config.dumpFreq = readInt("dumpFreq",1, 0, 1000000);
