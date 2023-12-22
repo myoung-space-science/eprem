@@ -98,7 +98,7 @@
   
   rmag = sqrt(pos.x*pos.x + pos.y*pos.y + pos.z*pos.z);
 
-	if ( (rmag - fabs(pos.z)) < VERYSMALL )
+	if ( (rmag - fabs(pos.z)) < SMALLFLOAT )
 	{
 		
 		out.x = 0.0;

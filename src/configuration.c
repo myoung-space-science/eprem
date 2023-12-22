@@ -59,32 +59,32 @@ getParams( char* configFilename)
   Scalar_t  theta, phi, width;
   Scalar_t *thetaArr, *phiArr;
 
-  config.numNodesPerStream = readInt("numNodesPerStream",N_PROCS,N_PROCS,BADINT);
-  config.numRowsPerFace = readInt("numRowsPerFace", 2, 1, BADINT);
-  config.numColumnsPerFace = readInt("numColumnsPerFace", 2, 1, BADINT);
-  config.numEnergySteps = readInt("numEnergySteps", 20, 2, BADINT);
-  config.numMuSteps = readInt("numMuSteps", 20, 2, BADINT);
+  config.numNodesPerStream = readInt("numNodesPerStream",N_PROCS,N_PROCS,LARGEINT);
+  config.numRowsPerFace = readInt("numRowsPerFace", 2, 1, LARGEINT);
+  config.numColumnsPerFace = readInt("numColumnsPerFace", 2, 1, LARGEINT);
+  config.numEnergySteps = readInt("numEnergySteps", 20, 2, LARGEINT);
+  config.numMuSteps = readInt("numMuSteps", 20, 2, LARGEINT);
 
-  config.rScale = readDouble("rScale", RSAU, VERYSMALL, BADVALUE);
-  config.flowMag = readDouble("flowMag", 400.0e5, VERYSMALL, BADVALUE);
-  config.mhdDensityAu = readDouble("mhdDensityAu", 8.30, VERYSMALL, BADVALUE);
-  config.mhdBAu = readDouble("mhdBAu", 1.60e-5, VERYSMALL, BADVALUE);
-  config.simStartTime = readDouble("simStartTime", 0.0, 0.0, BADVALUE);
-  config.tDel = readDouble("tDel", 0.01041666666667, VERYSMALL, BADVALUE);
-  config.simStopTime = readDouble("simStopTime", config.simStartTime + config.tDel, config.simStartTime, BADVALUE);
-  config.numEpSteps = readInt("numEpSteps", 30, 1, BADINT);
-  config.aziSunStart = readDouble("aziSunStart", 0.0, 0.0, BADVALUE);
-  config.omegaSun = readDouble("omegaSun", 0.001429813, 0.0, BADVALUE);
-  config.lamo = readDouble("lamo", 1.0, VERYSMALL, BADVALUE);
-  config.dsh_min = readDouble("dsh_min", 5.0e-5, VERYSMALL, BADVALUE);
-  config.dsh_hel_min = readDouble("dsh_hel_min", 2.5e-4, VERYSMALL, BADVALUE);
-  config.kperxkpar = readDouble("kperxkpar", 0.01, VERYSMALL, BADVALUE);
-  config.mfpRadialPower = readDouble("mfpRadialPower", 2.0, -1.0 * BADVALUE, BADVALUE);
-  config.rigidityPower = readDouble("rigidityPower", third, VERYSMALL, BADVALUE);
+  config.rScale = readDouble("rScale", RSAU, SMALLFLOAT, LARGEFLOAT);
+  config.flowMag = readDouble("flowMag", 400.0e5, SMALLFLOAT, LARGEFLOAT);
+  config.mhdDensityAu = readDouble("mhdDensityAu", 8.30, SMALLFLOAT, LARGEFLOAT);
+  config.mhdBAu = readDouble("mhdBAu", 1.60e-5, SMALLFLOAT, LARGEFLOAT);
+  config.simStartTime = readDouble("simStartTime", 0.0, 0.0, LARGEFLOAT);
+  config.tDel = readDouble("tDel", 0.01041666666667, SMALLFLOAT, LARGEFLOAT);
+  config.simStopTime = readDouble("simStopTime", config.simStartTime + config.tDel, config.simStartTime, LARGEFLOAT);
+  config.numEpSteps = readInt("numEpSteps", 30, 1, LARGEINT);
+  config.aziSunStart = readDouble("aziSunStart", 0.0, 0.0, LARGEFLOAT);
+  config.omegaSun = readDouble("omegaSun", 0.001429813, 0.0, LARGEFLOAT);
+  config.lamo = readDouble("lamo", 1.0, SMALLFLOAT, LARGEFLOAT);
+  config.dsh_min = readDouble("dsh_min", 5.0e-5, SMALLFLOAT, LARGEFLOAT);
+  config.dsh_hel_min = readDouble("dsh_hel_min", 2.5e-4, SMALLFLOAT, LARGEFLOAT);
+  config.kperxkpar = readDouble("kperxkpar", 0.01, SMALLFLOAT, LARGEFLOAT);
+  config.mfpRadialPower = readDouble("mfpRadialPower", 2.0, -1.0 * LARGEFLOAT, LARGEFLOAT);
+  config.rigidityPower = readDouble("rigidityPower", third, SMALLFLOAT, LARGEFLOAT);
   config.focusingLimit = readDouble("focusingLimit", 1.0, 0.0, 1.0);
 
-  config.eMin = readDouble("eMin", 1.0, VERYSMALL, BADVALUE);
-  config.eMax = readDouble("eMax", 1000.0, config.eMin, BADVALUE);
+  config.eMin = readDouble("eMin", 1.0, SMALLFLOAT, LARGEFLOAT);
+  config.eMax = readDouble("eMax", 1000.0, config.eMin, LARGEFLOAT);
   config.useStochastic = readInt("useStochastic", 0, 0, 1);
   config.useEPBoundary = readInt("useEPBoundary", 1, 0, 1);
   config.checkSeedPopulation = readInt("checkSeedPopulation", 1, 0, 1);
@@ -93,29 +93,29 @@ getParams( char* configFilename)
 
   config.fluxLimiter = readInt("fluxLimiter", 1, 0, 1);
 
-  config.gammaEhigh = readDouble("gammaEhigh", 0.0, -1.0 * BADVALUE, BADVALUE);
-  config.gammaElow = readDouble("gammaElow", 0.0, -1.0 * BADVALUE, BADVALUE);
+  config.gammaEhigh = readDouble("gammaEhigh", 0.0, -1.0 * LARGEFLOAT, LARGEFLOAT);
+  config.gammaElow = readDouble("gammaElow", 0.0, -1.0 * LARGEFLOAT, LARGEFLOAT);
 
   config.FailModeDump = readInt("FailModeDump", 1, 0, 1);
 
   config.outputFloat = readInt("outputFloat", 0, 0, 1);
 
   config.unifiedOutput = readInt("unifiedOutput", 1, 0, 1);
-  config.unifiedOutputTime = readDouble("unifiedOutputTime", 0.0, 0.0, BADVALUE);
+  config.unifiedOutputTime = readDouble("unifiedOutputTime", 0.0, 0.0, LARGEFLOAT);
 
   config.pointObserverOutput = readInt("pointObserverOutput", 0, 0, 1);
-  config.pointObserverOutputTime = readDouble("pointObserverOutputTime", 0.0, 0.0, BADVALUE);
+  config.pointObserverOutputTime = readDouble("pointObserverOutputTime", 0.0, 0.0, LARGEFLOAT);
 
   config.streamFluxOutput = readInt("streamFluxOutput", 0, 0, 1);
-  config.streamFluxOutputTime = readDouble("streamFluxOutputTime", 0.0, 0.0, BADVALUE);
+  config.streamFluxOutputTime = readDouble("streamFluxOutputTime", 0.0, 0.0, LARGEFLOAT);
 
   config.subTimeCouple = readInt("subTimeCouple", 0, 0, 1);
 
   config.epremDomain = readInt("epremDomain", 0, 0, 1);
-  config.epremDomainOutputTime = readDouble("epremDomainOutputTime", 0.0, 0.0, BADVALUE);
+  config.epremDomainOutputTime = readDouble("epremDomainOutputTime", 0.0, 0.0, LARGEFLOAT);
 
   config.unstructuredDomain = readInt("unstructuredDomain", 0, 0, 1);
-  config.unstructuredDomainOutputTime = readDouble("unstructuredDomainOutputTime", 0.0, 0.0, BADVALUE);
+  config.unstructuredDomainOutputTime = readDouble("unstructuredDomainOutputTime", 0.0, 0.0, LARGEFLOAT);
 
   config.useAdiabaticChange = readInt("useAdiabaticChange", 1, 0, 1);
   config.useAdiabaticFocus = readInt("useAdiabaticFocus", 1, 0, 1);
@@ -147,7 +147,7 @@ getParams( char* configFilename)
     config.obsPhi   = phiArr;
   }
 
-  config.idw_p = readDouble("idw_p", 3.0, VERYSMALL, BADVALUE);
+  config.idw_p = readDouble("idw_p", 3.0, SMALLFLOAT, LARGEFLOAT);
 
   config.mhdCouple = readInt("mhdCouple", 0, 0, 1);
   config.mhdNumFiles = readInt("mhdNumFiles", 0, 0, 32767);
@@ -157,18 +157,18 @@ getParams( char* configFilename)
   config.mhdDigits = readInt("mhdDigits", 3, 0, 32767);
 
   config.mhdCoupledTime = readInt("mhdCoupledTime", 1, 0, 1);
-  config.mhdStartTime = readDouble("mhdStartTime", 0.0, 0.0, BADVALUE);
-  config.epEquilibriumCalcDuration = readDouble("epEquilibriumCalcDuration", 0.0, 0.0, BADVALUE);
-  config.preEruptionDuration = readDouble("preEruptionDuration", 0.0, 0.0, BADVALUE);
+  config.mhdStartTime = readDouble("mhdStartTime", 0.0, 0.0, LARGEFLOAT);
+  config.epEquilibriumCalcDuration = readDouble("epEquilibriumCalcDuration", 0.0, 0.0, LARGEFLOAT);
+  config.preEruptionDuration = readDouble("preEruptionDuration", 0.0, 0.0, LARGEFLOAT);
 
-  config.mhdRadialMin = readDouble("mhdRadialMin", 0.0, 0.0, BADVALUE);
-  config.mhdRadialMax = readDouble("mhdRadialMax", 0.0, 0.0, BADVALUE);
-  config.mhdVmin = readDouble("mhdVmin", 50.0e5, 0.0, BADVALUE);
+  config.mhdRadialMin = readDouble("mhdRadialMin", 0.0, 0.0, LARGEFLOAT);
+  config.mhdRadialMax = readDouble("mhdRadialMax", 0.0, 0.0, LARGEFLOAT);
+  config.mhdVmin = readDouble("mhdVmin", 50.0e5, 0.0, LARGEFLOAT);
 
   config.mhdInitFromOuterBoundary = readInt("mhdInitFromOuterBoundary", 2, 0, 2);
   config.mhdInitMonteCarlo = readInt("mhdInitMonteCarlo", 0, 0, 1);
-  config.mhdInitRadius = readDouble("mhdInitRadius", 0.0, 0.0, BADVALUE);
-  config.mhdInitTimeStep = readDouble("mhdInitTimeStep", 0.000011574074074, 0.0, BADVALUE);
+  config.mhdInitRadius = readDouble("mhdInitRadius", 0.0, 0.0, LARGEFLOAT);
+  config.mhdInitTimeStep = readDouble("mhdInitTimeStep", 0.000011574074074, 0.0, LARGEFLOAT);
 
   config.useManualStreamSpawnLoc = readInt("useManualStreamSpawnLoc",0,0,1);
   Scalar_t defaultPos[1] = {0.0};
@@ -177,41 +177,41 @@ getParams( char* configFilename)
     config.streamSpawnLocZen = readDoubleArray("streamSpawnLocZen", 6*config.numRowsPerFace*config.numColumnsPerFace, defaultPos);
   }
 
-  config.parallelFlow = readDouble("parallelFlow", 0.0, 0.0, BADVALUE);
+  config.parallelFlow = readDouble("parallelFlow", 0.0, 0.0, LARGEFLOAT);
   config.fieldAligned = readInt("fieldAligned", 0, 0, 1);
 
-  config.epCalcStartTime = readDouble("epCalcStartTime", config.simStartTime, 0.0, BADVALUE);
+  config.epCalcStartTime = readDouble("epCalcStartTime", config.simStartTime, 0.0, LARGEFLOAT);
 
   config.mhdRotateSolution = readInt("mhdRotateSolution", 1, 0, 1);
 
-  config.mhdBConvert = readDouble("mhdBConvert", 1.0, 0.0, BADVALUE);
-  config.mhdVConvert = readDouble("mhdVConvert", 1.0, 0.0, BADVALUE);
-  config.mhdRhoConvert = readDouble("mhdRhoConvert", 1.0, 0.0, BADVALUE);
-  config.mhdRhoConvert = readDouble("mhdTimeConvert", 1.0, 0.0, BADVALUE);
+  config.mhdBConvert = readDouble("mhdBConvert", 1.0, 0.0, LARGEFLOAT);
+  config.mhdVConvert = readDouble("mhdVConvert", 1.0, 0.0, LARGEFLOAT);
+  config.mhdRhoConvert = readDouble("mhdRhoConvert", 1.0, 0.0, LARGEFLOAT);
+  config.mhdRhoConvert = readDouble("mhdTimeConvert", 1.0, 0.0, LARGEFLOAT);
 
   config.useBoundaryFunction = readInt("useBoundaryFunction", 1, 0, 1);
   config.boundaryFunctionInitDomain = readInt("boundaryFunctionInitDomain", 1, 0, 1);
 
-  config.boundaryFunctAmplitude = readDouble("boundaryFunctAmplitude", 1.0, VERYSMALL, BADVALUE);
-  config.boundaryFunctXi = readDouble("boundaryFunctXi", 1.0, 0.0, BADVALUE);
-  config.boundaryFunctBeta = readDouble("boundaryFunctBeta", 2.0, 0.0, BADVALUE);
-  config.boundaryFunctR0 = readDouble("boundaryFunctR0", 1.0, config.rScale, BADVALUE);
-  config.boundaryFunctGamma = readDouble("boundaryFunctGamma", 2.0, 0.0, BADVALUE);
-  config.boundaryFunctEr = readDouble("boundaryFunctEr", 1.0, 0.0, BADVALUE);
-  config.boundaryFunctEcutoff = readDouble("boundaryFunctEcutoff", 1.0, 0.0, BADVALUE);
+  config.boundaryFunctAmplitude = readDouble("boundaryFunctAmplitude", 1.0, SMALLFLOAT, LARGEFLOAT);
+  config.boundaryFunctXi = readDouble("boundaryFunctXi", 1.0, 0.0, LARGEFLOAT);
+  config.boundaryFunctBeta = readDouble("boundaryFunctBeta", 2.0, 0.0, LARGEFLOAT);
+  config.boundaryFunctR0 = readDouble("boundaryFunctR0", 1.0, config.rScale, LARGEFLOAT);
+  config.boundaryFunctGamma = readDouble("boundaryFunctGamma", 2.0, 0.0, LARGEFLOAT);
+  config.boundaryFunctEr = readDouble("boundaryFunctEr", 1.0, 0.0, LARGEFLOAT);
+  config.boundaryFunctEcutoff = readDouble("boundaryFunctEcutoff", 1.0, 0.0, LARGEFLOAT);
 
   config.shockSolver = readInt("shockSolver", 0, 0, 1);
-  config.shockDetectPercent = readDouble("shockDetectPercent", 1.0, 0.0, BADVALUE);
-  config.minInjectionEnergy = readDouble("minInjectionEnergy", 0.01, VERYSMALL, BADVALUE);
-  config.shockInjectionFactor = readDouble("shockInjectionFactor", 1.0, 0.0, BADVALUE);
+  config.shockDetectPercent = readDouble("shockDetectPercent", 1.0, 0.0, LARGEFLOAT);
+  config.minInjectionEnergy = readDouble("minInjectionEnergy", 0.01, SMALLFLOAT, LARGEFLOAT);
+  config.shockInjectionFactor = readDouble("shockInjectionFactor", 1.0, 0.0, LARGEFLOAT);
 
   config.idealShock = readInt("idealShock", 0, 0, 1);
-  config.idealShockSharpness = readDouble("idealShockSharpness", 1.0, VERYSMALL, BADVALUE);
-  config.idealShockScaleLength = readDouble("idealShockScaleLength", 0.0046491, VERYSMALL, BADVALUE);
-  config.idealShockJump = readDouble("idealShockJump", 4.0, VERYSMALL, BADVALUE);
-  config.idealShockFalloff = readDouble("idealShockFalloff", 0.0, 0.0, BADVALUE);
-  config.idealShockSpeed = readDouble("idealShockSpeed", 1500e5, VERYSMALL, BADVALUE);
-  config.idealShockInitTime = readDouble("idealShockInitTime", config.simStartTime, config.simStartTime, BADVALUE);
+  config.idealShockSharpness = readDouble("idealShockSharpness", 1.0, SMALLFLOAT, LARGEFLOAT);
+  config.idealShockScaleLength = readDouble("idealShockScaleLength", 0.0046491, SMALLFLOAT, LARGEFLOAT);
+  config.idealShockJump = readDouble("idealShockJump", 4.0, SMALLFLOAT, LARGEFLOAT);
+  config.idealShockFalloff = readDouble("idealShockFalloff", 0.0, 0.0, LARGEFLOAT);
+  config.idealShockSpeed = readDouble("idealShockSpeed", 1500e5, SMALLFLOAT, LARGEFLOAT);
+  config.idealShockInitTime = readDouble("idealShockInitTime", config.simStartTime, config.simStartTime, LARGEFLOAT);
   theta = readDouble("idealShockTheta", 90.0, 0.0, 180.0);
   phi = readDouble("idealShockPhi", 0.0, 0.0, 360.0);
   width = readDouble("idealShockWidth", 0.0, 0.0, 180.0);

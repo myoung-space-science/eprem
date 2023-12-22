@@ -47,9 +47,9 @@ typedef int               MPI_Flag_t;
 #define PI  3.1415926535897932
 #define TWO_PI 6.283185307179586
 
-#define VERYSMALL 1.0e-33
-#define BADVALUE 1.0e33
-#define BADINT 2147483647
+#define SMALLFLOAT 1.0e-33
+#define LARGEFLOAT 1.0e33
+#define LARGEINT 2147483647
 
 /*-- proton mass [grams] --*/
 #define MP  1.6726e-24

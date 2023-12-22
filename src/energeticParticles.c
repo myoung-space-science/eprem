@@ -544,19 +544,19 @@ Scalar_t leaving_rightGlobal = 0;
             dt_kper = dt * 0.33333333 * mfp[idx_frc(face,row,col)]
               * vgrid[energy] * config.kperxkpar;
 
-            delN = dt_kper / (node.n.dlPer * node.n.dlPer + VERYSMALL);
+            delN = dt_kper / (node.n.dlPer * node.n.dlPer + SMALLFLOAT);
             if (delN > THRESH)
               delN = THRESH;
 
-            delE = dt_kper / (node.e.dlPer * node.e.dlPer + VERYSMALL);
+            delE = dt_kper / (node.e.dlPer * node.e.dlPer + SMALLFLOAT);
             if (delE > THRESH)
               delE = THRESH;
 
-            delW = dt_kper / (node.w.dlPer * node.w.dlPer + VERYSMALL);
+            delW = dt_kper / (node.w.dlPer * node.w.dlPer + SMALLFLOAT);
             if (delW > THRESH)
               delW = THRESH;
 
-            delS = dt_kper / (node.s.dlPer * node.s.dlPer + VERYSMALL);
+            delS = dt_kper / (node.s.dlPer * node.s.dlPer + SMALLFLOAT);
             if (delS > THRESH)
               delS = THRESH;
 
@@ -1537,7 +1537,7 @@ Scalar_t leaving_rightGlobal = 0;
     deltaU = sqrt(pow(node.r.x - node.rOlder.x,2.0) + pow(node.r.y - node.rOlder.y,2.0) + pow(node.r.z - node.rOlder.z,2.0)) * config.rScale * log(cr);
 
     // determining the shock angle and injection energy
-    b_dn2xb_up2 = b1 * b1 / (b0 * b0 + VERYSMALL);
+    b_dn2xb_up2 = b1 * b1 / (b0 * b0 + SMALLFLOAT);
 
     if ( fabs(b_dn2xb_up2 - 1.0) > (cr * cr - 1.0) ) {
 
@@ -1558,7 +1558,7 @@ Scalar_t leaving_rightGlobal = 0;
     }
 
     // injection momentum, energy, and distribution
-    pInj = vInj / (sqrt(1.0 - vInj * vInj) + VERYSMALL);
+    pInj = vInj / (sqrt(1.0 - vInj * vInj) + SMALLFLOAT);
     eInj = sqrt( 1.0 + pInj * pInj ) - 1.0;
 
     // making sure there is a lower bound on the injection energy
@@ -1615,19 +1615,19 @@ Scalar_t leaving_rightGlobal = 0;
 
       oneOverGamma = v / p;
 
-      ionGyroRadius1 = v / ( oneOverGamma * ionGyroFreq1 + VERYSMALL);
-      ionGyroRadius0 = v / ( oneOverGamma * ionGyroFreq0 + VERYSMALL);
+      ionGyroRadius1 = v / ( oneOverGamma * ionGyroFreq1 + SMALLFLOAT);
+      ionGyroRadius0 = v / ( oneOverGamma * ionGyroFreq0 + SMALLFLOAT);
 
-      kappaPerp1 = kappaPar1 / ( 1.0 + (lambda1 * lambda1) / (ionGyroRadius1 * ionGyroRadius1 + VERYSMALL) );
-      kappaPerp0 = kappaPar0 / ( 1.0 + (lambda0 * lambda0) / (ionGyroRadius0 * ionGyroRadius0 + VERYSMALL) );
+      kappaPerp1 = kappaPar1 / ( 1.0 + (lambda1 * lambda1) / (ionGyroRadius1 * ionGyroRadius1 + SMALLFLOAT) );
+      kappaPerp0 = kappaPar0 / ( 1.0 + (lambda0 * lambda0) / (ionGyroRadius0 * ionGyroRadius0 + SMALLFLOAT) );
 
       kappa1 = kappaPar1 * cos2_tBN + kappaPerp1 * sin2_tBN;
       kappa0 = kappaPar0 * cos2_tBN + kappaPerp0 * sin2_tBN;
 
-      dx = kappa1 / (u1 + VERYSMALL) + kappa0 / (u0 + VERYSMALL);
+      dx = kappa1 / (u1 + SMALLFLOAT) + kappa0 / (u0 + SMALLFLOAT);
 
       // calculated the backward projected momentum
-      pProj = p * exp(-1.0 * dt * deltaU / (3.0 * dx + VERYSMALL));
+      pProj = p * exp(-1.0 * dt * deltaU / (3.0 * dx + SMALLFLOAT));
       pProjStep = floor( log(pProj/pMin) / dlnp + 0.5 );
 
       if (pProjStep < energy) {
@@ -1856,8 +1856,8 @@ Scalar_t leaving_rightGlobal = 0;
   if ((node.mhdBmagPlus == 0.0) || (node.mhdBmagMinus == 0.0))
     dlnBds = 0.0;
   else
-    dlnBds = (log(node.mhdBmagPlus) - log(node.mhdBmagMinus)) / (2.0 * node.ds + VERYSMALL);
-  // Probably could and maybe should get rid of VERYSMALL above (node.ds should never be zero!)
+    dlnBds = (log(node.mhdBmagPlus) - log(node.mhdBmagMinus)) / (2.0 * node.ds + SMALLFLOAT);
+  // Probably could and maybe should get rid of SMALLFLOAT above (node.ds should never be zero!)
 
   Cf = (2.0 * node.mhdDlnN - 3.0 * node.mhdDlnB) / (1.0 * config.numEpSteps);
 

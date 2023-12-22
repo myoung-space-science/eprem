@@ -1029,7 +1029,7 @@
             rSph.theta -= (2.0 * PI);
 
           rWalk = sphToCartPos(rSph);
-          diffMin = BADVALUE;
+          diffMin = LARGEFLOAT;
 
           // project forward until we cross the init radius
           // this isn't necessarily the counter used above as it can change if the footpoint changes

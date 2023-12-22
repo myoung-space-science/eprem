@@ -861,7 +861,7 @@ int * po_distObs_varid;
       pointObsNode[0].mhdDensity = config.mhdNsAu;
       pointObsNode[0].mhdBr = config.mhdBsAu;
       pointObsNode[0].mhdBtheta = 0.0;
-      pointObsNode[0].mhdBphi = -1.0 * config.mhdBsAu * (config.omegaSun / (config.mhdUs + VERYSMALL)) * sin(config.obsTheta[pointObserverIndex]);
+      pointObsNode[0].mhdBphi = -1.0 * config.mhdBsAu * (config.omegaSun / (config.mhdUs + SMALLFLOAT)) * sin(config.obsTheta[pointObserverIndex]);
       pointObsNode[0].mhdVr = config.mhdUs;
       pointObsNode[0].mhdVtheta = 0.0;
       pointObsNode[0].mhdVphi = 0.0;

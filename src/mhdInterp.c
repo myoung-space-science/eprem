@@ -263,7 +263,7 @@ Index_t unwindPhiOffset;
 
     B.theta = 0.0;
 
-    B.phi = -1.0 * rr * (B.r) * (config.omegaSun / (config.mhdUs + VERYSMALL) ) * sin(r.theta);
+    B.phi = -1.0 * rr * (B.r) * (config.omegaSun / (config.mhdUs + SMALLFLOAT) ) * sin(r.theta);
 
   }
 

@@ -302,7 +302,7 @@
 
     *Btheta = 0.0;
 
-    *Bphi = -1.0 * rr * (*Br) * (config.omegaSun / (Vr + VERYSMALL) ) * sin(theta);
+    *Bphi = -1.0 * rr * (*Br) * (config.omegaSun / (Vr + SMALLFLOAT) ) * sin(theta);
 
     // ideal shock test
     if ( (config.idealShock > 0) && (idealShockNode > 0) ) {
@@ -445,7 +445,7 @@
 
   B.theta = 0.0;
 
-  B.phi = -1.0 * r * B.r * (config.omegaSun / (Vr + VERYSMALL) ) * sin(theta);
+  B.phi = -1.0 * r * B.r * (config.omegaSun / (Vr + SMALLFLOAT) ) * sin(theta);
 
   if ( (config.idealShock > 0) && (idealShockNode > 0) ) {
 
