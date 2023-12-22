@@ -343,7 +343,7 @@ checkIntBounds(char *key, Index_t val, Index_t minVal, Index_t maxVal)
 {
   if ( (val < minVal) || (val > maxVal) ) {
 
-    printf("%s=%.4i is out of the acceptable range: [%.4i, %.4i]\n", (Index_t)val, key, minVal, maxVal);
+    printf("%s=%.4i is out of the acceptable range: [%.4i, %.4i]\n", key, (Index_t)val, minVal, maxVal);
     panic("the configuration reader detected an invalid value.\n");
 
   }
