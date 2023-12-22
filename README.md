@@ -6,10 +6,7 @@ The Energetic Particle Radiation Environment Module (EPREM) simulates accelerati
 
 ### For general use
 
-Download the latest version -- for example, via your browser or by running
-```
-wget https://prediccs.sr.unh.edu/sim/eprem/releases/eprem-latest.tar.gz
-```
+Download the latest [release](https://github.com/myoung-space-science/eprem/releases)
 
 Unpack the file
 ```
@@ -29,16 +26,21 @@ Proceed to **Setup**
 
 ### Setup
 
-The simplest way to configure, build, and install EPREM is by running `setup.sh`. Type `./setup.sh --help` to learn about its options.
+The simplest way to get started with EPREM is by running `install.sh` and `build.sh`. This section will describe some common usage of those scripts. Type `install.sh --help` and `./build.sh --help` for the most up-to-date information on their available options.
 
-To configure and build EPREM, then install the executable in your home directory, run
+The first time through, you will likely need to install the dependencies. To do so, pass the `--download-deps` option to `install.sh`; for future installations, you will then be able to pass `--with-deps-dir=deps`. The `--download-deps` parameter accepts an optional argument that will set the name of the subdirectory containing dependencies. If you choose to install dependencies in a non-default subdirectory, you will need to pass that same argument to `--with-deps-dir`.
+
+Suppose have downloaded the dependencies and you want to configure EPREM for installation in a directory named `new-build`. You should first run
 ```
-./setup.sh --install --prefix=$HOME
+$ ./install.sh --alias=new-build
 ```
+followed by
+```
+$ ./build.sh --alias=new-build
+```
+Those commands will configure, build, and install the executable file `new-build/bin/eprem`. The reason for separating `./install.sh` and `./build.sh` commands is to allow development-minded users to install once and repeatedly build.
 
-Although `setup.sh` intends to get you up and running as quickly as possible, you will likely need to specify some configuration options. In particular, you will need to point `configure.sh` to installations of [libconfig](http://hyperrealm.github.io/libconfig/) and [NetCDF4](https://unidata.github.io/netcdf4-python/) if they are not already in your `$PATH`. To do so, provide the `--with-libconfig-dir=...` and `--with-netcdf-dir=...` arguments. In the less likely event that there is no MPI distribution in your `$PATH`, you will need to provide the `--with-mpi-dir=...` argument. 
-
-If your system is 'vanilla' (e.g., a new installation) and doesn't have support for MPI, libconfig, or netCDF, you'll need to add them. For Debian-based systems (tested with 22.04 Ubuntu), you can run the following commands:
+More nuanced configuration is possible via the `--with-<package>-dir=...` options, with one for each dependency. You may also install dependencies in your executable path (e.g., `$PATH` on a *nix system). For example, to let EPREM use system installations of [libconfig]([libconfig](http://hyperrealm.github.io/libconfig/)) and [NetCDF4](https://www.unidata.ucar.edu/software/netcdf/) on a Debian-based system, you may run
 ```
 $ sudo apt install mpich
 $ sudo apt install libconfig-dev
@@ -50,18 +52,18 @@ If you are working with the development version, you'll also need to install the
 $ sudo apt install autoconf
 ```
 
-EPREM currently does not support serial operation (although it is possible in certain circumstances); `configure.sh` will do its best to find suitable MPI compilers without the need for explicitly setting `CC=...` and `CXX=...`, but if set-up fails, you may try doing so.
+Note that `--download-deps` will not download or install MPI. In the event that there is no MPI distribution in your `$PATH`, you will need to provide the `--with-mpi-dir=...` argument.
 
-Users familiar with the GNU Autotools are welcome to bypass `setup.sh` and directly run
+Users familiar with the GNU Autotools are welcome to bypass `install.sh` + `build.sh` and directly run
 ```
 ./configure OPTIONS && make && make install
 ```
 with whichever `OPTIONS` they require.
 
-Finally, to verify that the installation was successful, run one of the examples, such as: 
-
+Finally, to verify that the installation was successful, run one of the input files in `examples` by passing it as the sole argument to `eprem`. Using the previous example build:
 ```
-mpirun -n 2 eprem-latest cone.ini 
+cd new-build
+mpirun -n 2 bin/eprem ../examples/cone.ini 
 ```
 
 ## Contributions
