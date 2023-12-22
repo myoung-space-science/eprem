@@ -276,8 +276,8 @@ int main(int argc, char *argv[]) {
     // -------------------------------------------------------------------------
     // -------------------------------------------------------------------------
 
-    // NOTE!  This MUST be here and not below mhdGetInterpData.
-    //        This is because the I/O (and moveNodes()) use getMhdNode()
+    // NOTE!  This MUST be here and not below mhdGetInterpData for coupled runs.
+    //        This is because the I/O and moveNodes() use getMhdNode()
     //        which uses "s_xxx" and the MHD files from the previous step,
     //        which makes this work right because it makes it at the right time.
 
@@ -302,7 +302,6 @@ int main(int argc, char *argv[]) {
 
     // Phi-shift nodes in co-rotating coronal frame
     // (equivalent to converting corotating frame to inertial with a +Vphi?)
-    // During node seeding, this also phi-shifts nodes in helio-coupled domain.
     if ( (config.mhdRotateSolution > 0) && (config.mhdCouple > 0) )
       rotateCoupledDomain( config.tDel );
 
@@ -400,11 +399,6 @@ int main(int argc, char *argv[]) {
     if (mpi_rank == 0) printf("  --> Compute time for step: %18.4f seconds.\n",timer_tmp-timer_step);
 
   } while(t_global <= config.simStopTimeDay);
-
-  //
-  // Dump final solution state.
-  //
-  //dataDumpIO();
 
   // ---------------------------------------------------------------------------
   // ---------------------------------------------------------------------------
