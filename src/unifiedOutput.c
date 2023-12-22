@@ -1503,35 +1503,43 @@ int unstructuredDims2D[2];
       timer_tmp = MPI_Wtime();
 
       // stream output
-      if ( (config.unifiedOutput > 0) && (t_global*DAY >= config.unifiedOutputTime) )
+      if (config.unifiedOutput > 0)
       {
-        writeObserverDataNetCDF();
-        observerTimeSlice++;
-        if (mpi_rank==0) printf("  --> IO: Wrote observer data to file.\n");
+        if ( (t_global == 0.0) || (t_global*DAY >= config.unifiedOutputTime) ) {
+          writeObserverDataNetCDF();
+          observerTimeSlice++;
+          if (mpi_rank==0) printf("  --> IO: Wrote observer data to file.\n");
+        }
       }
 
       // observer point output
-      if ( (config.numObservers > 0) && (t_global*DAY >= config.pointObserverOutputTime) )
+      if (config.numObservers > 0)
       {
-        writePointObserverDataNetCDF();
-        pointObserverTimeSlice++;
-        if (mpi_rank==0) printf("  --> IO: Wrote point observer data to file.\n");
+        if ( (t_global == 0.0) || (t_global*DAY >= config.pointObserverOutputTime) ) {
+          writePointObserverDataNetCDF();
+          pointObserverTimeSlice++;
+          if (mpi_rank==0) printf("  --> IO: Wrote point observer data to file.\n");
+        }
       }
 
       // domain output
-      if ( (config.epremDomain > 0) && (t_global*DAY >= config.epremDomainOutputTime) )
+      if (config.epremDomain > 0)
       {
-        domainDumpNetCDF();
-        domainTimeSlice++;
-        if(mpi_rank==0) printf("  --> IO: Wrote domain to file.\n");
+        if ( (t_global == 0.0) || (t_global*DAY >= config.epremDomainOutputTime) ) {
+          domainDumpNetCDF();
+          domainTimeSlice++;
+          if(mpi_rank==0) printf("  --> IO: Wrote domain to file.\n");
+        }
       }
 
       // unstructured domain output
-      if ( (config.unstructuredDomain > 0) && (t_global*DAY >= config.epremDomainOutputTime) )
+      if ( (config.unstructuredDomain > 0) )
       {
-        unstructuredDomainDumpNetCDF();
-        unstructuredDomainTimeSlice++;
-        if (mpi_rank==0) printf("  --> IO: Wrote unstructured domain data to file.\n");
+        if ( (t_global == 0.0) || (t_global*DAY >= config.epremDomainOutputTime) ) {
+          unstructuredDomainDumpNetCDF();
+          unstructuredDomainTimeSlice++;
+          if (mpi_rank==0) printf("  --> IO: Wrote unstructured domain data to file.\n");
+        }
       }
 
       timer_eprem_io = timer_eprem_io + (MPI_Wtime() - timer_tmp);
