@@ -137,7 +137,7 @@ Index_t hdf5_input=0;              // Set=1 if hdf5 input files (RMC move this)
     if (config.mhdInitTimeStep == 0.0)
       config.mhdInitTimeStep = config.tDel;
 
-    // NOTE! For now, do not allow particle equalibrium.
+    // NOTE! For now, do not allow particle equilibrium.
 
     config.simStartTime = config.mhdStartTime;
     // Do not do any particle calculations until CME is about to erupt.
