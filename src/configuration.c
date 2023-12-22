@@ -121,8 +121,8 @@ getParams( char* configFilename)
   config.numSpecies = readInt("numSpecies", 1, 1, 100);
   Scalar_t defaultMass[1] = {1.0};
   Scalar_t defaultCharge[1] = {1.0};
-  config.mass = readDoubleArray("mass", config.numSpecies, defaultMass, 1.0, LARGEFLOAT);
-  config.charge = readDoubleArray("charge", config.numSpecies, defaultCharge, 1.0, LARGEFLOAT);
+  config.mass = readDoubleArray("mass", 1, config.numSpecies, defaultMass, 1.0, LARGEFLOAT);
+  config.charge = readDoubleArray("charge", 1, config.numSpecies, defaultCharge, 1.0, LARGEFLOAT);
 
   config.pointObserverOutput = readInt("pointObserverOutput", 0, 0, 1);
   config.pointObserverOutputTime = readDouble("pointObserverOutputTime", 0.0, 0.0, LARGEFLOAT);
@@ -132,9 +132,9 @@ getParams( char* configFilename)
   Scalar_t defaultObsTheta[1] = {0.0};
   Scalar_t defaultObsPhi[1] = {0.0};
   Scalar_t *thetaArr, *phiArr;
-  config.obsR = readDoubleArray("obsR", config.numObservers, defaultObsR, config.rScale, LARGEFLOAT);
-  thetaArr = readDoubleArray("obsTheta", config.numObservers, defaultObsTheta, 0.0, PI);
-  phiArr = readDoubleArray("obsPhi", config.numObservers, defaultObsPhi, 0.0, TWO_PI);
+  config.obsR = readDoubleArray("obsR", 1, config.numObservers, defaultObsR, config.rScale, LARGEFLOAT);
+  thetaArr = readDoubleArray("obsTheta", 1, config.numObservers, defaultObsTheta, 0.0, PI);
+  phiArr = readDoubleArray("obsPhi", 1, config.numObservers, defaultObsPhi, 0.0, TWO_PI);
   config.obsUseDegrees = readInt("obsUseDegrees", 0, 0, 1);
   if (config.obsUseDegrees == 1) {
     config.obsTheta = (Scalar_t *)malloc(sizeof(double) * config.numObservers);
@@ -174,8 +174,8 @@ getParams( char* configFilename)
   config.useManualStreamSpawnLoc = readInt("useManualStreamSpawnLoc",0,0,1);
   Scalar_t defaultPos[1] = {0.0};
   if (config.useManualStreamSpawnLoc > 0){
-    config.streamSpawnLocAzi = readDoubleArray("streamSpawnLocAzi", 6*config.numRowsPerFace*config.numColumnsPerFace, defaultPos, 0.0, TWO_PI);
-    config.streamSpawnLocZen = readDoubleArray("streamSpawnLocZen", 6*config.numRowsPerFace*config.numColumnsPerFace, defaultPos, 0.0, PI);
+    config.streamSpawnLocAzi = readDoubleArray("streamSpawnLocAzi", 1, 6*config.numRowsPerFace*config.numColumnsPerFace, defaultPos, 0.0, TWO_PI);
+    config.streamSpawnLocZen = readDoubleArray("streamSpawnLocZen", 1, 6*config.numRowsPerFace*config.numColumnsPerFace, defaultPos, 0.0, PI);
   }
 
   config.parallelFlow = readDouble("parallelFlow", 0.0, 0.0, LARGEFLOAT);
@@ -286,7 +286,7 @@ const char *readString(char *key, char *defaultVal) {
 }
 
 
-Scalar_t *readDoubleArray(char *key, int size, Scalar_t *defaultVal, Scalar_t minVal, Scalar_t maxVal) {
+Scalar_t *readDoubleArray(char *key, int defaultSize, int size, Scalar_t *defaultVal, Scalar_t minVal, Scalar_t maxVal) {
 
   Index_t i;
   Scalar_t *val;
@@ -314,11 +314,9 @@ Scalar_t *readDoubleArray(char *key, int size, Scalar_t *defaultVal, Scalar_t mi
   } else {
 
     if (mpi_rank == 0){
-//   RMC: THIS IS WRONG AND DOES NOT FIND THE LENGTH OF THE ARRAY!!!
-//   NEED TO PASS THE DEFAULT SIZE IN AS WELL!!!
-//      for (i = 0; i < (Index_t)(sizeof(defaultVal) / sizeof(*defaultVal)); i++)
-//        printf("%.4e ", defaultVal[i]);
-      printf("Using default values.  First element: %.4e ", defaultVal[0]);
+      for (i = 0; i < defaultSize; i++) {
+        printf("%.4e", defaultVal[i]);
+      }
     }
 
     if (mpi_rank == 0) printf("\n");

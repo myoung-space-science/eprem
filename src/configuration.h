@@ -192,6 +192,6 @@ void setRuntimeConstants( void );
 Index_t readInt(char *key, Index_t defaultVal, Index_t minVal, Index_t maxVal);
 Scalar_t readDouble(char *key, Scalar_t defaultVal, Scalar_t minVal, Scalar_t maxVal);
 const char *readString(char *key, char *defaultVal);
-Scalar_t *readDoubleArray(char *key, int size, Scalar_t *defaultVal, Scalar_t minVal, Scalar_t maxVal);
+Scalar_t *readDoubleArray(char *key, int defaultSize, int size, Scalar_t *defaultVal, Scalar_t minVal, Scalar_t maxVal);
 
 #endif
