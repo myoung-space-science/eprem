@@ -348,8 +348,10 @@ checkIntBounds(char *key, Index_t val, Index_t minVal, Index_t maxVal)
 {
   if ( (val < minVal) || (val > maxVal) ) {
 
-    printf("%s=%d is out of the acceptable range: [%d, %d]\n", key, (Index_t)val, minVal, maxVal);
-    panic("the configuration reader detected an invalid value.\n");
+    if (mpi_rank == 0) {
+      printf("%s=%d is out of the acceptable range: [%d, %d]\n", key, (Index_t)val, minVal, maxVal);
+      panic("the configuration reader detected an invalid value.\n");
+    }
 
   }
 }
@@ -360,8 +362,10 @@ checkDoubleBounds(char *key, Scalar_t val, Scalar_t minVal, Scalar_t maxVal)
 {
   if ( (val < minVal) || (val > maxVal) ) {
 
-    printf("%s=%.4e is out of the acceptable range: [%.4e, %.4e]\n", key, (Scalar_t)val, minVal, maxVal);
-    panic("the configuration reader detected an invalid value.\n");
+    if (mpi_rank == 0) {
+      printf("%s=%.4e is out of the acceptable range: [%.4e, %.4e]\n", key, (Scalar_t)val, minVal, maxVal);
+      panic("the configuration reader detected an invalid value.\n");
+    }
 
   }
 }
