@@ -243,12 +243,7 @@ Index_t readInt(char *key, Index_t defaultVal, Index_t minVal, Index_t maxVal) {
   if (! config_lookup_int(&cfg, key, &val) )
     val = defaultVal;
 
-  if ( (val < minVal) || (val > maxVal) ) {
-
-    printf("%s is out of the acceptable range: %.4i <= %.4i <= %.4i\n", key, minVal, (Index_t)val, maxVal);
-    panic("the configuration reader detected an invalid value.\n");
-
-  }
+  checkIntBounds(key, val, minVal, maxVal);
 
   if (mpi_rank == 0)
     printf("%s: %i\n", key, (Index_t)val);
@@ -265,12 +260,7 @@ Scalar_t readDouble(char *key, Scalar_t defaultVal, Scalar_t minVal, Scalar_t ma
   if (! config_lookup_float(&cfg, key, &val) )
     val = defaultVal;
 
-  if ( (val < minVal) || (val > maxVal) ) {
-
-    printf("%s is out of the acceptable range: %.4e < %.4e < %.4e\n", key, minVal, (Scalar_t)val, maxVal);
-    panic("the configuration reader detected an invalid value.\n");
-
-  }
+  checkDoubleBounds(key, val, minVal, maxVal);
 
   if (mpi_rank == 0)
     printf("%s: %.4e\n", key, (Scalar_t)val);
@@ -358,7 +348,7 @@ checkIntBounds(char *key, Index_t val, Index_t minVal, Index_t maxVal)
 {
   if ( (val < minVal) || (val > maxVal) ) {
 
-    printf("%s=%.4i is out of the acceptable range: [%.4i, %.4i]\n", key, (Index_t)val, minVal, maxVal);
+    printf("%s=%d is out of the acceptable range: [%d, %d]\n", key, (Index_t)val, minVal, maxVal);
     panic("the configuration reader detected an invalid value.\n");
 
   }
