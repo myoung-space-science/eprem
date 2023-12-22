@@ -128,24 +128,26 @@ getParams( char* configFilename)
   config.pointObserverOutputTime = readDouble("pointObserverOutputTime", 0.0, 0.0, LARGEFLOAT);
 
   config.numObservers = readInt("numObservers", 0, 0, 1000);
-  Scalar_t defaultObsR[1] = {config.rScale};
-  Scalar_t defaultObsTheta[1] = {0.0};
-  Scalar_t defaultObsPhi[1] = {0.0};
-  Scalar_t *thetaArr, *phiArr;
-  config.obsR = readDoubleArray("obsR", 1, config.numObservers, defaultObsR, config.rScale, LARGEFLOAT);
-  thetaArr = readDoubleArray("obsTheta", 1, config.numObservers, defaultObsTheta, 0.0, PI);
-  phiArr = readDoubleArray("obsPhi", 1, config.numObservers, defaultObsPhi, 0.0, TWO_PI);
-  config.obsUseDegrees = readInt("obsUseDegrees", 0, 0, 1);
-  if (config.obsUseDegrees == 1) {
-    config.obsTheta = (Scalar_t *)malloc(sizeof(double) * config.numObservers);
-    config.obsPhi = (Scalar_t *)malloc(sizeof(double) * config.numObservers);
-    for (int i=0; i<config.numObservers; i++) {
-      config.obsTheta[i] = deg2rad*thetaArr[i];
-      config.obsPhi[i]   = deg2rad*phiArr[i];
+  if (config.numObservers > 0) {
+    Scalar_t defaultObsR[1] = {config.rScale};
+    Scalar_t defaultObsTheta[1] = {0.0};
+    Scalar_t defaultObsPhi[1] = {0.0};
+    Scalar_t *thetaArr, *phiArr;
+    config.obsR = readDoubleArray("obsR", 1, config.numObservers, defaultObsR, config.rScale, LARGEFLOAT);
+    thetaArr = readDoubleArray("obsTheta", 1, config.numObservers, defaultObsTheta, 0.0, PI);
+    phiArr = readDoubleArray("obsPhi", 1, config.numObservers, defaultObsPhi, 0.0, TWO_PI);
+    config.obsUseDegrees = readInt("obsUseDegrees", 0, 0, 1);
+    if (config.obsUseDegrees == 1) {
+      config.obsTheta = (Scalar_t *)malloc(sizeof(double) * config.numObservers);
+      config.obsPhi = (Scalar_t *)malloc(sizeof(double) * config.numObservers);
+      for (int i=0; i<config.numObservers; i++) {
+        config.obsTheta[i] = deg2rad*thetaArr[i];
+        config.obsPhi[i]   = deg2rad*phiArr[i];
+      }
+    } else {
+      config.obsTheta = thetaArr;
+      config.obsPhi   = phiArr;
     }
-  } else {
-    config.obsTheta = thetaArr;
-    config.obsPhi   = phiArr;
   }
 
   config.idw_p = readDouble("idw_p", 3.0, SMALLFLOAT, LARGEFLOAT);
