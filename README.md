@@ -10,8 +10,9 @@ Download the latest [release](https://github.com/myoung-space-science/eprem/rele
 
 Unpack the file
 ```
-tar -zxvf eprem-latest.tar.gz
+tar -zxvf eprem-X.Y.Z.tar.gz
 ```
+after replacing `X.Y.Z` with the actual version number.
 
 Proceed to **Setup**
 
