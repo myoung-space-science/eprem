@@ -159,6 +159,7 @@ typedef struct {
   Scalar_t  idealShockTheta;
   Scalar_t  idealShockPhi;
   Scalar_t  idealShockWidth;
+  Bool_t    idealShockUseDegrees;
 
   int dumpFreq;
   int outputRestart;
@@ -182,6 +183,9 @@ extern config_t cfg;
 
 void initGlobalParameters( char* configFilename );
 void getParams( char* configFilename);
+void checkParams( void );
+void checkIntBounds( char* key, Index_t val, Index_t minVal, Index_t maxVal );
+void checkDoubleBounds( char* key, Scalar_t val, Scalar_t minVal, Scalar_t maxVal );
 void setRuntimeConstants( void );
 
 Index_t readInt(char *key, Index_t defaultVal, Index_t minVal, Index_t maxVal);

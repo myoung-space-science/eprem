@@ -28,12 +28,14 @@ Config_t config;
 config_t cfg;
 
 const double third = 1.0/3.0;
+const double deg2rad = PI/180.0;
 
 void
 initGlobalParameters( char* configFilename )
 {
 
   getParams(configFilename);
+  checkParams();
   setRuntimeConstants();
 
 }
@@ -196,9 +198,20 @@ getParams( char* configFilename)
   config.idealShockFalloff = readDouble("idealShockFalloff", 0.0, 0.0, BADVALUE);
   config.idealShockSpeed = readDouble("idealShockSpeed", 1500e5, VERYSMALL, BADVALUE);
   config.idealShockInitTime = readDouble("idealShockInitTime", config.simStartTime, config.simStartTime, BADVALUE);
-  config.idealShockTheta = readDouble("idealShockTheta", 1.570796, 0.0, PI);
-  config.idealShockPhi = readDouble("idealShockPhi", 0.0, 0.0, 2.0 * PI);
-  config.idealShockWidth = readDouble("idealShockWidth", 0.0, 0.0, PI);
+  Scalar_t theta, phi, width;
+  theta = readDouble("idealShockTheta", 90.0, 0.0, 180.0);
+  phi = readDouble("idealShockPhi", 0.0, 0.0, 360.0);
+  width = readDouble("idealShockWidth", 0.0, 0.0, 180.0);
+  config.idealShockUseDegrees = readInt("idealShockUseDegrees", 0, 0, 1);
+  if (config.idealShockUseDegrees == 1) {
+    config.idealShockTheta = deg2rad*theta;
+    config.idealShockPhi   = deg2rad*phi;
+    config.idealShockWidth = deg2rad*width;
+  } else {
+    config.idealShockTheta = theta;
+    config.idealShockPhi   = phi;
+    config.idealShockWidth = width;
+  }
 
   config.dumpFreq = readInt("dumpFreq",1, 0, 1000000);
   config.outputRestart = readInt("outputRestart",0, 0, 1000000);
@@ -312,6 +325,40 @@ Scalar_t *readDoubleArray(char *key, int size, Scalar_t *defaultVal) {
 
   }
 
+}
+
+
+void
+checkParams( void )
+{
+  // Enforce bounds on angles in radians.
+  checkDoubleBounds("idealShockTheta", config.idealShockTheta, 0.0, PI);
+  checkDoubleBounds("idealShockPhi", config.idealShockTheta, 0.0, 2.0 * PI);
+  checkDoubleBounds("idealShockWidth", config.idealShockTheta, 0.0, PI);
+}
+
+
+void
+checkIntBounds(char *key, Index_t val, Index_t minVal, Index_t maxVal)
+{
+  if ( (val < minVal) || (val > maxVal) ) {
+
+    printf("%s=%.4i is out of the acceptable range: [%.4i, %.4i]\n", (Index_t)val, key, minVal, maxVal);
+    panic("the configuration reader detected an invalid value.\n");
+
+  }
+}
+
+
+void
+checkDoubleBounds(char *key, Scalar_t val, Scalar_t minVal, Scalar_t maxVal)
+{
+  if ( (val < minVal) || (val > maxVal) ) {
+
+    printf("%s=%.4e is out of the acceptable range: [%.4e, %.4e]\n", key, (Scalar_t)val, minVal, maxVal);
+    panic("the configuration reader detected an invalid value.\n");
+
+  }
 }
 
 
