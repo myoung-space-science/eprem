@@ -9,6 +9,7 @@
 - Change value of `VERSION` to be consistent with this and configure files
 - Refactor parameter-related constants
 - Improve config-file read and echo
+- Always output the initial time step
 
 ## v0.3.0 (18Dec2023)
 
