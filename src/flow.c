@@ -80,12 +80,12 @@
           if (config.idealShock > 0) {
             radpos = cartToSphPosAu(grid[idx].r);
             if (radpos.r <= config.idealShockSpeed * t_global) {
-              if (config.idealShockWidth == 0.0)
+              if ((config.idealShockThetaWidth == 0.0) && (config.idealShockPhiWidth == 0.0))
                 idealShockNode = 1;
               else {
                 if ((fmin((2 * PI) - fabs(radpos.phi - config.idealShockPhi), fabs(radpos.phi - config.idealShockPhi)) <
-                    (config.idealShockWidth / (double)2.0)) &&
-                    (fabs(radpos.theta - config.idealShockTheta) < (config.idealShockWidth / 2.0)) )
+                    (config.idealShockPhiWidth / (double)2.0)) &&
+                    (fabs(radpos.theta - config.idealShockTheta) < (config.idealShockThetaWidth / 2.0)) )
                   idealShockNode = 1;
               }
             }
