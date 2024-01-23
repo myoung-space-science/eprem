@@ -153,6 +153,7 @@ typedef struct {
   Index_t   idealShock;
   Scalar_t  idealShockSharpness;
   Scalar_t  idealShockScaleLength;
+  Scalar_t  idealShockScale;
   Scalar_t  idealShockJump;
   Scalar_t  idealShockFalloff;
   Scalar_t  idealShockSpeed;

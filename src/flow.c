@@ -619,7 +619,7 @@
   Scalar_t factor, exponent, ratio, falloff;
 
   exponent = exp(2.0 *
-                 (config.idealShockSharpness / config.idealShockScaleLength) *
+                 (config.idealShockScale) *
                  (r - ((config.idealShockSpeed / C) * (t_global - config.idealShockInitTime / DAY) + config.rScale)));
 
   if (exponent >= 1.0e8)

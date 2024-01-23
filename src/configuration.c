@@ -216,6 +216,7 @@ getParams( char* configFilename)
   config.idealShock = readInt("idealShock", 0, 0, 1);
   config.idealShockSharpness = readDouble("idealShockSharpness", 1.0, SMALLFLOAT, LARGEFLOAT);
   config.idealShockScaleLength = readDouble("idealShockScaleLength", 0.0046491, SMALLFLOAT, LARGEFLOAT);
+  config.idealShockScale = readDouble("idealShockScale", config.idealShockSharpness / config.idealShockScaleLength, 0.0, LARGEFLOAT);
   config.idealShockJump = readDouble("idealShockJump", 4.0, SMALLFLOAT, LARGEFLOAT);
   config.idealShockFalloff = readDouble("idealShockFalloff", 0.0, 0.0, LARGEFLOAT);
   config.idealShockSpeed = readDouble("idealShockSpeed", 1500e5, SMALLFLOAT, LARGEFLOAT);
