@@ -19,6 +19,7 @@ When incrementing the version number to X.Y.Z, please do the following
 - Always output the initial time step
 - Accept different widths for the ideal shock
 - Define a merged shock-scale parameter
+- Fix redundant installation of external dependencies
 
 ## v0.3.0 (2023-12-18)
 
