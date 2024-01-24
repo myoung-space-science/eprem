@@ -481,6 +481,13 @@ install_netcdf() {
     install_package $pkg_alias $pkg_url $pkg_tar $pkg_dir $pkg_args
 }
 
+# Booleans to prevent redundant installations.
+installed_zlib=0
+installed_libconfig=0
+installed_hdf4=0
+installed_hdf5=0
+installed_netcdf=0
+
 # The function that will download and build external dependencies.
 install_dep() {
     local dep_name="${1}"
@@ -492,27 +499,30 @@ install_dep() {
 
     # --> zlib
     if [ "${dep_name}" == "zlib" ]; then
-        install_zlib
+        install_zlib && installed_zlib=1
     fi
 
     # --> libconfig
     if [ "${dep_name}" == "libconfig" ]; then
-        install_libconfig
+        install_libconfig && installed_libconfig=1
     fi
 
     # --> HDF4
     if [ "${dep_name}" == "hdf4" ]; then
-        install_hdf4
+        install_hdf4 && installed_hdf4=1
     fi
 
     # --> HDF5
-    if [ "${dep_name}" == "hdf5" ] || [ "${dep_name}" == "netcdf" ]; then
-        install_hdf5
+    if [ "${dep_name}" == "hdf5" ]; then
+        install_hdf5 && installed_hdf5=1
     fi
 
     # --> NetCDF4
     if [ "${dep_name}" == "netcdf" ]; then
-        install_netcdf
+        if [ $installed_hdf5 == 0 ]; then
+            install_hdf5 && installed_hdf5=1
+        fi
+        install_netcdf && installed_netcdf=1
     fi
 
     # Exit the top-level external-dependencies directory.
