@@ -11,6 +11,7 @@
 - Improve config-file read and echo
 - Always output the initial time step
 - Accept different widths for the ideal shock
+- Define a merged shock-scale parameter
 
 ## v0.3.0 (18Dec2023)
 
