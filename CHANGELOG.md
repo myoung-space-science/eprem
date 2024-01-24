@@ -1,5 +1,7 @@
 # Changelog
 
+## Developer Notes
+
 ## NEXT
 
 - Create `install.sh` to replace `setup.sh` with some features moved from `build.sh`
