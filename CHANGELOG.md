@@ -13,47 +13,47 @@
 - Accept different widths for the ideal shock
 - Define a merged shock-scale parameter
 
-## v0.3.0 (18Dec2023)
+## v0.3.0 (2023-12-18)
 
 - Implement point-observer output
 - Refactor and add features to build-process tools
 
-## v0.2.6 (03Aug2023)
+## v0.2.6 (2023-08-03)
 
 - Add `--download-ext-deps` to `setup.sh` CLI.
 
-## v0.2.5 (11Apr2023)
+## v0.2.5 (2023-04-11)
 
 - Redefined options for `setup.sh`.
 
-## v0.2.4 (06Jan2023)
+## v0.2.4 (2023-01-06)
 
 - Allow `idealShockFalloff` to be 0 and change default value to 0.
 
-## v0.2.3 (20Dec2022)
+## v0.2.3 (2022-12-20)
 
 - Expanded installation instructions in README.
 - Added `--with-ext-deps=DIR` to configure options.
 - Moved `--with`-style configure options to `setup.sh`.
 - Copy `config.log` during `make install`.
 
-## v0.2.2 (11Nov2022)
+## v0.2.2 (2022-11-11)
 
 - Revert to multiplying velocity by the ideal shock factor because EPREM nodes are not in the frame co-moving with the shock.
 
-## v0.2.1 (11Nov2022)
+## v0.2.1 (2022-11-11)
 
 - Avoid running `autoreconf` as part of setup.sh if possible.
 
-## v0.2.0 (10Nov2022)
+## v0.2.0 (2022-11-10)
 
 - Exponentially relax shocked quantities to unshocked values downstream of shock.
 - Allow user to control rate of relaxation with `idealShockFalloff`.
 
-## v0.1.1 (09Nov2022)
+## v0.1.1 (2022-11-09)
 
 - Fix velocity scaling for ideal shock in `flow.c`.
 
-## v0.1.0 (02Nov2022)
+## v0.1.0 (2022-11-02)
 
 - Initial release of uncoupled EPREM
