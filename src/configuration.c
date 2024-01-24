@@ -195,7 +195,7 @@ getParams( char* configFilename)
   config.mhdBConvert = readDouble("mhdBConvert", 1.0, 0.0, LARGEFLOAT);
   config.mhdVConvert = readDouble("mhdVConvert", 1.0, 0.0, LARGEFLOAT);
   config.mhdRhoConvert = readDouble("mhdRhoConvert", 1.0, 0.0, LARGEFLOAT);
-  config.mhdRhoConvert = readDouble("mhdTimeConvert", 1.0, 0.0, LARGEFLOAT);
+  config.mhdTimeConvert = readDouble("mhdTimeConvert", 1.0, 0.0, LARGEFLOAT);
 
   config.useBoundaryFunction = readInt("useBoundaryFunction", 1, 0, 1);
   config.boundaryFunctionInitDomain = readInt("boundaryFunctionInitDomain", 1, 0, 1);
