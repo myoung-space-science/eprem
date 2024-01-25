@@ -9,6 +9,8 @@ When incrementing the version number to X.Y.Z, please do the following
 
 ## NEXT
 
+## v0.4.0 (2024-01-25)
+
 - Create `install.sh` to replace `setup.sh` with some features moved from `build.sh`
 - Add reference radius and reference energy to runtime options
 - Allow user to pass ideal shock angles (i.e., theta, phi, and width) in degrees

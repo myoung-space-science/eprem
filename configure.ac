@@ -9,7 +9,7 @@
 # https://www.mail-archive.com/autoconf-patches@gnu.org/msg06239.html
 #-----------------------------------------------------------------------------#
 AC_PREREQ([2.71])
-AC_INIT([EPREM],[0.3.0],[Matthew.Young@unh.edu],[eprem])
+AC_INIT([EPREM],[0.4.0],[Matthew.Young@unh.edu],[eprem])
 
 #-----------------------------------------------------------------------------#
 # Perform global set-up tasks.
