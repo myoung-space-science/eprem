@@ -69,6 +69,8 @@
 
 #include <time.h>
 #include <math.h>
+#include <stdio.h>
+#include <string.h>
 #include "global.h"
 #include "configuration.h"
 #include "energeticParticlesInit.h"
@@ -106,6 +108,14 @@ int main(int argc, char *argv[]) {
 
   int epInit, rciter;
   double timer_tmp;
+
+  // Echo version, if requested.
+  for (int i=0; i<argc; i++) {
+    if ((strcmp(argv[i], "-V") == 0) || (strcmp(argv[i], "--version") == 0)) {
+      printf("EPREM version %s\n", VERSION);
+      return(0);
+    }
+  }
 
   // Initialize MPI
   initMPI(argc, argv);
