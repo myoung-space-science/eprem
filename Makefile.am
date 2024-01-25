@@ -47,7 +47,9 @@ src/simCore.h \
 src/timers.h \
 src/unifiedOutput.h
 
-EXTRA_DIST = setup.sh
+EXTRA_DIST = \
+$(srcdir)/install.sh \
+$(srcdir)/build.sh
 
 distclean-local:
 	find . -type f -name '*~' -exec rm {} \;
