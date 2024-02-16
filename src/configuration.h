@@ -18,6 +18,8 @@
 
 typedef struct {
 
+  Bool_t useDegrees;
+
   Index_t  numNodesPerStream;
   Index_t  numRowsPerFace;
   Index_t  numColumnsPerFace;

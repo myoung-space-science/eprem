@@ -56,6 +56,8 @@ getParams( char* configFilename)
 
   }
 
+  config.useDegrees = readInt("useDegrees", 0, 0, 1);
+
   config.numNodesPerStream = readInt("numNodesPerStream",N_PROCS,N_PROCS,LARGEINT);
   config.numRowsPerFace = readInt("numRowsPerFace", 2, 1, LARGEINT);
   config.numColumnsPerFace = readInt("numColumnsPerFace", 2, 1, LARGEINT);
@@ -139,8 +141,7 @@ getParams( char* configFilename)
     config.obsR = readDoubleArray("obsR", 1, config.numObservers, defaultObsR, config.rScale, LARGEFLOAT);
     thetaArr = readDoubleArray("obsTheta", 1, config.numObservers, defaultObsTheta, 0.0, PI);
     phiArr = readDoubleArray("obsPhi", 1, config.numObservers, defaultObsPhi, 0.0, TWO_PI);
-    config.obsUseDegrees = readInt("obsUseDegrees", 0, 0, 1);
-    if (config.obsUseDegrees == 1) {
+    if (config.useDegrees == 1) {
       config.obsTheta = (Scalar_t *)malloc(sizeof(double) * config.numObservers);
       config.obsPhi = (Scalar_t *)malloc(sizeof(double) * config.numObservers);
       for (int i=0; i<config.numObservers; i++) {
@@ -219,8 +220,7 @@ getParams( char* configFilename)
   config.idealShockFalloff = readDouble("idealShockFalloff", 0.0, 0.0, LARGEFLOAT);
   config.idealShockSpeed = readDouble("idealShockSpeed", 1500e5, SMALLFLOAT, LARGEFLOAT);
   config.idealShockInitTime = readDouble("idealShockInitTime", config.simStartTime, config.simStartTime, LARGEFLOAT);
-  config.idealShockUseDegrees = readInt("idealShockUseDegrees", 0, 0, 1);
-  if (config.idealShockUseDegrees == 1) {
+  if (config.useDegrees == 1) {
     config.idealShockTheta = DEG2RAD * readDouble("idealShockTheta", 90.0, 0.0, 180.0);
     config.idealShockPhi = DEG2RAD * readDouble("idealShockPhi", 0.0, 0.0, 360.0);
     config.idealShockWidth = DEG2RAD * readDouble("idealShockWidth", 0.0, 0.0, 180.0);
