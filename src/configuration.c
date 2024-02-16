@@ -224,10 +224,10 @@ getParams( char* configFilename)
   config.idealShockUseDegrees = readInt("idealShockUseDegrees", 0, 0, 1);
   if (config.idealShockUseDegrees == 1) {
     config.idealShockTheta = deg2rad * readDouble("idealShockTheta", 90.0, 0.0, 180.0);
-    config.idealShockPhi = deg2rad *readDouble("idealShockPhi", 0.0, 0.0, 360.0);
-    config.idealShockWidth = deg2rad *readDouble("idealShockWidth", 0.0, 0.0, 180.0);
-    config.idealShockThetaWidth = deg2rad *readDouble("idealShockThetaWidth", rad2deg * config.idealShockWidth, 0.0, 180.0);
-    config.idealShockPhiWidth = deg2rad *readDouble("idealShockPhiWidth", rad2deg * config.idealShockWidth, 0.0, 180.0);
+    config.idealShockPhi = deg2rad * readDouble("idealShockPhi", 0.0, 0.0, 360.0);
+    config.idealShockWidth = deg2rad * readDouble("idealShockWidth", 0.0, 0.0, 180.0);
+    config.idealShockThetaWidth = deg2rad * readDouble("idealShockThetaWidth", rad2deg * config.idealShockWidth, 0.0, 180.0);
+    config.idealShockPhiWidth = deg2rad * readDouble("idealShockPhiWidth", rad2deg * config.idealShockWidth, 0.0, 180.0);
   } else {
     config.idealShockTheta = readDouble("idealShockTheta", HALF_PI, 0.0, PI);
     config.idealShockPhi = readDouble("idealShockPhi", 0.0, 0.0, TWO_PI);
