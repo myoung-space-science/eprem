@@ -10,6 +10,7 @@ When incrementing the version number to X.Y.Z, please do the following
 ## NEXT
 
 - Add command-line option to print version number and exit
+- Replace `obsUseDegrees` and `idealShockUseDegrees` with single `useDegrees` parameter
 
 ## v0.4.0 (2024-01-25)
 
