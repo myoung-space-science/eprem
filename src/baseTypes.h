@@ -27,9 +27,8 @@
 
 #include <mpi.h>
 
-typedef double            doublereal;   /*-- See f2c.h.--*/
-typedef long int          integer;      /*-- See f2c.h.--*/
-//typedef long int          Index_t;
+typedef double            doublereal;   /*-- NOTE: Possibly unused --*/
+typedef long int          integer;      /*-- NOTE: Possibly unused --*/
 typedef int               Index_t;
 typedef double            Time_t;
 typedef double            Coord_t;
@@ -43,14 +42,24 @@ typedef int               MPI_Flag_t;
 #define T 1
 #define F 0
 
-/*-- [see numpy.pi] --*/
-#define PI  3.1415926535897932
-#define TWO_PI 6.283185307179586
-#define HALF_PI 1.570796327
+/*-- pi to double precision --*/
+#define PI      3.141592653589793
+/*-- 2 * pi to double precision --*/
+#define TWO_PI  6.283185307179586
+/*-- pi / 2 to double precision --*/
+#define HALF_PI 1.5707963267948966
 
+/*-- A reference "small" floating-point number --*/
 #define SMALLFLOAT 1.0e-33
+/*-- A reference "large" floating-point number --*/
 #define LARGEFLOAT 1.0e33
+/*-- A reference "large" integer number --*/
 #define LARGEINT 2147483647
+
+/*-- conversion from degrees to radians --*/
+#define DEG2RAD (PI/180.0)
+/*-- conversion from radians to degrees --*/
+#define RAD2DEG (180.0/PI)
 
 /*-- proton mass [grams] --*/
 #define MP  1.6726e-24
