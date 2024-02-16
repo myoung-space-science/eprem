@@ -28,8 +28,6 @@ Config_t config;
 config_t cfg;
 
 const double third = 1.0/3.0;
-const double deg2rad = PI/180.0;
-const double rad2deg = 180.0/PI;
 
 void
 initGlobalParameters( char* configFilename )
@@ -146,8 +144,8 @@ getParams( char* configFilename)
       config.obsTheta = (Scalar_t *)malloc(sizeof(double) * config.numObservers);
       config.obsPhi = (Scalar_t *)malloc(sizeof(double) * config.numObservers);
       for (int i=0; i<config.numObservers; i++) {
-        config.obsTheta[i] = deg2rad*thetaArr[i];
-        config.obsPhi[i]   = deg2rad*phiArr[i];
+        config.obsTheta[i] = DEG2RAD*thetaArr[i];
+        config.obsPhi[i]   = DEG2RAD*phiArr[i];
       }
     } else {
       config.obsTheta = thetaArr;
@@ -223,11 +221,11 @@ getParams( char* configFilename)
   config.idealShockInitTime = readDouble("idealShockInitTime", config.simStartTime, config.simStartTime, LARGEFLOAT);
   config.idealShockUseDegrees = readInt("idealShockUseDegrees", 0, 0, 1);
   if (config.idealShockUseDegrees == 1) {
-    config.idealShockTheta = deg2rad * readDouble("idealShockTheta", 90.0, 0.0, 180.0);
-    config.idealShockPhi = deg2rad * readDouble("idealShockPhi", 0.0, 0.0, 360.0);
-    config.idealShockWidth = deg2rad * readDouble("idealShockWidth", 0.0, 0.0, 180.0);
-    config.idealShockThetaWidth = deg2rad * readDouble("idealShockThetaWidth", rad2deg * config.idealShockWidth, 0.0, 180.0);
-    config.idealShockPhiWidth = deg2rad * readDouble("idealShockPhiWidth", rad2deg * config.idealShockWidth, 0.0, 180.0);
+    config.idealShockTheta = DEG2RAD * readDouble("idealShockTheta", 90.0, 0.0, 180.0);
+    config.idealShockPhi = DEG2RAD * readDouble("idealShockPhi", 0.0, 0.0, 360.0);
+    config.idealShockWidth = DEG2RAD * readDouble("idealShockWidth", 0.0, 0.0, 180.0);
+    config.idealShockThetaWidth = DEG2RAD * readDouble("idealShockThetaWidth", RAD2DEG * config.idealShockWidth, 0.0, 180.0);
+    config.idealShockPhiWidth = DEG2RAD * readDouble("idealShockPhiWidth", RAD2DEG * config.idealShockWidth, 0.0, 180.0);
   } else {
     config.idealShockTheta = readDouble("idealShockTheta", HALF_PI, 0.0, PI);
     config.idealShockPhi = readDouble("idealShockPhi", 0.0, 0.0, TWO_PI);
