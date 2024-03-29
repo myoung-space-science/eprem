@@ -1,10 +1,12 @@
 #!/bin/bash
 
 # Import functions.
-if [ -f tools.sh ]; then
-    . tools.sh
+funcfile=tools.sh
+if [ -f $funcfile ]; then
+    . $funcfile
 else
-    echo "Cannot source necessary functions."
+    echo "Cannot source necessary functions to set up EPREM."
+    echo "Is your distribution missing $funcfile?"
     exit 1
 fi
 
@@ -88,13 +90,10 @@ ${textbf}DESCRIPTION${textnm}
                 to install. Note that whitespace between names will cause an error.
         ${textbf}--with-deps-dir=DIR${textnm}
                 Install dependencies in DIR when --download-deps is present.
-        ${textbf}--dry-run${textnm}
-                Display the sequence of commands but don't run anything.
+                Otherwise, look for external dependencies in DIR/include and DIR/lib.
         ${textbf}--with-mpi-dir=DIR${textnm}
                 Look for MPI header files in DIR/include and look for MPI 
                 libraries in DIR/lib.
-        ${textbf}--with-deps-dir=DIR${textnm}
-                Look for external dependencies in DIR/include and DIR/lib.
         ${textbf}--with-zlib-dir=DIR${textnm}
                 Look for zlib header files in DIR/include and look for 
                 libraries in DIR/lib. Supersedes the --with-deps-dir option.
