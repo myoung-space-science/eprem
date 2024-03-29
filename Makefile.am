@@ -49,7 +49,8 @@ src/unifiedOutput.h
 
 EXTRA_DIST = \
 $(srcdir)/install.sh \
-$(srcdir)/build.sh
+$(srcdir)/build.sh \
+$(srcdir)/tools.sh
 
 distclean-local:
 	find . -type f -name '*~' -exec rm {} \;
