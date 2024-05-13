@@ -18,6 +18,7 @@ When incrementing the version number to X.Y.Z, please do the following
 ## v0.4.0 (2024-01-25)
 
 - Create `install.sh` to replace `setup.sh` with some features moved from `build.sh`
+- Change default value of `boundaryFunctBeta` from 1.7 to 2.0
 - Add reference radius and reference energy to runtime options
 - Allow user to pass ideal shock angles (i.e., theta, phi, and width) in degrees
 - Allow user to pass observer angles (i.e., theta and phi) in degrees
@@ -31,7 +32,12 @@ When incrementing the version number to X.Y.Z, please do the following
 
 ## v0.3.0 (2023-12-18)
 
+- Implement major algorithmic updates to adiabatic change and focusing developed by PSI
+- Remove species dependence of "grid" arrays for energy, velocity, and momentum
+- Set the default value of `rScale` to the value of 1 solar radius in au (i.e., `RSAU` as defined in `global.h`).
+- Set the background (a.k.a "seed") spectrum minimum value to `DBL_MIN`
 - Implement point-observer output
+- Add initial components for model-agnostic MHD coupling
 - Refactor and add features to build-process tools
 
 ## v0.2.6 (2023-08-03)
