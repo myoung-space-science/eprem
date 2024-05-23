@@ -121,9 +121,17 @@ getParams( char* configFilename)
 
   config.numSpecies = readInt("numSpecies", 1, 1, 100);
   Scalar_t defaultMass[1] = {1.0};
+  if (config_lookup(&cfg, "mass") == NULL) {
+    config.mass = readDoubleArray("mass", 1, 0, defaultMass, 1.0, LARGEFLOAT);
+  } else {
+    config.mass = readDoubleArray("mass", 1, config.numSpecies, defaultMass, 1.0, LARGEFLOAT);
+  }
   Scalar_t defaultCharge[1] = {1.0};
-  config.mass = readDoubleArray("mass", 1, config.numSpecies, defaultMass, 1.0, LARGEFLOAT);
-  config.charge = readDoubleArray("charge", 1, config.numSpecies, defaultCharge, 1.0, LARGEFLOAT);
+  if (config_lookup(&cfg, "charge") == NULL) {
+    config.charge = readDoubleArray("charge", 1, 0, defaultCharge, 1.0, LARGEFLOAT);
+  } else {
+    config.charge = readDoubleArray("charge", 1, config.numSpecies, defaultCharge, 1.0, LARGEFLOAT);
+  }
 
   config.pointObserverOutput = readInt("pointObserverOutput", 0, 0, 1);
   config.pointObserverOutputTime = readDouble("pointObserverOutputTime", 0.0, 0.0, LARGEFLOAT);
