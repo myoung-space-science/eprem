@@ -14,6 +14,7 @@ When incrementing the version number to X.Y.Z, please do the following
 - Add `DEG2RAD` and `RAD2DEG` constants
 - Fix bug in `make dist`: add missing `tools.sh`
 - Remove redundant parameter descriptions in `install.sh` help text
+- Fix bug in default `numSpecies`, `mass`, and `charge`
 
 ## v0.4.0 (2024-01-25)
 
