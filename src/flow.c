@@ -304,12 +304,13 @@
 
     *Bphi = -1.0 * rr * (*Br) * (config.omegaSun / (Vr + SMALLFLOAT) ) * sin(theta);
 
-    // ideal shock test
+    // Apply ideal-shock conditions.
+    // - The normal component of the field is unchanged across the shock
+    // - The tangential component compresses but does not rotate. Since Btheta =
+    //   0.0, only Bphi changes.
     if ( (config.idealShock > 0) && (idealShockNode > 0) ) {
 
-      *Br     *= idealShockFactor(rr);
-      *Btheta *= idealShockFactor(rr);
-      *Bphi   *= idealShockFactor(rr);
+      *Bphi *= idealShockFactor(rr);
 
     }
 
@@ -449,8 +450,6 @@
 
   if ( (config.idealShock > 0) && (idealShockNode > 0) ) {
 
-    B.r     *= idealShockFactor(r);
-    B.theta *= idealShockFactor(r);
     B.phi   *= idealShockFactor(r);
 
   }
