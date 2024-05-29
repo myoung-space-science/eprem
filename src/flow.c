@@ -77,7 +77,7 @@
 
           // Check to see if node is in ideal shock domain
           idealShockNode = 0;
-          if (config.idealShock > 0) {
+          if ((config.idealShock > 0) && (t_global*DAY >= config.idealShockInitTime)) {
             radpos = cartToSphPosAu(grid[idx].r);
             if (radpos.r <= config.idealShockSpeed * t_global) {
               if ((config.idealShockThetaWidth == 0.0) && (config.idealShockPhiWidth == 0.0))
@@ -298,21 +298,18 @@
 
   if (mhdGridStatus == MHD_DEFAULT) {
 
+    // Note on ideal shock: The normal component of the field is unchanged
+    // across the shock. The tangential component compresses but does not
+    // rotate. Since Btheta == 0.0, only Bphi changes. Across the shock,
+    //
+    // Vr1 Bphi1 = Vr2 Bphi2 <=> Bphi2 = Bphi1 (Vr1/Vr2)
+    //
+    // The given value of Vr will thus self-consistently scale Bphi to account
+    // for shock affects (without the need for additional if..else logic), as
+    // long as updateMhd calls this routine after calling mhdV.
     *Br = config.mhdBsAu / (rr*rr);
-
     *Btheta = 0.0;
-
     *Bphi = -1.0 * rr * (*Br) * (config.omegaSun / (Vr + SMALLFLOAT) ) * sin(theta);
-
-    // Apply ideal-shock conditions.
-    // - The normal component of the field is unchanged across the shock
-    // - The tangential component compresses but does not rotate. Since Btheta =
-    //   0.0, only Bphi changes.
-    if ( (config.idealShock > 0) && (idealShockNode > 0) ) {
-
-      *Bphi *= idealShockFactor(rr);
-
-    }
 
   }
   else if (mhdGridStatus == MHD_COUPLED) {
