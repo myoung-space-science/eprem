@@ -12,6 +12,8 @@ When incrementing the version number to X.Y.Z, please do the following
 ## NEXT
 
 - Rename `install.sh` to `setup.sh`
+- Change default file-name prefix for stream and point observers
+- Implement `streamLegacyPrefix` and `pointLegacyPrefix` options
 
 ## v0.5.0 (2024-05-30)
 
