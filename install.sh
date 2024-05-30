@@ -68,6 +68,11 @@ ${textbf}DESCRIPTION${textnm}
 
         where the arguments to ./configure depend on the selected options.
 
+        Typical use cases will only require running this script once. Furthermore, 
+        after downloading and building external dependencies (see --download-deps), 
+        setting up additional builds with the same dependencies will simply require 
+        pointing to the dependencies directory (see --with-deps-dir).
+
         ${textbf}-h${textnm}, ${textbf}--help${textnm}
                 Display help and exit.
         ${textbf}-v${textnm}, ${textbf}--verbose${textnm}
