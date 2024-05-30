@@ -33,7 +33,7 @@ logfile=${top_dir}/setup.log
 # Set option defaults.
 verbose=0
 dry_run=0
-alias="latest"
+alias=$(git symbolic-ref --short -q HEAD)
 download_deps=0
 requested_deps=
 default_deps_dir=${top_dir}/deps
