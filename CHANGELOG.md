@@ -5,7 +5,9 @@
 When incrementing the version number to X.Y.Z, please do the following
 * create a new subsection here (below **NEXT**) with the title vX.Y.Z (YYYY-MM-DD)
 * update the version number in `configure.ac` and in `src/global.h`
+* commit with the message "Increment version to X.Y.Z"
 * create a tag named "vX.Y.Z" with the message "version X.Y.Z"
+* push and follow tags
 
 ## NEXT
 
