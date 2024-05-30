@@ -438,18 +438,10 @@
 
   SphVec_t B;
 
-
+  // See note on ideal shock in mhdB.
   B.r = config.mhdBsAu / (r * r);
-
   B.theta = 0.0;
-
   B.phi = -1.0 * r * B.r * (config.omegaSun / (Vr + SMALLFLOAT) ) * sin(theta);
-
-  if ( (config.idealShock > 0) && (idealShockNode > 0) ) {
-
-    B.phi   *= idealShockFactor(r);
-
-  }
 
   return B;
 
