@@ -16,7 +16,7 @@
 #include "baseTypes.h"
 #include "cubeShellStruct.h"
 
-#define VERSION "0.4.0"
+#define VERSION "0.5.0"
 
 // All permutations defined
 extern Index_t RC;
