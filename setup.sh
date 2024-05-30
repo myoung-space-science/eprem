@@ -28,7 +28,7 @@ set -eu
 top_dir="$(dirname "$(readlink -f "${0}")")"
 
 # Declare the name of the log file.
-logfile=${top_dir}/install.log
+logfile=${top_dir}/setup.log
 
 # Set option defaults.
 verbose=0
@@ -143,7 +143,7 @@ report_bad_arg()
 # `/usr/share/doc/util-linux/examples/getopt-example.bash` and the `getopt`
 # manual page for more information.
 TEMP=$(getopt \
-    -n 'install.sh' \
+    -n 'setup.sh' \
     -o 'hv' \
     -l 'help,verbose,' \
     -l 'dry-run' \
@@ -299,11 +299,11 @@ build_dir=${top_dir}/${alias}
 cleanup() {
     if [ "$status" != "$success" ]; then
         echo
-        echo "Installation failed. See $logfile for details."
+        echo "Setup failed. See $logfile for details."
         exit 1
     else
         echo &>> $logfile
-        echo "Installation succeeded." &>> $logfile
+        echo "Setup succeeded." &>> $logfile
         print_banner "Done"
         echo
         echo "You may now run make && make install in ${build_dir}"
@@ -377,7 +377,7 @@ build_package() {
     local pkg_dir="${3}"
     local pkg_args="${4-}"
 
-    print_banner "Installing $pkg_alias ($pkg_dir)"
+    print_banner "Setting up $pkg_alias ($pkg_dir)"
     if [ $dry_run == 0 ]; then
         tar -xvzf $pkg_tar &>> $logfile
         pushd $pkg_dir &> /dev/null
