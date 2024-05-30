@@ -11,6 +11,8 @@ When incrementing the version number to X.Y.Z, please do the following
 
 ## NEXT
 
+- Rename `install.sh` to `setup.sh`
+
 ## v0.5.0 (2024-05-30)
 
 - Add command-line option to print version number and exit
