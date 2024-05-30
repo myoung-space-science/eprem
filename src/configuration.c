@@ -150,8 +150,13 @@ getParams( char* configFilename)
     Scalar_t defaultObsPhi[1] = {0.0};
     Scalar_t *thetaArr, *phiArr;
     config.obsR = readDoubleArray("obsR", 1, config.numObservers, defaultObsR, config.rScale, LARGEFLOAT);
-    thetaArr = readDoubleArray("obsTheta", 1, config.numObservers, defaultObsTheta, 0.0, PI);
-    phiArr = readDoubleArray("obsPhi", 1, config.numObservers, defaultObsPhi, 0.0, TWO_PI);
+    if (config.useDegrees == 1) {
+      thetaArr = readDoubleArray("obsTheta", 1, config.numObservers, defaultObsTheta, 0.0, RAD2DEG*PI);
+      phiArr = readDoubleArray("obsPhi", 1, config.numObservers, defaultObsPhi, 0.0, RAD2DEG*TWO_PI);
+    } else {
+      thetaArr = readDoubleArray("obsTheta", 1, config.numObservers, defaultObsTheta, 0.0, PI);
+      phiArr = readDoubleArray("obsPhi", 1, config.numObservers, defaultObsPhi, 0.0, TWO_PI);
+    }
     if (config.useDegrees == 1) {
       config.obsTheta = (Scalar_t *)malloc(sizeof(double) * config.numObservers);
       config.obsPhi = (Scalar_t *)malloc(sizeof(double) * config.numObservers);
