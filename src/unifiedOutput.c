@@ -622,10 +622,15 @@ int * po_distObs_varid;
     for (pointObserverIndex = 0; pointObserverIndex < numPointObs; pointObserverIndex++)
     {
 
+      if (config.pointLegacyPrefix) {
+        sprintf(pointObsName, "p_obs%03i.nc", pointObserverIndex);
+      } else {
+        sprintf(pointObsName, "point%03i.nc", pointObserverIndex);
+      }
+
       if (pointObserverOutputInit == 0)
       {
         // create the netCDF file
-        sprintf(pointObsName, "p_obs%03i.nc", pointObserverIndex);
         err = nc_create(pointObsName, NC_CLOBBER, &ncid);
 
         // dimension definitions
@@ -731,7 +736,6 @@ int * po_distObs_varid;
       {
 
         // open netCDF file
-        sprintf(pointObsName, "p_obs%03i.nc", pointObserverIndex);
         err = nc_open(pointObsName, NC_WRITE, &ncid);
 
         // read variable ids
@@ -824,7 +828,12 @@ int * po_distObs_varid;
     if (mpi_rank == 0)
     {
 
-      sprintf(pointObsName, "p_obs%03i.nc", pointObserverIndex);
+      if (config.pointLegacyPrefix) {
+        sprintf(pointObsName, "p_obs%03i.nc", pointObserverIndex);
+      } else {
+        sprintf(pointObsName, "point%03i.nc", pointObserverIndex);
+      }
+
       err = nc_open(pointObsName, NC_WRITE, &ncid);
 
       if (pointObserverTimeSlice == 0)
