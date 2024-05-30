@@ -62,6 +62,8 @@ typedef struct {
 
   Index_t   outputFloat;
 
+  Bool_t streamLegacyPrefix;
+
   Index_t   unifiedOutput;
   Scalar_t  unifiedOutputTime;
 

@@ -99,6 +99,8 @@ getParams( char* configFilename)
 
   config.outputFloat = readInt("outputFloat", 0, 0, 1);
 
+  config.streamLegacyPrefix = readInt("streamLegacyPrefix", 0, 0, 1);
+
   config.unifiedOutput = readInt("unifiedOutput", 1, 0, 1);
   config.unifiedOutputTime = readDouble("unifiedOutputTime", 0.0, 0.0, LARGEFLOAT);
 

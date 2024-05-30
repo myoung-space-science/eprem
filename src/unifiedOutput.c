@@ -113,13 +113,19 @@ Index_t strideSize = sizeof(Node_t) / sizeof(double);
     outputLineNamesNetCDF[i]=(char *)malloc(sizeof(char)*MAX_STRING_SIZE);
   }
 
-  if (config.streamFluxOutput == 1) {
-    for (stream = 0; stream < NUM_STREAMS; stream++) {
-      sprintf(outputLineNamesNetCDF[stream], "flux%06d.nc", stream);
+  if (config.streamLegacyPrefix) {
+    if (config.streamFluxOutput == 1) {
+      for (stream = 0; stream < NUM_STREAMS; stream++) {
+        sprintf(outputLineNamesNetCDF[stream], "flux%06d.nc", stream);
+      }
+    } else {
+      for (stream = 0; stream < NUM_STREAMS; stream++) {
+        sprintf(outputLineNamesNetCDF[stream], "obs%06d.nc", stream);
+      }
     }
   } else {
     for (stream = 0; stream < NUM_STREAMS; stream++) {
-      sprintf(outputLineNamesNetCDF[stream], "obs%06d.nc", stream);
+      sprintf(outputLineNamesNetCDF[stream], "stream%06d.nc", stream);
     }
   }
 
