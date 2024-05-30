@@ -15,6 +15,7 @@ When incrementing the version number to X.Y.Z, please do the following
 - Change default file-name prefix for stream and point observers
 - Implement `streamLegacyPrefix` and `pointLegacyPrefix` options
 - Use the current git branch as the default alias in `setup.sh`
+- Fix bug for setting point-observer angular positions in degrees
 
 ## v0.5.0 (2024-05-30)
 
