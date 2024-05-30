@@ -15,6 +15,7 @@ When incrementing the version number to X.Y.Z, please do the following
 - Fix bug in `make dist`: add missing `tools.sh`
 - Remove redundant parameter descriptions in `install.sh` help text
 - Fix bug in default `numSpecies`, `mass`, and `charge`
+- Fix error in how `mhdB` and `parkerB` compute ideal-shock magnetic field
 
 ## v0.4.0 (2024-01-25)
 
