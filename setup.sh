@@ -34,6 +34,7 @@ logfile=${top_dir}/setup.log
 verbose=0
 dry_run=0
 alias=$(git symbolic-ref --short -q HEAD)
+user_alias=0
 download_deps=0
 requested_deps=
 default_deps_dir=${top_dir}/deps
@@ -84,7 +85,10 @@ ${textbf}DESCRIPTION${textnm}
                 Display the sequence of commands but don't run anything.
         ${textbf}--alias=ALIAS${textnm}
                 Declare an alias for this installation. This will create a new 
-                subdirectory called ALIAS in which to configure the build.
+                subdirectory called ALIAS in which to configure the build. By default, 
+                this script will create the build-directory from the current git 
+                branch, appending "-dbg" for --debug builds and "-opt" for --optimize
+                builds. This script will not append anything to ALIAS, if given.
         ${textbf}--download-deps[=A[,B,...]]${textnm}
                 Download external dependencies. By default, this will download
                 all required packages and build them inside 
@@ -121,15 +125,11 @@ ${textbf}DESCRIPTION${textnm}
         ${textbf}--debug${textnm}
                 Build a debugging version of EPREM. Specifically, this will 
                 pass the '-g' compiler flag and the '-DDEBUG' pre-processor 
-                directive to ./configure. You should consider using the 
-                --alias option with this option in order to keep track of 
-                different builds.
+                directive to ./configure.
         ${textbf}--optimize${textnm}
                 Build an optimized version of EPREM. Specifically, this will 
                 pass the '-O3' compiler flag and the '-DNDEBUG' pre-processor 
-                directive to ./configure. You should consider using the 
-                --alias option with this option in order to keep track of 
-                different builds.
+                directive to ./configure.
 "
 }
 
@@ -187,6 +187,7 @@ while [ $# -gt 0 ]; do
         '--alias')
             alias="${2}"
             shift 2
+            user_alias=1
             continue
         ;;
         '--download-deps')
@@ -293,6 +294,14 @@ status=
 success="@!SUCCESS!@"
 
 # Declare the build-specific directory.
+if [ $user_alias == 0 ]; then
+    if [ $debug == 1 ]; then
+        alias="${alias}-dbg"
+    else if [ $optimize == 1 ]; then
+        alias="${alias}-opt"
+        fi
+    fi
+fi
 build_dir=${top_dir}/${alias}
 
 # Define a clean-up function.
