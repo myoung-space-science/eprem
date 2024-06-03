@@ -62,7 +62,7 @@ getParams( char* configFilename)
   config.numRowsPerFace = readInt("numRowsPerFace", 2, 1, LARGEINT);
   config.numColumnsPerFace = readInt("numColumnsPerFace", 2, 1, LARGEINT);
   config.numEnergySteps = readInt("numEnergySteps", 20, 2, LARGEINT);
-  config.numMuSteps = readInt("numMuSteps", 20, 2, LARGEINT);
+  config.numMuSteps = readInt("numMuSteps", 11, 2, LARGEINT);
 
   config.rScale = readDouble("rScale", RSAU, SMALLFLOAT, LARGEFLOAT);
   config.flowMag = readDouble("flowMag", 400.0e5, SMALLFLOAT, LARGEFLOAT);
